@@ -72,7 +72,7 @@ const Hero = () => {
         .hero-bg-img {
           width: 100%;
           height: 100%;
-          object-fit: cover;
+          object-fit: contain;
           object-position: right center;
         }
 
@@ -216,7 +216,7 @@ const Hero = () => {
           }
           .hero-bg-img {
             object-position: top right;
-            transform: scale(0.92);
+            transform: scale(1.5);
             transform-origin: top right;
           }
           .hero-title {
