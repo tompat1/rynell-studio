@@ -5,8 +5,7 @@ const Navbar = ({ cartCount, setIsCartOpen }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    'SERVICES', 'WORK', 'STUDIO', 'COLLECTIONS', 
-    'SHOP', 'ABOUT', 'ADS', 'JOURNAL'
+    'STUDIO', 'COLLECTIONS', 'SHOP', 'ABOUT', 'JOURNAL'
   ];
 
   useEffect(() => {
@@ -24,7 +23,11 @@ const Navbar = ({ cartCount, setIsCartOpen }) => {
         <div className="navbar-container">
           
           {/* Logo */}
-          <div className="navbar-logo">
+          <div 
+            className="navbar-logo" 
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            style={{ cursor: 'pointer' }}
+          >
             RYNELL STUDIO
           </div>
 

@@ -1,4 +1,17 @@
 import React from 'react';
+import camp1 from '../assets/campaigns/campaign_01.jpg';
+import camp2 from '../assets/campaigns/campaign_02.jpg';
+import camp3 from '../assets/campaigns/campaign_03.jpg';
+import camp4 from '../assets/campaigns/campaign_04.jpg';
+import camp5 from '../assets/campaigns/campaign_05.jpg';
+
+const campaignData = [
+  { id: 1, image: camp1, title: 'WHISPER CAMPAIGN' },
+  { id: 2, image: camp2, title: 'SCROLL STOPPER' },
+  { id: 3, image: camp3, title: 'VISUAL UNIVERSE' },
+  { id: 4, image: camp4, title: 'MERCH DROP' },
+  { id: 5, image: camp5, title: 'OOH BILLBOARD' },
+];
 
 const Collections = () => {
   return (
@@ -7,11 +20,13 @@ const Collections = () => {
         <h2 className="section-title">COLLECTIONS</h2>
       </div>
       <div className="collections-carousel">
-        {[1, 2, 3, 4].map((item) => (
-          <div key={item} className="collection-card">
-            <div className="collection-image"></div>
+        {campaignData.map((item) => (
+          <div key={item.id} className="collection-card">
+            <div className="collection-image">
+              <img src={item.image} alt={item.title} className="collection-img" />
+            </div>
             <div className="collection-overlay">
-              <h3>SERIES 0{item}</h3>
+              <h3>{item.title}</h3>
               <button>VIEW CAMPAIGN</button>
             </div>
           </div>
@@ -51,8 +66,13 @@ const Collections = () => {
         .collection-image {
           width: 100%;
           height: 100%;
-          background: linear-gradient(45deg, #0A1E3F 0%, #020813 100%);
+          background: #0A1E3F;
           transition: transform 0.5s ease;
+        }
+        .collection-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
         }
         .collection-card:hover .collection-image {
           transform: scale(1.05);
@@ -78,6 +98,8 @@ const Collections = () => {
           margin: 0 0 2rem 0;
           transform: translateY(20px);
           transition: transform 0.3s ease;
+          text-align: center;
+          padding: 0 2rem;
         }
         .collection-card:hover .collection-overlay h3 {
           transform: translateY(0);
@@ -105,4 +127,5 @@ const Collections = () => {
     </section>
   );
 };
+
 export default Collections;
