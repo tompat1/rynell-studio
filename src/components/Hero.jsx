@@ -185,12 +185,21 @@ const Hero = () => {
         @media (max-width: 768px) {
           .hero-section {
             padding: 0 2rem;
+            align-items: flex-end;
+            padding-bottom: 4rem;
           }
           .hero-bg-overlay {
-            display: block; /* Ensure text is readable over shifted background */
+            display: block;
+            background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,1) 100%);
+          }
+          .hero-bg-container {
+            height: 70vh;
           }
           .hero-bg-img {
-            object-position: 70% center; /* Shift logo slightly to stay visible but not cover text */
+            object-fit: contain;
+            object-position: top right;
+            transform: scale(0.9);
+            transform-origin: top right;
           }
           .hero-title {
             font-size: 4rem;
@@ -210,9 +219,16 @@ const Hero = () => {
         @media (max-width: 480px) {
           .hero-section {
             padding: 0 1.5rem;
+            padding-bottom: 3rem;
+          }
+          .hero-bg-container {
+            height: 60vh;
           }
           .hero-bg-img {
-            object-position: 80% center;
+            object-fit: contain;
+            object-position: top right;
+            transform: scale(0.8);
+            transform-origin: top right;
           }
           .hero-title {
             font-size: 3rem;
