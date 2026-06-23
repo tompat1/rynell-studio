@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import Services from './components/Services'
@@ -10,21 +10,40 @@ import About from './components/About'
 import Ads from './components/Ads'
 import Journal from './components/Journal'
 import Footer from './components/Footer'
+import CartDrawer from './components/CartDrawer'
 
 function App() {
+  const [cart, setCart] = useState([])
+  const [isCartOpen, setIsCartOpen] = useState(false)
+
+  const addToCart = (item) => {
+    setCart((prevCart) => [...prevCart, item])
+    setIsCartOpen(true) // Auto-open cart on add
+  }
+
+  const removeFromCart = (indexToRemove) => {
+    setCart((prevCart) => prevCart.filter((_, index) => index !== indexToRemove))
+  }
+
   return (
     <div className="app">
-      <Navbar />
+      <Navbar cartCount={cart.length} setIsCartOpen={setIsCartOpen} />
       <Hero />
       <Services />
       <Work />
       <Studio />
       <Collections />
-      <Shop />
+      <Shop addToCart={addToCart} />
       <About />
       <Ads />
       <Journal />
       <Footer />
+      <CartDrawer 
+        cart={cart} 
+        isCartOpen={isCartOpen} 
+        setIsCartOpen={setIsCartOpen} 
+        removeFromCart={removeFromCart} 
+      />
     </div>
   )
 }

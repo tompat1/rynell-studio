@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const Navbar = () => {
+const Navbar = ({ cartCount, setIsCartOpen }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -37,8 +37,36 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Right Side: CTA & Mobile Toggle */}
+          {/* Right Side: Icons, CTA & Mobile Toggle */}
           <div className="navbar-actions">
+            
+            <div className="nav-icons">
+              <button className="icon-btn" aria-label="Search">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </button>
+              
+              <button className="icon-btn" aria-label="Account">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </button>
+
+              <button className="icon-btn cart-icon-btn" aria-label="Cart" onClick={() => setIsCartOpen(true)}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="9" cy="21" r="1"></circle>
+                  <circle cx="20" cy="21" r="1"></circle>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+                {cartCount > 0 && (
+                  <span className="cart-badge">{cartCount}</span>
+                )}
+              </button>
+            </div>
+
             <button className="cta-button">LET'S TALK</button>
             <button 
               className="mobile-menu-toggle" 
@@ -163,7 +191,52 @@ const Navbar = () => {
         .navbar-actions {
           display: flex;
           align-items: center;
+          gap: 2rem;
+        }
+
+        .nav-icons {
+          display: flex;
+          align-items: center;
           gap: 1.5rem;
+        }
+
+        .icon-btn {
+          background: transparent;
+          border: none;
+          color: rgba(255, 255, 255, 0.8);
+          cursor: pointer;
+          transition: color 0.3s ease, transform 0.3s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+        }
+
+        .icon-btn:hover {
+          color: #0078FF;
+          transform: translateY(-2px);
+        }
+
+        .cart-icon-btn {
+          position: relative;
+        }
+
+        .cart-badge {
+          position: absolute;
+          top: -8px;
+          right: -10px;
+          background: var(--primary-orange);
+          color: #FFF;
+          font-family: var(--font-body);
+          font-size: 0.65rem;
+          font-weight: bold;
+          min-width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 4px;
         }
 
         .cta-button {
