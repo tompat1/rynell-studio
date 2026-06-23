@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import servicesBg from '../assets/design_that_hits_clean.webp';
 
 const Services = () => {
@@ -130,39 +131,42 @@ const Services = () => {
         </div>
       </div>
 
-      {/* Drawer Overlay Backdrop */}
-      <div 
-        className={`drawer-backdrop ${activeService ? 'open' : ''}`}
-        onClick={() => setActiveService(null)}
-      ></div>
+      {/* Slide-out Drawer Portalled to Body */}
+      {typeof document !== 'undefined' && createPortal(
+        <>
+          <div 
+            className={`services-backdrop ${activeService ? 'open' : ''}`}
+            onClick={() => setActiveService(null)}
+          ></div>
 
-      {/* Slide-out Drawer */}
-      <div className={`service-drawer ${activeService ? 'open' : ''}`}>
-        <button className="drawer-close" onClick={() => setActiveService(null)}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-        
-        {activeService && (
-          <div className="drawer-content">
-            {/* Dark abstract placeholder image */}
-            <div className="drawer-image-placeholder">
-              <div className="placeholder-pattern"></div>
-            </div>
+          <div className={`service-drawer ${activeService ? 'open' : ''}`}>
+            <button className="drawer-close" onClick={() => setActiveService(null)}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
             
-            <div className="drawer-text-content">
-              <div className="drawer-icon">
-                {activeService.svg}
+            {activeService && (
+              <div className="drawer-content">
+                <div className="drawer-image-placeholder">
+                  <div className="placeholder-pattern"></div>
+                </div>
+                
+                <div className="drawer-text-content">
+                  <div className="drawer-icon">
+                    {activeService.svg}
+                  </div>
+                  <h3 className="drawer-title">{activeService.title}</h3>
+                  <div className="drawer-divider"></div>
+                  <p className="drawer-description">{activeService.description}</p>
+                </div>
               </div>
-              <h3 className="drawer-title">{activeService.title}</h3>
-              <div className="drawer-divider"></div>
-              <p className="drawer-description">{activeService.description}</p>
-            </div>
+            )}
           </div>
-        )}
-      </div>
+        </>,
+        document.body
+      )}
 
       <style>{`
         .services-section {
@@ -348,7 +352,7 @@ const Services = () => {
         }
 
         /* Drawer Styles */
-        .drawer-backdrop {
+        .services-backdrop {
           position: fixed;
           top: 0;
           left: 0;
@@ -356,13 +360,13 @@ const Services = () => {
           height: 100vh;
           background-color: rgba(0, 0, 0, 0.6);
           backdrop-filter: blur(5px);
-          z-index: 100;
+          z-index: 2000;
           opacity: 0;
           pointer-events: none;
           transition: opacity 0.4s ease;
         }
 
-        .drawer-backdrop.open {
+        .services-backdrop.open {
           opacity: 1;
           pointer-events: auto;
         }
@@ -375,7 +379,7 @@ const Services = () => {
           max-width: 450px;
           height: 100vh;
           background-color: #051024;
-          z-index: 101;
+          z-index: 2001;
           transform: translateX(100%);
           transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
           box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
