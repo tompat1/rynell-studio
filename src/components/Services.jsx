@@ -1,7 +1,68 @@
-import React from 'react';
+import React, { useState } from 'react';
 import servicesBg from '../assets/design_that_hits_clean.webp';
 
 const Services = () => {
+  const [activeService, setActiveService] = useState(null);
+
+  const servicesData = [
+    { 
+      label: 'BRANDING', 
+      title: 'BRAND IDENTITY',
+      description: 'More than just a logo. We build holistic, scalable brand identities that cut through the noise. From typography systems to visual guidelines, we craft the DNA of your brand.',
+      svg: (
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <g transform="translate(0.7, 0.7)">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+            <line x1="7" y1="7" x2="7.01" y2="7" strokeWidth="2" />
+          </g>
+        </svg>
+      )
+    },
+    { 
+      label: 'CAMPAIGN', 
+      title: 'CAMPAIGN CREATIVE',
+      description: 'High-impact visual campaigns designed to convert. We conceptualize and execute bold, multi-channel aesthetics that grab attention and refuse to let go.',
+      svg: (
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+      )
+    },
+    { 
+      label: 'CONTENT', 
+      title: 'CONTENT CREATION',
+      description: 'Engaging, platform-native content creation. Whether it\'s motion graphics, video, or rich static media, we produce assets that tell your story dynamically.',
+      svg: (
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+          <polygon points="10 7 15 10 10 13 10 7"></polygon>
+        </svg>
+      )
+    },
+    { 
+      label: 'AI-POWERED', 
+      title: 'AI-POWERED ASSETS',
+      description: 'The future of asset generation, guided by human taste. We leverage state-of-the-art AI to rapidly prototype, iterate, and scale visual assets without sacrificing the premium studio finish.',
+      svg: (
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="2" width="20" height="20" rx="2" ry="2"></rect>
+          <line x1="7" y1="0" x2="7" y2="2"></line>
+          <line x1="17" y1="0" x2="17" y2="2"></line>
+          <line x1="7" y1="22" x2="7" y2="24"></line>
+          <line x1="17" y1="22" x2="17" y2="24"></line>
+          <line x1="22" y1="7" x2="24" y2="7"></line>
+          <line x1="22" y1="17" x2="24" y2="17"></line>
+          <line x1="0" y1="7" x2="2" y2="7"></line>
+          <line x1="0" y1="17" x2="2" y2="17"></line>
+          <text x="12" y="16" fontFamily="sans-serif" fontSize="11" fontWeight="bold" textAnchor="middle" fill="currentColor" stroke="none">AI</text>
+        </svg>
+      )
+    }
+  ];
+
   return (
     <section className="services-section">
       
@@ -15,7 +76,6 @@ const Services = () => {
             e.target.style.display = 'none';
           }}
         />
-        {/* Subtle overlay for text readability if needed */}
         <div className="services-overlay"></div>
       </div>
 
@@ -55,57 +115,8 @@ const Services = () => {
 
           {/* Icons Grid */}
           <div className="services-icons">
-            {[
-              { 
-                label: 'BRANDING', 
-                svg: (
-                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <g transform="translate(0.7, 0.7)">
-                      <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-                      <line x1="7" y1="7" x2="7.01" y2="7" strokeWidth="2" />
-                    </g>
-                  </svg>
-                )
-              },
-              { 
-                label: 'CAMPAIGN', 
-                svg: (
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                  </svg>
-                )
-              },
-              { 
-                label: 'CONTENT', 
-                svg: (
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                    <line x1="8" y1="21" x2="16" y2="21"></line>
-                    <line x1="12" y1="17" x2="12" y2="21"></line>
-                    <polygon points="10 7 15 10 10 13 10 7"></polygon>
-                  </svg>
-                )
-              },
-              { 
-                label: 'AI-POWERED', 
-                svg: (
-                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="2" width="20" height="20" rx="2" ry="2"></rect>
-                    <line x1="7" y1="0" x2="7" y2="2"></line>
-                    <line x1="17" y1="0" x2="17" y2="2"></line>
-                    <line x1="7" y1="22" x2="7" y2="24"></line>
-                    <line x1="17" y1="22" x2="17" y2="24"></line>
-                    <line x1="22" y1="7" x2="24" y2="7"></line>
-                    <line x1="22" y1="17" x2="24" y2="17"></line>
-                    <line x1="0" y1="7" x2="2" y2="7"></line>
-                    <line x1="0" y1="17" x2="2" y2="17"></line>
-                    <text x="12" y="16" fontFamily="sans-serif" fontSize="11" fontWeight="bold" textAnchor="middle" fill="currentColor" stroke="none">AI</text>
-                  </svg>
-                )
-              }
-            ].map((item, idx) => (
-              <div key={idx} className="icon-item">
+            {servicesData.map((item, idx) => (
+              <div key={idx} className="icon-item" onClick={() => setActiveService(item)}>
                 <div className="icon-circle">
                   {item.svg}
                 </div>
@@ -117,6 +128,40 @@ const Services = () => {
           </div>
 
         </div>
+      </div>
+
+      {/* Drawer Overlay Backdrop */}
+      <div 
+        className={`drawer-backdrop ${activeService ? 'open' : ''}`}
+        onClick={() => setActiveService(null)}
+      ></div>
+
+      {/* Slide-out Drawer */}
+      <div className={`service-drawer ${activeService ? 'open' : ''}`}>
+        <button className="drawer-close" onClick={() => setActiveService(null)}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+        
+        {activeService && (
+          <div className="drawer-content">
+            {/* Dark abstract placeholder image */}
+            <div className="drawer-image-placeholder">
+              <div className="placeholder-pattern"></div>
+            </div>
+            
+            <div className="drawer-text-content">
+              <div className="drawer-icon">
+                {activeService.svg}
+              </div>
+              <h3 className="drawer-title">{activeService.title}</h3>
+              <div className="drawer-divider"></div>
+              <p className="drawer-description">{activeService.description}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       <style>{`
@@ -139,7 +184,12 @@ const Services = () => {
           z-index: 0;
         }
 
-        
+        .services-bg-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center center;
+        }
 
         .services-overlay {
           position: absolute;
@@ -256,6 +306,12 @@ const Services = () => {
           flex-direction: column;
           align-items: center;
           gap: 0.4rem;
+          cursor: pointer;
+          transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .icon-item:hover {
+          transform: translateY(-5px) scale(1.05);
         }
 
         .icon-circle {
@@ -268,6 +324,12 @@ const Services = () => {
           justify-content: center;
           background-color: transparent;
           color: #FFFFFF;
+          transition: all 0.3s ease;
+        }
+
+        .icon-item:hover .icon-circle {
+          box-shadow: 0 0 20px rgba(0, 120, 255, 0.5), inset 0 0 10px rgba(0, 120, 255, 0.2);
+          background-color: rgba(0, 120, 255, 0.1);
         }
 
         .icon-label {
@@ -277,6 +339,135 @@ const Services = () => {
           font-weight: 700;
           letter-spacing: 1px;
           text-transform: uppercase;
+          transition: color 0.3s ease;
+        }
+
+        .icon-item:hover .icon-label {
+          color: #0078FF;
+        }
+
+        /* Drawer Styles */
+        .drawer-backdrop {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background-color: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(5px);
+          z-index: 100;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.4s ease;
+        }
+
+        .drawer-backdrop.open {
+          opacity: 1;
+          pointer-events: auto;
+        }
+
+        .service-drawer {
+          position: fixed;
+          top: 0;
+          right: 0;
+          width: 100%;
+          max-width: 450px;
+          height: 100vh;
+          background-color: #051024;
+          z-index: 101;
+          transform: translateX(100%);
+          transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+          box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+          overflow-y: auto;
+          border-left: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .service-drawer.open {
+          transform: translateX(0);
+        }
+
+        .drawer-close {
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          background: rgba(0, 0, 0, 0.5);
+          border: 1px solid rgba(255,255,255,0.2);
+          color: #FFF;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          z-index: 102;
+          transition: all 0.2s ease;
+        }
+
+        .drawer-close:hover {
+          background: #0078FF;
+          border-color: #0078FF;
+          transform: rotate(90deg);
+        }
+
+        .drawer-content {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .drawer-image-placeholder {
+          width: 100%;
+          height: 300px;
+          background: linear-gradient(135deg, #0A1E3F 0%, #020813 100%);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .placeholder-pattern {
+          position: absolute;
+          top: 0; left: 0; right: 0; bottom: 0;
+          opacity: 0.1;
+          background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, #FFFFFF 10px, #FFFFFF 11px);
+        }
+
+        .drawer-text-content {
+          padding: 3rem 2rem;
+          color: #FFF;
+        }
+
+        .drawer-icon {
+          color: #0078FF;
+          margin-bottom: 1.5rem;
+        }
+
+        .drawer-icon svg {
+          width: 45px;
+          height: 45px;
+        }
+
+        .drawer-title {
+          font-family: var(--font-heading);
+          font-size: 3.5rem;
+          line-height: 0.9;
+          margin: 0 0 1rem 0;
+          color: #FFF;
+          text-shadow: 2px 2px 0 #000;
+          transform: skewX(-10deg);
+        }
+
+        .drawer-divider {
+          width: 50px;
+          height: 4px;
+          background-color: var(--primary-orange);
+          margin-bottom: 2rem;
+        }
+
+        .drawer-description {
+          font-family: var(--font-body);
+          font-size: 1.1rem;
+          line-height: 1.8;
+          color: rgba(255, 255, 255, 0.8);
+          font-weight: 300;
         }
 
         /* Responsive Viewports */
@@ -321,11 +512,11 @@ const Services = () => {
             padding-bottom: 4rem;
           }
           .services-bg-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: -39rem;
-}
+            object-fit: contain;
+            object-position: top right;
+            transform: scale(0.9);
+            transform-origin: top right;
+          }
           .services-text-container { margin-top: 0; }
           .headline-lockup { margin-bottom: 3rem; }
           .design-text { 
@@ -345,6 +536,16 @@ const Services = () => {
           
           .paragraph-container { margin-bottom: 3rem; }
           .icon-circle { width: 40px; height: 40px; }
+          
+          .service-drawer {
+            max-width: 100%; /* Full screen on mobile */
+          }
+          .drawer-image-placeholder {
+            height: 250px;
+          }
+          .drawer-title {
+            font-size: 3rem;
+          }
         }
       `}</style>
     </section>
