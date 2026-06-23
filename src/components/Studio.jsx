@@ -1,4 +1,5 @@
 import React from 'react';
+import studioPortrait from '../assets/studio_portrait.jpg';
 
 const Studio = () => {
   return (
@@ -11,8 +12,8 @@ const Studio = () => {
             blending raw human creativity with state-of-the-art AI tooling to deliver uncompromising aesthetics.
           </p>
         </div>
-        <div className="studio-image-placeholder">
-          {/* Placeholder for behind the scenes photo */}
+        <div className="studio-image-wrapper">
+          <img src={studioPortrait} alt="Studio Portrait" className="studio-image" />
         </div>
       </div>
       <style>{`
@@ -40,14 +41,20 @@ const Studio = () => {
           border-left: 4px solid var(--primary-orange);
           padding-left: 2rem;
         }
-        .studio-image-placeholder {
+        .studio-image-wrapper {
           flex: 1;
           height: 600px;
-          background: #0A1E3F;
-          border: 2px solid #0078FF;
           position: relative;
+          border: 2px solid #0078FF;
+          overflow: hidden;
         }
-        .studio-image-placeholder::after {
+        .studio-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          filter: grayscale(20%) contrast(1.1);
+        }
+        .studio-image-wrapper::after {
           content: 'STUDIO_CAM_01';
           position: absolute;
           bottom: 20px;
@@ -55,10 +62,12 @@ const Studio = () => {
           font-family: monospace;
           color: #0078FF;
           font-size: 1.2rem;
+          background: rgba(2, 8, 19, 0.8);
+          padding: 4px 8px;
         }
         @media (max-width: 1024px) {
           .studio-split { flex-direction: column; }
-          .studio-image-placeholder { width: 100%; }
+          .studio-image-wrapper { width: 100%; }
         }
       `}</style>
     </section>
