@@ -56,16 +56,58 @@ const Services = () => {
           {/* Icons Grid */}
           <div className="services-icons">
             {[
-              { label: 'BRANDING', icon: 'M12 2L2 22h20L12 2zm0 4l6 14H6l6-14z' },
-              { label: 'CAMPAIGN', icon: 'M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z' },
-              { label: 'CONTENT', icon: 'M4 4h16v16H4V4zm2 2v12h12V6H6zm2 2h8v2H8V8zm0 4h8v2H8v-2z' },
-              { label: 'AI-POWERED', icon: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-2h2v2zm0-4h-2V7h2v6zm4 4h-2v-2h2v2zm0-4h-2V7h2v6z' }
+              { 
+                label: 'BRANDING', 
+                svg: (
+                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <g transform="translate(0.7, 0.7)">
+                      <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                      <line x1="7" y1="7" x2="7.01" y2="7" strokeWidth="2" />
+                    </g>
+                  </svg>
+                )
+              },
+              { 
+                label: 'CAMPAIGN', 
+                svg: (
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                  </svg>
+                )
+              },
+              { 
+                label: 'CONTENT', 
+                svg: (
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                    <polygon points="10 7 15 10 10 13 10 7"></polygon>
+                  </svg>
+                )
+              },
+              { 
+                label: 'AI-POWERED', 
+                svg: (
+                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="2" ry="2"></rect>
+                    <line x1="7" y1="0" x2="7" y2="2"></line>
+                    <line x1="17" y1="0" x2="17" y2="2"></line>
+                    <line x1="7" y1="22" x2="7" y2="24"></line>
+                    <line x1="17" y1="22" x2="17" y2="24"></line>
+                    <line x1="22" y1="7" x2="24" y2="7"></line>
+                    <line x1="22" y1="17" x2="24" y2="17"></line>
+                    <line x1="0" y1="7" x2="2" y2="7"></line>
+                    <line x1="0" y1="17" x2="2" y2="17"></line>
+                    <text x="12" y="16" fontFamily="sans-serif" fontSize="11" fontWeight="bold" textAnchor="middle" fill="currentColor" stroke="none">AI</text>
+                  </svg>
+                )
+              }
             ].map((item, idx) => (
               <div key={idx} className="icon-item">
                 <div className="icon-circle">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="rgba(255,255,255,0.9)">
-                    <path d={item.icon} />
-                  </svg>
+                  {item.svg}
                 </div>
                 <span className="icon-label">
                   {item.label}
@@ -189,7 +231,7 @@ const Services = () => {
         }
 
         .paragraph-container {
-          border-left: 4px solid var(--primary-orange);
+          border-left: 4px solid #0078FF;
           padding-left: 1.5rem;
           margin-bottom: 4rem;
         }
@@ -213,28 +255,28 @@ const Services = () => {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 0.8rem;
+          gap: 0.4rem;
         }
 
         .icon-circle {
-          width: 50px;
-          height: 50px;
+          width: 60px;
+          height: 60px;
           border-radius: 50%;
-          border: 2px solid rgba(255,255,255,0.5);
+          border: 1.5px solid #0078FF;
           display: flex;
           align-items: center;
           justify-content: center;
-          background-color: rgba(0,0,0,0.3);
-          box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+          background-color: transparent;
+          color: #FFFFFF;
         }
 
         .icon-label {
           font-family: var(--font-body);
-          font-size: 0.7rem;
-          color: rgba(255,255,255,0.9);
+          font-size: 0.65rem;
+          color: #FFFFFF;
+          font-weight: 700;
           letter-spacing: 1px;
-          text-shadow: 1px 1px 0 rgba(0,0,0,0.8);
-          font-weight: 600;
+          text-transform: uppercase;
         }
 
         /* Responsive Viewports */
