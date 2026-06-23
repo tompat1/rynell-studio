@@ -3,128 +3,237 @@ import heroImg from '../assets/hero_page_rynell_studio_clean.webp'; // Provided 
 
 const Hero = () => {
   return (
-    <section style={{ 
-      minHeight: '100vh', 
-      backgroundColor: '#000000', 
-      position: 'relative', 
-      overflow: 'hidden',
-      display: 'flex',
-      alignItems: 'center',
-      padding: '0 5%'
-    }}>
+    <section className="hero-section">
       
       {/* Big and Bold Background Image */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        zIndex: 0
-      }}>
+      <div className="hero-bg-container">
         <img 
           src={heroImg} 
           alt="Rynell Studio Background" 
-          style={{ 
-            width: '100%', 
-            height: '100%', 
-            objectFit: 'cover', 
-            objectPosition: 'right center' 
-          }} 
+          className="hero-bg-img"
           onError={(e) => {
             e.target.style.display = 'none';
           }}
         />
+        {/* Mobile gradient overlay for text readability */}
+        <div className="hero-bg-overlay"></div>
       </div>
 
       {/* Content Container overlaying the background */}
-      <div style={{ 
-        display: 'flex', 
-        width: '100%', 
-        maxWidth: '1400px', 
-        margin: '0 auto', 
-        position: 'relative', 
-        zIndex: 1,
-        alignItems: 'center',
-      }}>
+      <div className="hero-content">
         
         {/* Left Text Side - On Top of Background */}
-        <div style={{ maxWidth: '600px' }}>
-          <h1 style={{ 
-            fontFamily: 'var(--font-heading)', 
-            fontSize: '6.5rem', 
-            color: '#E6E6E6', 
-            textShadow: '0 0 10px rgba(255,255,255,0.2), 3px 3px 0 #000000',
-            marginBottom: '0',
-            lineHeight: '0.9'
-          }}>
+        <div className="hero-text-container">
+          <h1 className="hero-title">
             Rynell Studio
           </h1>
-          <h2 style={{ 
-            fontFamily: 'var(--font-body)', 
-            fontSize: '1.2rem', 
-            color: 'var(--primary-orange)', 
-            letterSpacing: '8px', 
-            textTransform: 'uppercase',
-            marginTop: '1rem',
-            marginBottom: '1.5rem',
-            fontWeight: 600,
-            textShadow: '1px 1px 0 #000000'
-          }}>
+          <h2 className="hero-subtitle">
             Campaign System
           </h2>
           
-          <div style={{ 
-            height: '1px', 
-            background: 'linear-gradient(90deg, rgba(0,123,255,1) 0%, rgba(0,0,0,0) 100%)', 
-            width: '80%', 
-            marginBottom: '1.5rem' 
-          }}></div>
+          <div className="hero-divider"></div>
           
-          <p style={{ 
-            fontFamily: 'var(--font-body)', 
-            fontSize: '0.9rem', 
-            color: '#FFFFFF', 
-            letterSpacing: '2px', 
-            textTransform: 'uppercase',
-            fontWeight: 400,
-            textShadow: '1px 1px 0 #000000'
-          }}>
+          <p className="hero-description">
             Visuals that connect. Campaigns that perform.
           </p>
 
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '1rem', 
-            marginTop: '6rem' 
-          }}>
-            <div style={{ 
-              width: '40px', 
-              height: '40px', 
-              border: '2px solid rgba(255,255,255,0.3)', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              borderRadius: '4px',
-              backgroundColor: 'rgba(0,0,0,0.3)'
-            }}>
-              <span style={{ fontFamily: 'var(--font-heading)', color: 'rgba(255,255,255,0.8)', fontSize: '1.5rem' }}>R</span>
+          <div className="hero-bottom-lockup">
+            <div className="hero-logo-box">
+              <span>R</span>
             </div>
-            <p style={{ 
-              fontFamily: 'var(--font-body)', 
-              fontSize: '0.8rem', 
-              color: 'rgba(255,255,255,0.8)', 
-              letterSpacing: '2px', 
-              textTransform: 'uppercase',
-              textShadow: '1px 1px 0 #000000'
-            }}>
+            <p className="hero-bottom-text">
               Creative Strategy. Bold Execution.
             </p>
           </div>
         </div>
 
       </div>
+
+      <style>{`
+        .hero-section {
+          min-height: 100vh;
+          background-color: #000000;
+          position: relative;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          padding: 0 5%;
+        }
+
+        .hero-bg-container {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 0;
+        }
+
+        .hero-bg-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: right center;
+        }
+
+        .hero-bg-overlay {
+          display: none;
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%);
+        }
+
+        .hero-content {
+          display: flex;
+          width: 100%;
+          max-width: 1400px;
+          margin: 0 auto;
+          position: relative;
+          z-index: 1;
+          align-items: center;
+        }
+
+        .hero-text-container {
+          max-width: 600px;
+        }
+
+        .hero-title {
+          font-family: var(--font-heading);
+          font-size: 6.5rem;
+          color: #E6E6E6;
+          text-shadow: 0 0 10px rgba(255,255,255,0.2), 3px 3px 0 #000000;
+          margin-bottom: 0;
+          line-height: 0.9;
+        }
+
+        .hero-subtitle {
+          font-family: var(--font-body);
+          font-size: 1.2rem;
+          color: var(--primary-orange);
+          letter-spacing: 8px;
+          text-transform: uppercase;
+          margin-top: 1rem;
+          margin-bottom: 1.5rem;
+          font-weight: 600;
+          text-shadow: 1px 1px 0 #000000;
+        }
+
+        .hero-divider {
+          height: 1px;
+          background: linear-gradient(90deg, rgba(0,123,255,1) 0%, rgba(0,0,0,0) 100%);
+          width: 80%;
+          margin-bottom: 1.5rem;
+        }
+
+        .hero-description {
+          font-family: var(--font-body);
+          font-size: 0.9rem;
+          color: #FFFFFF;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          font-weight: 400;
+          text-shadow: 1px 1px 0 #000000;
+        }
+
+        .hero-bottom-lockup {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          margin-top: 6rem;
+        }
+
+        .hero-logo-box {
+          width: 40px;
+          height: 40px;
+          border: 2px solid rgba(255,255,255,0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 4px;
+          background-color: rgba(0,0,0,0.3);
+          flex-shrink: 0;
+        }
+
+        .hero-logo-box span {
+          font-family: var(--font-heading);
+          color: rgba(255,255,255,0.8);
+          font-size: 1.5rem;
+        }
+
+        .hero-bottom-text {
+          font-family: var(--font-body);
+          font-size: 0.8rem;
+          color: rgba(255,255,255,0.8);
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          text-shadow: 1px 1px 0 #000000;
+        }
+
+        /* Responsive Viewports */
+        @media (max-width: 1024px) {
+          .hero-title {
+            font-size: 5rem;
+          }
+          .hero-bottom-lockup {
+            margin-top: 4rem;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .hero-section {
+            padding: 0 2rem;
+          }
+          .hero-bg-overlay {
+            display: block; /* Ensure text is readable over shifted background */
+          }
+          .hero-bg-img {
+            object-position: 70% center; /* Shift logo slightly to stay visible but not cover text */
+          }
+          .hero-title {
+            font-size: 4rem;
+          }
+          .hero-subtitle {
+            font-size: 1rem;
+            letter-spacing: 4px;
+          }
+          .hero-divider {
+            width: 100%;
+          }
+          .hero-bottom-lockup {
+            margin-top: 3rem;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .hero-section {
+            padding: 0 1.5rem;
+          }
+          .hero-bg-img {
+            object-position: 80% center;
+          }
+          .hero-title {
+            font-size: 3rem;
+            text-shadow: 0 0 10px rgba(255,255,255,0.2), 2px 2px 0 #000000;
+          }
+          .hero-subtitle {
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+          }
+          .hero-description {
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+          }
+          .hero-bottom-lockup {
+            margin-top: 2.5rem;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.8rem;
+          }
+        }
+      `}</style>
     </section>
   );
 };
