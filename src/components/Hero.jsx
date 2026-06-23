@@ -185,20 +185,14 @@ const Hero = () => {
         @media (max-width: 768px) {
           .hero-section {
             padding: 0 2rem;
-            align-items: flex-end;
-            padding-bottom: 4rem;
           }
           .hero-bg-overlay {
             display: block;
-            background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,1) 100%);
-          }
-          .hero-bg-container {
-            height: 70vh;
+            background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 70%, rgba(0,0,0,1) 100%);
           }
           .hero-bg-img {
-            object-fit: contain;
             object-position: top right;
-            transform: scale(0.9);
+            transform: scale(0.92);
             transform-origin: top right;
           }
           .hero-title {
@@ -219,15 +213,10 @@ const Hero = () => {
         @media (max-width: 480px) {
           .hero-section {
             padding: 0 1.5rem;
-            padding-bottom: 3rem;
-          }
-          .hero-bg-container {
-            height: 60vh;
           }
           .hero-bg-img {
-            object-fit: contain;
             object-position: top right;
-            transform: scale(0.8);
+            transform: scale(0.92);
             transform-origin: top right;
           }
           .hero-title {
