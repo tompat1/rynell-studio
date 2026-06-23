@@ -214,6 +214,9 @@ const Hero = () => {
           .hero-section {
             padding: 0 1.5rem;
           }
+            .hero-content {
+                padding-top: 6rem;
+            }
           .hero-bg-img {
             object-position: top right;
             transform: scale(1.5);
