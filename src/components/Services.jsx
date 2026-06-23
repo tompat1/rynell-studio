@@ -97,12 +97,7 @@ const Services = () => {
           z-index: 0;
         }
 
-        .services-bg-img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          object-position: center center;
-        }
+        
 
         .services-overlay {
           position: absolute;
@@ -284,11 +279,11 @@ const Services = () => {
             padding-bottom: 4rem;
           }
           .services-bg-img {
-            object-fit: contain;
-            object-position: top right;
-            transform: scale(0.9);
-            transform-origin: top right;
-          }
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: -39rem;
+}
           .services-text-container { margin-top: 0; }
           .headline-lockup { margin-bottom: 3rem; }
           .design-text { 
