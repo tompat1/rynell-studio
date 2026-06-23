@@ -325,6 +325,7 @@ const Services = () => {
           background-color: transparent;
           color: #FFFFFF;
           transition: all 0.3s ease;
+          flex-shrink: 0;
         }
 
         .icon-item:hover .icon-circle {
@@ -512,10 +513,9 @@ const Services = () => {
             padding-bottom: 4rem;
           }
           .services-bg-img {
-            object-fit: contain;
-            object-position: top right;
-            transform: scale(0.9);
-            transform-origin: top right;
+            object-fit: cover;
+            object-position: 85% center;
+            transform: none;
           }
           .services-text-container { margin-top: 0; }
           .headline-lockup { margin-bottom: 3rem; }
@@ -535,7 +535,15 @@ const Services = () => {
           .hits-underline { bottom: -15px; height: 12px; }
           
           .paragraph-container { margin-bottom: 3rem; }
-          .icon-circle { width: 40px; height: 40px; }
+          
+          .icon-circle { 
+            width: 50px; 
+            height: 50px; 
+          }
+          .icon-circle svg {
+            width: 26px !important;
+            height: 26px !important;
+          }
           
           .service-drawer {
             max-width: 100%; /* Full screen on mobile */
