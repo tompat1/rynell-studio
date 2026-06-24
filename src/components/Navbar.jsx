@@ -412,6 +412,18 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
             display: flex; /* Show hamburger */
           }
         }
+
+        @media (max-width: 768px) {
+          .navbar-logo {
+            display: none;
+          }
+          .global-navbar {
+            padding: 1rem 0;
+          }
+          .global-navbar.scrolled {
+            padding: 0.75rem 0;
+          }
+        }
       `}</style>
     </>
   );
