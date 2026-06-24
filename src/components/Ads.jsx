@@ -117,8 +117,11 @@ const Ads = () => {
           border-top: 4px solid var(--text-primary);
         }
         .ads-header {
+          display: flex;
+          align-items: center;
+          gap: 2rem;
           padding: 0 5%;
-          margin-bottom: 4rem;
+          margin-bottom: 3rem;
         }
         .ads-header .section-title {
           font-family: var(--font-heading);
@@ -132,9 +135,11 @@ const Ads = () => {
           font-family: var(--font-body);
           font-size: 1.2rem;
           color: var(--text-secondary);
-          margin: 1rem 0 0 0;
-          max-width: 600px;
+          margin: 0;
+          max-width: 500px;
           line-height: 1.5;
+          border-left: 4px solid var(--primary-orange);
+          padding-left: 1.5rem;
         }
         .ads-carousel {
           width: 100%;
@@ -225,6 +230,11 @@ const Ads = () => {
           transform: translateY(0);
         }
         @media (max-width: 768px) {
+          .ads-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+          }
           .ads-header .section-title { font-size: 4rem; }
           .ad-card { width: 280px; }
           .ad-overlay h3 { font-size: 2.2rem; }

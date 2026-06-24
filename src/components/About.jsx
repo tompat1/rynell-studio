@@ -74,9 +74,10 @@ const About = () => {
         }
         .section-title {
           font-family: var(--font-heading);
-          font-size: 4rem;
+          font-size: 6rem;
           color: var(--text-primary);
           margin: 0 0 2rem 0;
+          text-shadow: 4px 4px 0 var(--border-color);
           transform: skewX(-10deg);
         }
         .studio-manifesto-text {
@@ -118,6 +119,13 @@ const About = () => {
           .about-manifesto { font-size: 5rem; }
           .studio-split { flex-direction: column; gap: 3rem; }
           .studio-image-wrapper { width: 100%; }
+        }
+        @media (max-width: 768px) {
+          .section-title { 
+            font-size: 4rem; 
+            text-shadow: 2px 2px 0 var(--border-color);
+          }
+          .studio-manifesto-text { font-size: 1.2rem; }
         }
         @media (max-width: 480px) {
           .about-manifesto { font-size: 4rem; }

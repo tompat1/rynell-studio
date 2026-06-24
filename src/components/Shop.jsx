@@ -115,9 +115,16 @@ const Shop = ({ addToCart }) => {
           font-family: var(--font-body);
           font-size: 1.2rem;
           color: var(--text-secondary);
-          margin: 1rem 0 0 0;
-          max-width: 600px;
+          margin: 0;
+          max-width: 500px;
           line-height: 1.5;
+          border-left: 4px solid var(--primary-orange);
+          padding-left: 1.5rem;
+        }
+        .title-group {
+          display: flex;
+          align-items: center;
+          gap: 2rem;
         }
         .view-all-btn {
           background: transparent;
@@ -257,6 +264,11 @@ const Shop = ({ addToCart }) => {
             flex-direction: column;
             align-items: flex-start;
             gap: 2rem;
+          }
+          .title-group {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
           }
           .section-title { font-size: 4rem; }
           
