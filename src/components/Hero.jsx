@@ -1,12 +1,11 @@
-import React from 'react';
-import heroImgDark from '../assets/hero_page_rynell_studio_clean.webp';
-import heroImgLight from '../assets/hero_page_rynell_studio_clean_light.webp';
-import boltSvg from '../assets/lightning_bolt_sticker_vector.svg';
+import "react";
+import heroImgDark from "../assets/hero_page_rynell_studio_clean.webp";
+import heroImgLight from "../assets/hero_page_rynell_studio_clean_light.webp";
+import boltSvg from "../assets/lightning_bolt_sticker_vector.svg";
 
 const Hero = () => {
   return (
     <section className="hero-section">
-
       {/* Big and Bold Background Image */}
       <div className="hero-bg-container">
         <img
@@ -14,7 +13,7 @@ const Hero = () => {
           alt="Rynell Studio Background"
           className="hero-bg-img img-dark"
           onError={(e) => {
-            e.target.style.display = 'none';
+            e.target.style.display = "none";
           }}
         />
         <img
@@ -22,7 +21,7 @@ const Hero = () => {
           alt="Rynell Studio Background Light"
           className="hero-bg-img img-light"
           onError={(e) => {
-            e.target.style.display = 'none';
+            e.target.style.display = "none";
           }}
         />
         {/* Mobile gradient overlay for text readability */}
@@ -31,15 +30,10 @@ const Hero = () => {
 
       {/* Content Container overlaying the background */}
       <div className="hero-content">
-
         {/* Left Text Side - On Top of Background */}
         <div className="hero-text-container">
-          <h1 className="hero-title">
-            Rynell Studio
-          </h1>
-          <h2 className="hero-subtitle">
-            Campaign System
-          </h2>
+          <h1 className="hero-title">Rynell Studio</h1>
+          <h2 className="hero-subtitle">Campaign System</h2>
 
           <div className="hero-divider"></div>
 
@@ -54,7 +48,6 @@ const Hero = () => {
             </p>
           </div>
         </div>
-
       </div>
 
       <style>{`
@@ -221,11 +214,11 @@ const Hero = () => {
         @media (max-width: 480px) {
           .hero-section {
            padding: 0 1.5rem;
-                   margin-top: 4rem;
+                   margin-top: 5rem;
 
 
 
-                   
+
           }
             .hero-content {
                 padding-top: 6rem;
