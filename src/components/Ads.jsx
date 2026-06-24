@@ -155,8 +155,8 @@ const Ads = () => {
           width: max-content;
         }
         .ad-card {
-          min-width: 600px;
-          height: 700px;
+          width: 400px;
+          aspect-ratio: 4/5;
           position: relative;
           background: var(--bg-secondary);
           flex-shrink: 0;
@@ -224,7 +224,7 @@ const Ads = () => {
         }
         @media (max-width: 768px) {
           .ads-header .section-title { font-size: 4rem; }
-          .ad-card { min-width: 300px; height: 400px; }
+          .ad-card { width: 280px; }
           .ad-overlay h3 { font-size: 2.2rem; }
         }
       `}</style>
