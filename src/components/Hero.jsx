@@ -6,20 +6,20 @@ import boltSvg from '../assets/lightning_bolt_sticker_vector.svg';
 const Hero = () => {
   return (
     <section className="hero-section">
-      
+
       {/* Big and Bold Background Image */}
       <div className="hero-bg-container">
-        <img 
-          src={heroImgDark} 
-          alt="Rynell Studio Background" 
+        <img
+          src={heroImgDark}
+          alt="Rynell Studio Background"
           className="hero-bg-img img-dark"
           onError={(e) => {
             e.target.style.display = 'none';
           }}
         />
-        <img 
-          src={heroImgLight} 
-          alt="Rynell Studio Background Light" 
+        <img
+          src={heroImgLight}
+          alt="Rynell Studio Background Light"
           className="hero-bg-img img-light"
           onError={(e) => {
             e.target.style.display = 'none';
@@ -31,7 +31,7 @@ const Hero = () => {
 
       {/* Content Container overlaying the background */}
       <div className="hero-content">
-        
+
         {/* Left Text Side - On Top of Background */}
         <div className="hero-text-container">
           <h1 className="hero-title">
@@ -40,9 +40,9 @@ const Hero = () => {
           <h2 className="hero-subtitle">
             Campaign System
           </h2>
-          
+
           <div className="hero-divider"></div>
-          
+
           <p className="hero-description">
             Visuals that connect. Campaigns that perform.
           </p>
@@ -220,7 +220,12 @@ const Hero = () => {
 
         @media (max-width: 480px) {
           .hero-section {
-            padding: 0 1.5rem;
+           padding: 0 1.5rem;
+                   margin-top: 4rem;
+
+
+
+                   
           }
             .hero-content {
                 padding-top: 6rem;
