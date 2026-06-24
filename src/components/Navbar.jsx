@@ -108,7 +108,7 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
               </button>
             </div>
 
-            <button className="cta-button">LET'S TALK</button>
+            <a href="mailto:hello@rynell.studio" className="cta-button">LET'S TALK</a>
             <button 
               className="mobile-menu-toggle" 
               onClick={() => setIsMobileMenuOpen(true)}
@@ -155,7 +155,7 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
               <span className="mobile-nav-link-text">{item.name}</span>
             </a>
           ))}
-          <button className="mobile-cta-button">LET'S TALK</button>
+          <a href="mailto:hello@rynell.studio" className="mobile-cta-button">LET'S TALK</a>
         </div>
 
         {/* Minified Mobile Footer */}
@@ -324,6 +324,9 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
           transform: skewX(-10deg);
           transition: transform 0.2s ease, background-color 0.2s ease;
           box-shadow: 4px 4px 0 #000;
+          text-decoration: none;
+          display: inline-block;
+          text-align: center;
         }
 
         .cta-button:hover {
@@ -448,6 +451,10 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
           box-shadow: 4px 4px 0 #000;
           width: 100%;
           max-width: 400px;
+          text-decoration: none;
+          display: inline-block;
+          text-align: center;
+        }
         }
 
         /* Minified Mobile Footer */
