@@ -1,5 +1,6 @@
 import React from 'react';
-import heroImg from '../assets/hero_page_rynell_studio_clean.webp'; // Provided by user
+import heroImgDark from '../assets/hero_page_rynell_studio_clean.webp';
+import heroImgLight from '../assets/hero_page_rynell_studio_clean_light.webp';
 
 const Hero = () => {
   return (
@@ -8,9 +9,17 @@ const Hero = () => {
       {/* Big and Bold Background Image */}
       <div className="hero-bg-container">
         <img 
-          src={heroImg} 
+          src={heroImgDark} 
           alt="Rynell Studio Background" 
-          className="hero-bg-img"
+          className="hero-bg-img img-dark"
+          onError={(e) => {
+            e.target.style.display = 'none';
+          }}
+        />
+        <img 
+          src={heroImgLight} 
+          alt="Rynell Studio Background Light" 
+          className="hero-bg-img img-light"
           onError={(e) => {
             e.target.style.display = 'none';
           }}
@@ -52,7 +61,7 @@ const Hero = () => {
       <style>{`
         .hero-section {
           min-height: 100vh;
-          background-color: #000000;
+          background-color: var(--bg-primary);
           position: relative;
           overflow: hidden;
           display: flex;
@@ -76,6 +85,17 @@ const Hero = () => {
           object-position: right center;
         }
 
+        .hero-bg-img.img-light {
+          display: none;
+        }
+
+        body.light-theme .hero-bg-img.img-dark {
+          display: none;
+        }
+        body.light-theme .hero-bg-img.img-light {
+          display: block;
+        }
+
         .hero-bg-overlay {
           display: none;
           position: absolute;
@@ -83,7 +103,7 @@ const Hero = () => {
           left: 0;
           width: 100%;
           height: 100%;
-          background: linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%);
+          background: linear-gradient(90deg, var(--bg-primary) 0%, transparent 100%);
         }
 
         .hero-content {
@@ -103,8 +123,8 @@ const Hero = () => {
         .hero-title {
           font-family: var(--font-heading);
           font-size: 6.5rem;
-          color: #E6E6E6;
-          text-shadow: 0 0 10px rgba(255,255,255,0.2), 3px 3px 0 #000000;
+          color: var(--text-primary);
+          text-shadow: 0 0 10px var(--bg-primary), 3px 3px 0 var(--border-color);
           margin-bottom: 0;
           line-height: 0.9;
         }
@@ -118,12 +138,12 @@ const Hero = () => {
           margin-top: 1rem;
           margin-bottom: 1.5rem;
           font-weight: 600;
-          text-shadow: 1px 1px 0 #000000;
+          text-shadow: 1px 1px 0 var(--bg-primary);
         }
 
         .hero-divider {
           height: 1px;
-          background: linear-gradient(90deg, rgba(0,123,255,1) 0%, rgba(0,0,0,0) 100%);
+          background: linear-gradient(90deg, var(--secondary-blue) 0%, transparent 100%);
           width: 80%;
           margin-bottom: 1.5rem;
         }
@@ -131,11 +151,11 @@ const Hero = () => {
         .hero-description {
           font-family: var(--font-body);
           font-size: 0.9rem;
-          color: #FFFFFF;
+          color: var(--text-primary);
           letter-spacing: 2px;
           text-transform: uppercase;
           font-weight: 400;
-          text-shadow: 1px 1px 0 #000000;
+          text-shadow: 1px 1px 0 var(--bg-primary);
         }
 
         .hero-bottom-lockup {
@@ -148,28 +168,28 @@ const Hero = () => {
         .hero-logo-box {
           width: 40px;
           height: 40px;
-          border: 2px solid rgba(255,255,255,0.3);
+          border: 2px solid var(--border-color);
           display: flex;
           align-items: center;
           justify-content: center;
           border-radius: 4px;
-          background-color: rgba(0,0,0,0.3);
+          background-color: var(--pattern-color);
           flex-shrink: 0;
         }
 
         .hero-logo-box span {
           font-family: var(--font-heading);
-          color: rgba(255,255,255,0.8);
+          color: var(--text-secondary);
           font-size: 1.5rem;
         }
 
         .hero-bottom-text {
           font-family: var(--font-body);
           font-size: 0.8rem;
-          color: rgba(255,255,255,0.8);
+          color: var(--text-secondary);
           letter-spacing: 2px;
           text-transform: uppercase;
-          text-shadow: 1px 1px 0 #000000;
+          text-shadow: 1px 1px 0 var(--bg-primary);
         }
 
         /* Responsive Viewports */
@@ -188,7 +208,7 @@ const Hero = () => {
           }
           .hero-bg-overlay {
             display: block;
-            background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 70%, rgba(0,0,0,1) 100%);
+            background: linear-gradient(180deg, transparent 0%, var(--bg-primary) 100%);
           }
           .hero-bg-img {
             object-position: top right;
@@ -224,7 +244,7 @@ const Hero = () => {
           }
           .hero-title {
             font-size: 3rem;
-            text-shadow: 0 0 10px rgba(255,255,255,0.2), 2px 2px 0 #000000;
+            text-shadow: 0 0 10px var(--bg-primary), 2px 2px 0 var(--border-color);
           }
           .hero-subtitle {
             font-size: 0.9rem;

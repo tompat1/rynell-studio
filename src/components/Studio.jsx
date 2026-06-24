@@ -3,7 +3,7 @@ import studioPortrait from '../assets/studio_portrait.jpg';
 
 const Studio = () => {
   return (
-    <section id="studio" className="section-container">
+    <section id="studio" className="section-container bg-halftone">
       <div className="content-wrapper studio-split">
         <div className="studio-text">
           <h2 className="section-title">THE STUDIO</h2>
@@ -18,9 +18,9 @@ const Studio = () => {
       </div>
       <style>{`
         #studio {
-          background-color: #020813;
+          background-color: var(--bg-secondary);
           padding: 8rem 5%;
-          border-top: 1px solid rgba(255,255,255,0.05);
+          border-top: 1px solid var(--border-color);
         }
         .studio-split {
           display: flex;
@@ -35,7 +35,7 @@ const Studio = () => {
         .studio-manifesto {
           font-family: var(--font-body);
           font-size: 1.5rem;
-          color: rgba(255, 255, 255, 0.8);
+          color: var(--text-secondary);
           line-height: 1.6;
           font-weight: 300;
           border-left: 4px solid var(--primary-orange);
@@ -62,7 +62,7 @@ const Studio = () => {
           font-family: monospace;
           color: #0078FF;
           font-size: 1.2rem;
-          background: rgba(2, 8, 19, 0.8);
+          background: var(--bg-primary);
           padding: 4px 8px;
         }
         @media (max-width: 1024px) {

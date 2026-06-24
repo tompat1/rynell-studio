@@ -32,7 +32,7 @@ const Journal = () => {
   const [activeArticle, setActiveArticle] = useState(null);
 
   return (
-    <section id="journal" className="section-container">
+    <section id="journal" className="section-container bg-grunge">
       <div className="content-wrapper">
         <div className="journal-header">
           <h2 className="section-title">LATEST DISPATCHES</h2>
@@ -89,9 +89,9 @@ const Journal = () => {
 
       <style>{`
         #journal {
-          background-color: #020813;
+          background-color: var(--bg-primary);
           padding: 8rem 5%;
-          border-top: 1px solid rgba(255,255,255,0.05);
+          border-top: 1px solid var(--border-color);
         }
         .journal-header {
           display: flex;
@@ -102,15 +102,15 @@ const Journal = () => {
         .journal-header .section-title {
           font-family: var(--font-heading);
           font-size: 6rem;
-          color: #FFF;
+          color: var(--text-primary);
           margin: 0;
-          text-shadow: 4px 4px 0 #000;
+          text-shadow: 4px 4px 0 var(--border-color);
           transform: skewX(-10deg);
         }
         .view-all-btn {
           background: transparent;
-          color: #FFF;
-          border: 2px solid var(--primary-orange);
+          color: var(--text-primary);
+          border: 2px solid var(--secondary-blue);
           padding: 0.8rem 2rem;
           font-family: var(--font-body);
           font-weight: bold;
@@ -119,7 +119,8 @@ const Journal = () => {
           transition: all 0.3s ease;
         }
         .view-all-btn:hover {
-          background: var(--primary-orange);
+          background: var(--secondary-blue);
+          color: #FFF;
         }
         .journal-list {
           display: flex;
@@ -130,16 +131,16 @@ const Journal = () => {
           justify-content: space-between;
           align-items: center;
           padding: 2.5rem 0;
-          border-top: 1px solid rgba(255,255,255,0.1);
+          border-top: 1px solid var(--border-color);
           cursor: pointer;
           transition: all 0.3s ease;
         }
         .journal-item:last-child {
-          border-bottom: 1px solid rgba(255,255,255,0.1);
+          border-bottom: 1px solid var(--border-color);
         }
         @media (hover: hover) {
           .journal-item:hover {
-            background: rgba(255,255,255,0.02);
+            background: var(--bg-secondary);
             padding-left: 2rem;
             padding-right: 2rem;
           }
@@ -147,13 +148,13 @@ const Journal = () => {
         .journal-title {
           font-family: var(--font-heading);
           font-size: 3.5rem;
-          color: #FFF;
+          color: var(--text-primary);
           margin: 0;
           transform: skewX(-5deg);
           transition: color 0.3s ease;
         }
         .journal-item:hover .journal-title {
-          color: #0078FF;
+          color: var(--secondary-blue);
         }
         .journal-meta {
           display: flex;
@@ -162,7 +163,7 @@ const Journal = () => {
         }
         .journal-date {
           font-family: var(--font-body);
-          color: rgba(255,255,255,0.5);
+          color: var(--text-secondary);
           letter-spacing: 2px;
         }
         .journal-arrow {
@@ -201,13 +202,13 @@ const Journal = () => {
           width: 100%;
           max-width: 550px;
           height: 100vh;
-          background-color: #051024;
+          background-color: var(--bg-tertiary);
           z-index: 2001;
           transform: translateX(100%);
           transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
           box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
           overflow-y: auto;
-          border-left: 2px solid var(--primary-orange);
+          border-left: 2px solid var(--border-color);
         }
 
         .journal-drawer.open {
@@ -220,7 +221,7 @@ const Journal = () => {
           right: 20px;
           background: rgba(0, 0, 0, 0.5);
           border: 1px solid rgba(255,255,255,0.2);
-          color: #FFF;
+          color: var(--text-primary);
           width: 40px;
           height: 40px;
           border-radius: 50%;
@@ -233,9 +234,10 @@ const Journal = () => {
         }
 
         .journal-close:hover {
-          background: var(--primary-orange);
-          border-color: var(--primary-orange);
+          background: var(--secondary-blue);
+          border-color: var(--secondary-blue);
           transform: rotate(90deg);
+          color: #FFF;
         }
 
         .journal-drawer-content {
@@ -246,7 +248,7 @@ const Journal = () => {
         .journal-drawer-image {
           width: 100%;
           height: 350px;
-          background: #020813;
+          background: var(--bg-primary);
         }
 
         .journal-drawer-image img {
@@ -257,7 +259,7 @@ const Journal = () => {
 
         .journal-drawer-text {
           padding: 3rem 2.5rem;
-          color: #FFF;
+          color: var(--text-primary);
         }
 
         .drawer-date {
@@ -275,15 +277,15 @@ const Journal = () => {
           font-size: 3.5rem;
           line-height: 0.9;
           margin: 0 0 1.5rem 0;
-          color: #FFF;
-          text-shadow: 2px 2px 0 #000;
+          color: var(--text-primary);
+          text-shadow: 2px 2px 0 var(--border-color);
           transform: skewX(-5deg);
         }
 
         .drawer-divider {
           width: 60px;
           height: 4px;
-          background-color: #0078FF;
+          background-color: var(--secondary-blue);
           margin-bottom: 2rem;
         }
 
@@ -291,7 +293,7 @@ const Journal = () => {
           font-family: var(--font-body);
           font-size: 1.15rem;
           line-height: 1.8;
-          color: rgba(255, 255, 255, 0.85);
+          color: var(--text-secondary);
           font-weight: 300;
         }
 

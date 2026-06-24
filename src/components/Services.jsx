@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import servicesBg from '../assets/design_that_hits_clean.webp';
+import servicesBgDark from '../assets/design_that_hits_clean.webp';
+import servicesBgLight from '../assets/design_that_hits_clean_light.webp';
 
 const Services = () => {
   const [activeService, setActiveService] = useState(null);
@@ -70,9 +71,17 @@ const Services = () => {
       {/* Explosive Pop-Art Background Image */}
       <div className="services-bg-container">
         <img 
-          src={servicesBg} 
+          src={servicesBgDark} 
           alt="Explosive Pop-Art Background" 
-          className="services-bg-img"
+          className="services-bg-img img-dark"
+          onError={(e) => {
+            e.target.style.display = 'none';
+          }}
+        />
+        <img 
+          src={servicesBgLight} 
+          alt="Explosive Pop-Art Background Light" 
+          className="services-bg-img img-light"
           onError={(e) => {
             e.target.style.display = 'none';
           }}
@@ -95,7 +104,7 @@ const Services = () => {
                 THAT
               </span>
               <div className="hits-container">
-                <span className="hits-text">
+                <span className="hits-text" style={{ color: 'var(--text-primary)' }}>
                   HITS
                 </span>
                 {/* Marker Brush Underline */}
@@ -108,7 +117,7 @@ const Services = () => {
 
           <div className="paragraph-container">
             <p className="paragraph-text">
-              <strong style={{ fontWeight: 600, color: '#FFFFFF' }}>Bold identity, campaign visuals</strong><br/>
+              <strong style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Bold identity, campaign visuals</strong><br/>
               and AI-powered assets &mdash;<br/>
               built with <strong style={{ fontWeight: 600, color: 'var(--primary-orange)' }}>human taste.</strong>
             </p>
@@ -171,7 +180,7 @@ const Services = () => {
       <style>{`
         .services-section {
           min-height: 100vh;
-          background-color: #0A1E3F;
+          background-color: var(--bg-primary);
           position: relative;
           overflow: hidden;
           display: flex;
@@ -195,13 +204,24 @@ const Services = () => {
           object-position: center center;
         }
 
+        .services-bg-img.img-light {
+          display: none;
+        }
+
+        body.light-theme .services-bg-img.img-dark {
+          display: none;
+        }
+        body.light-theme .services-bg-img.img-light {
+          display: block;
+        }
+
         .services-overlay {
           position: absolute;
           top: 0; 
           left: 0; 
           width: 100%; 
           height: 100%;
-          background: linear-gradient(90deg, rgba(10,30,63,0.9) 0%, rgba(10,30,63,0.3) 50%, rgba(10,30,63,0) 100%);
+          background: linear-gradient(90deg, var(--bg-primary) 0%, transparent 100%);
         }
 
         .services-content-wrapper {
@@ -230,11 +250,11 @@ const Services = () => {
         .design-text {
           font-family: var(--font-heading);
           font-size: 11rem;
-          color: #FFFFFF;
+          color: var(--text-primary);
           line-height: 0.75;
           letter-spacing: 2px;
           margin: 0;
-          text-shadow: 5px 5px 0 #000;
+          text-shadow: 5px 5px 0 var(--border-color);
           transform: skewX(-15deg);
           display: inline-block;
         }
@@ -249,9 +269,9 @@ const Services = () => {
         .that-text {
           font-family: var(--font-heading);
           font-size: 4.5rem;
-          color: #FFFFFF;
+          color: var(--text-primary);
           line-height: 1;
-          text-shadow: 3px 3px 0 #000;
+          text-shadow: 3px 3px 0 var(--border-color);
           transform: skewX(-15deg);
           margin-top: 0.5rem;
         }
@@ -266,7 +286,7 @@ const Services = () => {
           font-size: 7rem;
           color: var(--primary-orange);
           line-height: 0.6;
-          text-shadow: 3px 3px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 6px 6px 0 #000;
+          text-shadow: 3px 3px 0 var(--border-color), -2px -2px 0 var(--border-color), 2px -2px 0 var(--border-color), -2px 2px 0 var(--border-color), 6px 6px 0 var(--border-color);
           position: relative;
           transform: rotate(-5deg);
           display: inline-block;
@@ -281,11 +301,11 @@ const Services = () => {
           left: -10%;
           transform: rotate(-4deg);
           z-index: 1;
-          filter: drop-shadow(3px 3px 0px #000);
+          filter: drop-shadow(3px 3px 0px var(--border-color));
         }
 
         .paragraph-container {
-          border-left: 4px solid #0078FF;
+          border-left: 4px solid var(--secondary-blue);
           padding-left: 1.5rem;
           margin-bottom: 4rem;
         }
@@ -293,10 +313,10 @@ const Services = () => {
         .paragraph-text {
           font-family: var(--font-body);
           font-size: 1.1rem;
-          color: #E6E6E6;
+          color: var(--text-secondary);
           line-height: 1.6;
           font-weight: 300;
-          text-shadow: 1px 1px 0 rgba(0,0,0,0.8);
+          text-shadow: 1px 1px 0 var(--bg-primary);
         }
 
         .services-icons {
@@ -322,12 +342,12 @@ const Services = () => {
           width: 60px;
           height: 60px;
           border-radius: 50%;
-          border: 1.5px solid #0078FF;
+          border: 1.5px solid var(--secondary-blue);
           display: flex;
           align-items: center;
           justify-content: center;
           background-color: transparent;
-          color: #FFFFFF;
+          color: var(--text-primary);
           transition: all 0.3s ease;
           flex-shrink: 0;
         }
@@ -340,7 +360,7 @@ const Services = () => {
         .icon-label {
           font-family: var(--font-body);
           font-size: 0.65rem;
-          color: #FFFFFF;
+          color: var(--text-primary);
           font-weight: 700;
           letter-spacing: 1px;
           text-transform: uppercase;
@@ -348,7 +368,7 @@ const Services = () => {
         }
 
         .icon-item:hover .icon-label {
-          color: #0078FF;
+          color: var(--secondary-blue);
         }
 
         /* Drawer Styles */
@@ -378,13 +398,13 @@ const Services = () => {
           width: 100%;
           max-width: 450px;
           height: 100vh;
-          background-color: #051024;
+          background-color: var(--bg-tertiary);
           z-index: 2001;
           transform: translateX(100%);
           transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
           box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
           overflow-y: auto;
-          border-left: 1px solid rgba(255, 255, 255, 0.05);
+          border-left: 1px solid var(--border-color);
         }
 
         .service-drawer.open {
@@ -397,7 +417,7 @@ const Services = () => {
           right: 20px;
           background: rgba(0, 0, 0, 0.5);
           border: 1px solid rgba(255,255,255,0.2);
-          color: #FFF;
+          color: var(--text-primary);
           width: 40px;
           height: 40px;
           border-radius: 50%;
@@ -410,8 +430,8 @@ const Services = () => {
         }
 
         .drawer-close:hover {
-          background: #0078FF;
-          border-color: #0078FF;
+          background: var(--secondary-blue);
+          border-color: var(--secondary-blue);
           transform: rotate(90deg);
         }
 
@@ -423,7 +443,7 @@ const Services = () => {
         .drawer-image-placeholder {
           width: 100%;
           height: 300px;
-          background: linear-gradient(135deg, #0A1E3F 0%, #020813 100%);
+          background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--bg-primary) 100%);
           position: relative;
           overflow: hidden;
         }
@@ -437,11 +457,11 @@ const Services = () => {
 
         .drawer-text-content {
           padding: 3rem 2rem;
-          color: #FFF;
+          color: var(--text-primary);
         }
 
         .drawer-icon {
-          color: #0078FF;
+          color: var(--secondary-blue);
           margin-bottom: 1.5rem;
         }
 
@@ -455,8 +475,8 @@ const Services = () => {
           font-size: 3.5rem;
           line-height: 0.9;
           margin: 0 0 1rem 0;
-          color: #FFF;
-          text-shadow: 2px 2px 0 #000;
+          color: var(--text-primary);
+          text-shadow: 2px 2px 0 var(--border-color);
           transform: skewX(-10deg);
         }
 
@@ -471,7 +491,7 @@ const Services = () => {
           font-family: var(--font-body);
           font-size: 1.1rem;
           line-height: 1.8;
-          color: rgba(255, 255, 255, 0.8);
+          color: var(--text-secondary);
           font-weight: 300;
         }
 
@@ -490,7 +510,7 @@ const Services = () => {
             align-items: flex-end;
           }
           .services-overlay {
-            background: linear-gradient(180deg, rgba(10,30,63,0) 0%, rgba(10,30,63,0.8) 50%, rgba(10,30,63,1) 100%);
+            background: linear-gradient(180deg, transparent 0%, var(--bg-primary) 100%);
           }
           .services-bg-img {
             object-position: right top;

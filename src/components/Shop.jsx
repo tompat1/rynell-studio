@@ -69,7 +69,7 @@ const ShopItem = ({ item, addToCart }) => {
 
 const Shop = ({ addToCart }) => {
   return (
-    <section id="shop" className="section-container">
+    <section id="shop" className="section-container bg-grunge">
       <div className="content-wrapper">
         <div className="shop-header">
           <h2 className="section-title">LATEST DROPS</h2>
@@ -84,7 +84,7 @@ const Shop = ({ addToCart }) => {
       </div>
       <style>{`
         #shop {
-          background-color: #0A1E3F;
+          background-color: var(--bg-primary);
           padding: 8rem 5%;
         }
         .shop-header {
@@ -96,15 +96,15 @@ const Shop = ({ addToCart }) => {
         .section-title {
           font-family: var(--font-heading);
           font-size: 6rem;
-          color: #FFF;
+          color: var(--text-primary);
           margin: 0;
-          text-shadow: 4px 4px 0 #000;
+          text-shadow: 4px 4px 0 var(--border-color);
           transform: skewX(-10deg);
         }
         .view-all-btn {
           background: transparent;
-          color: #FFF;
-          border: 2px solid #0078FF;
+          color: var(--text-primary);
+          border: 2px solid var(--secondary-blue);
           padding: 0.8rem 2rem;
           font-family: var(--font-body);
           font-weight: bold;
@@ -113,7 +113,7 @@ const Shop = ({ addToCart }) => {
           transition: all 0.3s ease;
         }
         .view-all-btn:hover {
-          background: #0078FF;
+          background: var(--secondary-blue);
           color: #FFF;
         }
         .shop-grid {
@@ -129,8 +129,8 @@ const Shop = ({ addToCart }) => {
         .shop-image-container {
           position: relative;
           aspect-ratio: 1;
-          background: #020813;
-          border: 1px solid rgba(255,255,255,0.05);
+          background: var(--bg-secondary);
+          border: 1px solid var(--border-color);
           overflow: hidden;
         }
         .shop-product-img {
@@ -149,11 +149,11 @@ const Shop = ({ addToCart }) => {
           bottom: 0;
           left: 0;
           width: 100%;
-          background: rgba(2, 8, 19, 0.95);
+          background: var(--bg-card);
           backdrop-filter: blur(8px);
           transform: translateY(100%);
           transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-          border-top: 1px solid rgba(0, 120, 255, 0.5);
+          border-top: 1px solid var(--secondary-blue);
           padding: 1.5rem;
           display: flex;
           flex-direction: column;
@@ -166,7 +166,7 @@ const Shop = ({ addToCart }) => {
         .item-details {
           font-family: var(--font-body);
           font-size: 0.85rem;
-          color: rgba(255,255,255,0.7);
+          color: var(--text-secondary);
           margin: 0 0 1rem 0;
           line-height: 1.4;
         }
@@ -183,8 +183,8 @@ const Shop = ({ addToCart }) => {
 
         .size-btn {
           background: transparent;
-          border: 1px solid rgba(255,255,255,0.2);
-          color: #FFF;
+          border: 1px solid var(--border-color);
+          color: var(--text-primary);
           font-family: var(--font-body);
           font-size: 0.85rem;
           padding: 0.4rem 0.8rem;
@@ -193,12 +193,13 @@ const Shop = ({ addToCart }) => {
         }
 
         .size-btn:hover {
-          border-color: rgba(255,255,255,0.5);
+          border-color: var(--text-secondary);
         }
 
         .size-btn.active {
-          background: #0078FF;
-          border-color: #0078FF;
+          background: var(--secondary-blue);
+          border-color: var(--secondary-blue);
+          color: #FFF;
           font-weight: bold;
         }
 
@@ -222,7 +223,7 @@ const Shop = ({ addToCart }) => {
         .shop-item-details h3 {
           font-family: var(--font-heading);
           font-size: 1.5rem;
-          color: #FFF;
+          color: var(--text-primary);
           margin: 0 0 0.5rem 0;
           letter-spacing: 1px;
         }
@@ -240,6 +241,17 @@ const Shop = ({ addToCart }) => {
             gap: 2rem;
           }
           .section-title { font-size: 4rem; }
+          
+          .shop-image-container {
+            aspect-ratio: auto;
+            height: auto;
+          }
+          
+          .shop-product-img {
+            aspect-ratio: 1;
+            height: auto;
+          }
+
           .quick-add-overlay {
             transform: translateY(0); /* Always visible on mobile */
             position: static;

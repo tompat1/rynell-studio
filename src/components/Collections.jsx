@@ -15,7 +15,7 @@ const campaignData = [
 
 const Collections = () => {
   return (
-    <section id="collections" className="section-container">
+    <section id="collections" className="section-container bg-grunge">
       <div className="collections-header">
         <h2 className="section-title">COLLECTIONS</h2>
       </div>
@@ -34,7 +34,7 @@ const Collections = () => {
       </div>
       <style>{`
         #collections {
-          background-color: #051024;
+          background-color: var(--bg-tertiary);
           padding: 8rem 0 8rem 5%;
           overflow: hidden;
         }
@@ -58,15 +58,16 @@ const Collections = () => {
           min-width: 600px;
           height: 700px;
           position: relative;
-          background: #020813;
+          background: var(--bg-secondary);
           flex-shrink: 0;
           overflow: hidden;
           cursor: pointer;
+          border: 1px solid var(--border-color);
         }
         .collection-image {
           width: 100%;
           height: 100%;
-          background: #0A1E3F;
+          background: var(--bg-primary);
           transition: transform 0.5s ease;
         }
         .collection-img {

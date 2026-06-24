@@ -2,7 +2,7 @@ import React from 'react';
 
 const About = () => {
   return (
-    <section id="about" className="section-container">
+    <section id="about" className="section-container bg-halftone">
       <div className="about-content">
         <h2 className="about-manifesto">
           WE DON'T FOLLOW TRENDS.<br/>
@@ -18,7 +18,7 @@ const About = () => {
       </div>
       <style>{`
         #about {
-          background-color: #020813;
+          background-color: var(--bg-secondary);
           padding: 10rem 5%;
           display: flex;
           align-items: center;
@@ -31,10 +31,10 @@ const About = () => {
         .about-manifesto {
           font-family: var(--font-heading);
           font-size: 8rem;
-          color: #FFF;
+          color: var(--text-primary);
           line-height: 0.85;
           margin: 0 0 3rem 0;
-          text-shadow: 4px 4px 0 #000;
+          text-shadow: 4px 4px 0 var(--border-color);
           transform: skewX(-10deg);
         }
         .highlight {
@@ -43,7 +43,7 @@ const About = () => {
         .about-description {
           font-family: var(--font-body);
           font-size: 1.5rem;
-          color: rgba(255, 255, 255, 0.8);
+          color: var(--text-secondary);
           line-height: 1.6;
           font-weight: 300;
           max-width: 800px;

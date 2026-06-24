@@ -94,14 +94,14 @@ const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart }) => {
           width: 100%;
           max-width: 450px;
           height: 100vh;
-          background-color: #020813;
+          background-color: var(--bg-secondary);
           z-index: 2001;
           transform: translateX(100%);
           transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
           box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
           display: flex;
           flex-direction: column;
-          border-left: 1px solid rgba(0, 120, 255, 0.3);
+          border-left: 1px solid var(--secondary-blue);
         }
 
         .cart-drawer.open {
@@ -113,13 +113,13 @@ const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart }) => {
           justify-content: space-between;
           align-items: center;
           padding: 2rem;
-          border-bottom: 1px solid rgba(255,255,255,0.1);
+          border-bottom: 1px solid var(--border-color);
         }
 
         .cart-header h2 {
           font-family: var(--font-heading);
           font-size: 2.5rem;
-          color: #FFF;
+          color: var(--text-primary);
           margin: 0;
           transform: skewX(-10deg);
         }
@@ -127,7 +127,7 @@ const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart }) => {
         .cart-close {
           background: transparent;
           border: none;
-          color: #FFF;
+          color: var(--text-primary);
           cursor: pointer;
           transition: color 0.3s ease, transform 0.3s ease;
         }
@@ -149,15 +149,15 @@ const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart }) => {
           align-items: center;
           justify-content: center;
           height: 100%;
-          color: rgba(255,255,255,0.5);
+          color: var(--text-secondary);
           font-family: var(--font-body);
         }
 
         .continue-shopping {
           margin-top: 1.5rem;
           background: transparent;
-          color: #0078FF;
-          border: 1px solid #0078FF;
+          color: var(--secondary-blue);
+          border: 1px solid var(--secondary-blue);
           padding: 0.8rem 1.5rem;
           font-family: var(--font-body);
           font-weight: bold;
@@ -167,7 +167,7 @@ const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart }) => {
         }
 
         .continue-shopping:hover {
-          background: #0078FF;
+          background: var(--secondary-blue);
           color: #FFF;
         }
 
@@ -182,14 +182,14 @@ const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart }) => {
           gap: 1.5rem;
           align-items: center;
           padding-bottom: 1.5rem;
-          border-bottom: 1px solid rgba(255,255,255,0.05);
+          border-bottom: 1px solid var(--border-color);
         }
 
         .cart-item-image {
           width: 80px;
           height: 80px;
-          background: #0A1E3F;
-          border: 1px solid rgba(255,255,255,0.1);
+          background: var(--bg-primary);
+          border: 1px solid var(--border-color);
           flex-shrink: 0;
         }
 
@@ -209,7 +209,7 @@ const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart }) => {
         .cart-item-details h4 {
           font-family: var(--font-heading);
           font-size: 1.5rem;
-          color: #FFF;
+          color: var(--text-primary);
           margin: 0;
           line-height: 1;
         }
@@ -217,7 +217,7 @@ const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart }) => {
         .cart-item-size {
           font-family: var(--font-body);
           font-size: 0.8rem;
-          color: rgba(255,255,255,0.6);
+          color: var(--text-secondary);
           margin: 0;
         }
 
@@ -232,7 +232,7 @@ const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart }) => {
         .remove-item {
           background: transparent;
           border: none;
-          color: rgba(255,255,255,0.3);
+          color: var(--text-secondary);
           cursor: pointer;
           transition: color 0.3s ease;
           padding: 0.5rem;
@@ -244,8 +244,8 @@ const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart }) => {
 
         .cart-footer {
           padding: 2rem;
-          background: #0A1E3F;
-          border-top: 2px solid #0078FF;
+          background: var(--bg-tertiary);
+          border-top: 2px solid var(--secondary-blue);
         }
 
         .cart-subtotal {
@@ -254,7 +254,7 @@ const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart }) => {
           font-family: var(--font-body);
           font-weight: bold;
           font-size: 1.2rem;
-          color: #FFF;
+          color: var(--text-primary);
           margin-bottom: 1.5rem;
         }
 

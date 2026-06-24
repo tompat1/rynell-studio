@@ -12,6 +12,27 @@
   /* Typography */
   --font-heading: 'Bebas Neue', sans-serif;
   --font-body: 'Poppins', sans-serif;
+
+  /* Theme Variables - Dark (Default) */
+  --bg-primary: #000000;
+  --bg-secondary: #020813;
+  --bg-tertiary: #0A1E3F;
+  --bg-card: #051024;
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(255, 255, 255, 0.8);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --pattern-color: rgba(255, 255, 255, 0.15);
+}
+
+.light-theme {
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F5F5F5;
+  --bg-tertiary: #E6E6E6;
+  --bg-card: #FFFFFF;
+  --text-primary: #000000;
+  --text-secondary: #333333;
+  --border-color: rgba(0, 0, 0, 0.15);
+  --pattern-color: rgba(0, 0, 0, 0.15);
 }
 
 * {
@@ -22,8 +43,8 @@
 
 body {
   font-family: var(--font-body);
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   line-height: 1.6;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -128,9 +149,22 @@ a {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background-image: radial-gradient(var(--dark-gray) 1px, transparent 1px);
+  background-image: radial-gradient(var(--pattern-color) 1px, transparent 1px);
   background-size: 8px 8px;
-  opacity: 0.1;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Grunge/Noise Pattern Background */
+.bg-grunge {
+  position: relative;
+}
+
+.bg-grunge::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.3'/%3E%3C/svg%3E");
   z-index: 0;
   pointer-events: none;
 }
