@@ -44,7 +44,7 @@ const Hero = () => {
           <div className="hero-bottom-lockup">
             <img src={boltSvg} alt="Bolt Accent" className="hero-bolt-icon" />
             <p className="hero-bottom-text">
-              Creative Strategy. Bold Execution.
+              Creative Strategy.<br />Bold Execution.
             </p>
           </div>
         </div>
@@ -158,21 +158,24 @@ const Hero = () => {
         }
 
         .hero-bolt-icon {
-    width: 30%;
-    height: auto;
-    filter: drop-shadow(4px 4px rgba(0, 0, 0, 0.1));
-    flex-shrink: 0;
-}
+          width: 20%;
+          height: auto;
+          filter: drop-shadow(4px 4px rgba(0, 0, 0, 0.1));
+          flex-shrink: 0;
+        }
 
 
 
         .hero-bottom-text {
           font-family: var(--font-body);
-          font-size: 0.8rem;
+          font-size: 2rem;
           color: var(--text-secondary);
           letter-spacing: 2px;
           text-transform: uppercase;
           text-shadow: 1px 1px 0 var(--bg-primary);
+          border-left: 4px solid var(--primary-orange);
+          padding-left: 1.5rem;
+          line-height: 1.2;
         }
 
         /* Responsive Viewports */
@@ -211,6 +214,10 @@ const Hero = () => {
           .hero-bottom-lockup {
             margin-top: 3rem;
           }
+          .hero-bottom-text {
+            font-size: 1.2rem;
+            padding-left: 1rem;
+          }
         }
 
         @media (max-width: 480px) {
@@ -246,7 +253,12 @@ const Hero = () => {
             margin-top: 2.5rem;
             flex-direction: column;
             align-items: flex-start;
-            gap: 0.8rem;
+            gap: 1rem;
+          }
+          .hero-bottom-text {
+            font-size: 1rem;
+            border-left: 3px solid var(--primary-orange);
+            padding-left: 0.8rem;
           }
         }
       `}</style>
