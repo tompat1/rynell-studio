@@ -137,10 +137,12 @@ const Journal = () => {
         .journal-item:last-child {
           border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-        .journal-item:hover {
-          background: rgba(255,255,255,0.02);
-          padding-left: 2rem;
-          padding-right: 2rem;
+        @media (hover: hover) {
+          .journal-item:hover {
+            background: rgba(255,255,255,0.02);
+            padding-left: 2rem;
+            padding-right: 2rem;
+          }
         }
         .journal-title {
           font-family: var(--font-heading);
