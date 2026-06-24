@@ -39,6 +39,7 @@ const About = () => {
           align-items: center;
           gap: 8rem;
           border-top: 4px solid var(--text-primary);
+          border-bottom: 4px solid var(--text-primary);
         }
         
         /* Manifesto Styles */
