@@ -215,8 +215,8 @@ const Ads = () => {
         }
         @media (max-width: 768px) {
           .ads-header .section-title { font-size: 4rem; }
-          .ad-card { min-width: 85vw; height: 500px; }
-          .ad-overlay h3 { font-size: 3rem; }
+          .ad-card { min-width: 300px; height: 400px; }
+          .ad-overlay h3 { font-size: 2.2rem; }
         }
       `}</style>
     </section>

@@ -1,12 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import boltSvg from '../assets/lightning_bolt_sticker_vector.svg';
 
+// Images for Mobile Menu
+import adImg from '../assets/campaigns/campaign_02.jpg';
+import collImg from '../assets/collection/collection_02.webp';
+import shopImg from '../assets/merch/hoodie_merch_blackout_07.webp';
+import aboutImg from '../assets/studio_portrait.jpg';
+import journalImg from '../assets/journal/neon_nights.png';
+
 const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navLinks = [
-    'ADS', 'COLLECTIONS', 'SHOP', 'ABOUT', 'JOURNAL'
+  const navItems = [
+    { name: 'ADS', image: adImg },
+    { name: 'COLLECTIONS', image: collImg },
+    { name: 'SHOP', image: shopImg },
+    { name: 'ABOUT', image: aboutImg },
+    { name: 'JOURNAL', image: journalImg }
   ];
 
   useEffect(() => {
@@ -36,9 +47,9 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
 
           {/* Desktop Links */}
           <div className="navbar-links-desktop">
-            {navLinks.map((link) => (
-              <a key={link} href={`#${link.toLowerCase()}`} className="nav-link">
-                {link}
+            {navItems.map((item) => (
+              <a key={item.name} href={`#${item.name.toLowerCase()}`} className="nav-link">
+                {item.name}
               </a>
             ))}
           </div>
@@ -129,18 +140,32 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
             </svg>
           </button>
         </div>
+        
         <div className="mobile-menu-links">
-          {navLinks.map((link) => (
+          {navItems.map((item) => (
             <a 
-              key={link} 
-              href={`#${link.toLowerCase()}`} 
-              className="mobile-nav-link"
+              key={item.name} 
+              href={`#${item.name.toLowerCase()}`} 
+              className="mobile-nav-link-wrapper"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              {link}
+              <div className="mobile-nav-image-placeholder">
+                <img src={item.image} alt={item.name} />
+              </div>
+              <span className="mobile-nav-link-text">{item.name}</span>
             </a>
           ))}
           <button className="mobile-cta-button">LET'S TALK</button>
+        </div>
+
+        {/* Minified Mobile Footer */}
+        <div className="mobile-menu-footer">
+          <div className="mobile-footer-social">
+            <a href="#instagram">INSTAGRAM</a>
+            <a href="#x">X / TWITTER</a>
+            <a href="#contact">CONTACT</a>
+          </div>
+          <p className="mobile-footer-copy">© {new Date().getFullYear()} RYNELL STUDIO. ALL RIGHTS RESERVED.</p>
         </div>
       </div>
 
@@ -340,6 +365,7 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
           align-items: center;
           padding: 1.5rem 5%;
           border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          flex-shrink: 0;
         }
 
         .mobile-menu-close {
@@ -356,27 +382,59 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 2rem;
-          padding: 2rem;
+          gap: 1.5rem;
+          padding: 2rem 5%;
           overflow-y: auto;
         }
 
-        .mobile-nav-link {
-          font-family: var(--font-heading);
-          font-size: 2.5rem;
-          color: #FFF;
+        .mobile-nav-link-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 1.5rem;
+          width: 100%;
+          max-width: 400px;
           text-decoration: none;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          padding-bottom: 1rem;
+        }
+
+        .mobile-nav-image-placeholder {
+          width: 80px;
+          height: 50px;
+          background: var(--bg-secondary);
+          border: 1px solid var(--border-color);
+          overflow: hidden;
+          flex-shrink: 0;
+          transform: skewX(-5deg);
+        }
+
+        .mobile-nav-image-placeholder img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          filter: grayscale(100%);
+          transition: filter 0.3s ease;
+        }
+
+        .mobile-nav-link-text {
+          font-family: var(--font-heading);
+          font-size: 2.2rem;
+          color: #FFF;
           letter-spacing: 2px;
           transform: skewX(-10deg);
           transition: color 0.3s ease;
         }
 
-        .mobile-nav-link:hover {
+        .mobile-nav-link-wrapper:hover .mobile-nav-link-text {
           color: var(--primary-orange);
         }
 
+        .mobile-nav-link-wrapper:hover .mobile-nav-image-placeholder img {
+          filter: grayscale(0%);
+        }
+
         .mobile-cta-button {
-          margin-top: 2rem;
+          margin-top: 1rem;
           background-color: #0078FF;
           color: #FFF;
           font-family: var(--font-body);
@@ -388,6 +446,48 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
           cursor: pointer;
           transform: skewX(-10deg);
           box-shadow: 4px 4px 0 #000;
+          width: 100%;
+          max-width: 400px;
+        }
+
+        /* Minified Mobile Footer */
+        .mobile-menu-footer {
+          padding: 1.5rem 5%;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1rem;
+          background: rgba(0,0,0,0.2);
+          flex-shrink: 0;
+        }
+
+        .mobile-footer-social {
+          display: flex;
+          gap: 2rem;
+        }
+
+        .mobile-footer-social a {
+          color: #FFF;
+          font-family: var(--font-heading);
+          font-size: 1.2rem;
+          text-decoration: none;
+          transform: skewX(-10deg);
+          transition: color 0.3s ease;
+          letter-spacing: 1px;
+        }
+
+        .mobile-footer-social a:hover {
+          color: var(--primary-orange);
+        }
+
+        .mobile-footer-copy {
+          font-family: var(--font-body);
+          font-size: 0.7rem;
+          color: rgba(255,255,255,0.4);
+          margin: 0;
+          letter-spacing: 1px;
+          text-align: center;
         }
 
         /* Responsive Breakpoints */
@@ -422,6 +522,9 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
           }
           .global-navbar.scrolled {
             padding: 0.75rem 0;
+          }
+          .mobile-nav-link-text {
+            font-size: 1.8rem;
           }
         }
       `}</style>
