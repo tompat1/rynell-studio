@@ -4,6 +4,12 @@ import aiFashionImg from '../assets/journal/ai_fashion.png';
 import neonNightsImg from '../assets/journal/neon_nights.png';
 import typographyImg from '../assets/journal/brutalist_typography.png';
 
+// New images for new articles
+import img4 from '../assets/campaigns/campaign_01.jpg';
+import img5 from '../assets/collection/collection_04.webp';
+import img6 from '../assets/design_that_hits_clean.webp';
+import img7 from '../assets/studio_portrait.jpg';
+
 const journalData = [
   {
     id: 1,
@@ -25,22 +31,51 @@ const journalData = [
     date: 'JUL 04, 2026',
     image: typographyImg,
     content: "Words don't just speak; they hit. We break down our approach to using hyper-scaled, aggressive typography. Discover why breaking the rules of kerning and legibility is sometimes the only way to make a brand truly scream."
+  },
+  {
+    id: 4,
+    title: 'MERCH IS DEAD, LONG LIVE MERCH',
+    date: 'JUN 12, 2026',
+    image: img4,
+    content: "The traditional logo tee is obsolete. We explore the rise of functional, story-driven artifacts and why your next drop needs to feel like a piece of armor, not a billboard."
+  },
+  {
+    id: 5,
+    title: 'THE ARCHITECTURE OF A DROP',
+    date: 'MAY 22, 2026',
+    image: img5,
+    content: "Scarcity isn't just a marketing tactic; it's a structural requirement. A breakdown of the math, aesthetics, and frenzy behind orchestrating a modern, blink-and-you-miss-it release."
+  },
+  {
+    id: 6,
+    title: 'AI AS A CO-CONSPIRATOR',
+    date: 'APR 08, 2026',
+    image: img6,
+    content: "We are no longer just prompting; we are fighting our algorithms. How adversarial creative processes with generative AI yield the most striking, unpredictable visual results."
+  },
+  {
+    id: 7,
+    title: 'WEARABLE BRUTALISM: DESIGNING FOR THE END',
+    date: 'MAR 19, 2026',
+    image: img7,
+    content: "Heavy fabrics, asymmetrical cuts, and distressed finishing. A deep dive into why dystopian aesthetics and survivalist functionality are dominating the current fashion cycle."
   }
 ];
 
 const Journal = () => {
   const [activeArticle, setActiveArticle] = useState(null);
+  const [isArchiveOpen, setIsArchiveOpen] = useState(false);
 
   return (
     <section id="journal" className="section-container bg-grunge">
       <div className="content-wrapper">
         <div className="journal-header">
           <h2 className="section-title">LATEST DISPATCHES</h2>
-          <button className="view-all-btn">ALL ARTICLES</button>
+          <button className="view-all-btn" onClick={() => setIsArchiveOpen(true)}>ALL ARTICLES</button>
         </div>
         
         <div className="journal-list">
-          {journalData.map((article) => (
+          {journalData.slice(0, 3).map((article) => (
             <div key={article.id} className="journal-item" onClick={() => setActiveArticle(article)}>
               <h3 className="journal-title">{article.title}</h3>
               <div className="journal-meta">
@@ -52,14 +87,42 @@ const Journal = () => {
         </div>
       </div>
 
-      {/* Slide-out Drawer Portalled to Body */}
+      {/* Portals for Archive and Article Drawer */}
       {typeof document !== 'undefined' && createPortal(
         <>
+          {/* Full Screen Archive Overlay */}
+          <div className={`journal-archive-overlay ${isArchiveOpen ? 'open' : ''}`}>
+            <div className="archive-header">
+              <h2 className="archive-title">FULL ARCHIVE</h2>
+              <button className="archive-close" onClick={() => setIsArchiveOpen(false)}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            
+            <div className="archive-list">
+              {journalData.map((article) => (
+                <div key={article.id} className="archive-item" onClick={() => setActiveArticle(article)}>
+                  <div className="archive-item-meta">
+                    <span className="archive-number">{String(article.id).padStart(2, '0')}</span>
+                    <span className="archive-date">{article.date}</span>
+                  </div>
+                  <h3 className="archive-item-title">{article.title}</h3>
+                  <div className="archive-item-arrow">→</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Slide-out Drawer Backdrop */}
           <div 
             className={`journal-backdrop ${activeArticle ? 'open' : ''}`}
             onClick={() => setActiveArticle(null)}
           ></div>
 
+          {/* Slide-out Drawer */}
           <div className={`journal-drawer ${activeArticle ? 'open' : ''}`}>
             <button className="journal-close" onClick={() => setActiveArticle(null)}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -175,16 +238,113 @@ const Journal = () => {
           transform: translateX(10px);
         }
 
+        /* Full Screen Archive Styles */
+        .journal-archive-overlay {
+          position: fixed;
+          inset: 0;
+          background-color: var(--bg-primary);
+          z-index: 2000;
+          display: flex;
+          flex-direction: column;
+          transform: translateY(100%);
+          transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+          overflow-y: auto;
+        }
+        .journal-archive-overlay.open {
+          transform: translateY(0);
+        }
+        .archive-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 2rem 5%;
+          border-bottom: 2px solid var(--border-color);
+          position: sticky;
+          top: 0;
+          background: var(--bg-primary);
+          z-index: 10;
+        }
+        .archive-title {
+          font-family: var(--font-heading);
+          font-size: 4rem;
+          color: var(--text-primary);
+          margin: 0;
+          transform: skewX(-10deg);
+        }
+        .archive-close {
+          background: transparent;
+          border: none;
+          color: var(--text-primary);
+          cursor: pointer;
+          transition: color 0.3s ease, transform 0.3s ease;
+        }
+        .archive-close:hover {
+          color: var(--primary-orange);
+          transform: rotate(90deg);
+        }
+        .archive-list {
+          display: flex;
+          flex-direction: column;
+          padding: 0 5% 5rem 5%;
+        }
+        .archive-item {
+          display: grid;
+          grid-template-columns: 200px 1fr auto;
+          align-items: center;
+          padding: 3rem 0;
+          border-bottom: 1px solid var(--border-color);
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        .archive-item:hover {
+          background: var(--bg-secondary);
+          padding-left: 2rem;
+          padding-right: 2rem;
+        }
+        .archive-item-meta {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+        .archive-number {
+          font-family: var(--font-heading);
+          font-size: 2rem;
+          color: var(--primary-orange);
+        }
+        .archive-date {
+          font-family: var(--font-body);
+          font-size: 1rem;
+          color: var(--text-secondary);
+          letter-spacing: 2px;
+        }
+        .archive-item-title {
+          font-family: var(--font-heading);
+          font-size: 4rem;
+          color: var(--text-primary);
+          margin: 0;
+          transform: skewX(-5deg);
+          transition: color 0.3s ease;
+        }
+        .archive-item:hover .archive-item-title {
+          color: var(--secondary-blue);
+        }
+        .archive-item-arrow {
+          font-size: 3rem;
+          color: var(--border-color);
+          transition: all 0.3s ease;
+        }
+        .archive-item:hover .archive-item-arrow {
+          color: var(--primary-orange);
+          transform: translateX(10px);
+        }
+
         /* Drawer Styles */
         .journal-backdrop {
           position: fixed;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          height: 100vh;
+          inset: 0;
           background-color: rgba(0, 0, 0, 0.7);
           backdrop-filter: blur(5px);
-          z-index: 2000;
+          z-index: 2001; /* Above archive */
           opacity: 0;
           pointer-events: none;
           transition: opacity 0.4s ease;
@@ -203,7 +363,7 @@ const Journal = () => {
           max-width: 550px;
           height: 100vh;
           background-color: var(--bg-tertiary);
-          z-index: 2001;
+          z-index: 2002; /* Above backdrop */
           transform: translateX(100%);
           transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
           box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
@@ -308,6 +468,26 @@ const Journal = () => {
           .journal-item { flex-direction: column; align-items: flex-start; gap: 1rem; }
           .journal-meta { width: 100%; justify-content: space-between; }
           .journal-drawer { max-width: 100%; }
+          
+          /* Mobile Archive Styles */
+          .archive-item {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            padding: 2rem 0;
+          }
+          .archive-item-meta {
+            flex-direction: row;
+            align-items: center;
+          }
+          .archive-item-title {
+            font-size: 2.5rem;
+          }
+          .archive-item-arrow {
+            display: none;
+          }
+          .archive-title {
+            font-size: 2.5rem;
+          }
         }
       `}</style>
     </section>
