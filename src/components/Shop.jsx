@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import merch1 from '../assets/merch/bolt_sticker_merch_neutral_01.webp';
 import merch2 from '../assets/merch/cap_merch_tangerine_02.webp';
 import merch3 from '../assets/merch/hoodie_merch_tangerine_03.webp';
@@ -74,6 +75,8 @@ const ShopItem = ({ item, addToCart }) => {
 };
 
 const Shop = ({ addToCart }) => {
+  const [isArchiveOpen, setIsArchiveOpen] = useState(false);
+
   return (
     <section id="shop" className="section-container">
       <div className="content-wrapper">
@@ -82,15 +85,35 @@ const Shop = ({ addToCart }) => {
             <h2 className="section-title">LATEST DROPS</h2>
             <p className="section-description">Physical artifacts of our visual philosophy. Limited run apparel and accessories designed for the modern dystopia.</p>
           </div>
-          <button className="view-all-btn">VIEW ALL MERCH</button>
+          <button className="view-all-btn" onClick={() => setIsArchiveOpen(true)}>VIEW ALL MERCH</button>
         </div>
         
         <div className="shop-grid">
-          {merchData.map((item) => (
+          {merchData.slice(0, 4).map((item) => (
             <ShopItem key={item.id} item={item} addToCart={addToCart} />
           ))}
         </div>
       </div>
+
+      {typeof document !== 'undefined' && createPortal(
+        <div className={`shop-archive-overlay ${isArchiveOpen ? 'open' : ''}`}>
+          <div className="archive-header">
+            <h2 className="archive-title">FULL CATALOG</h2>
+            <button className="archive-close" onClick={() => setIsArchiveOpen(false)}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div className="shop-archive-grid">
+            {merchData.map((item) => (
+              <ShopItem key={`archive-${item.id}`} item={item} addToCart={addToCart} />
+            ))}
+          </div>
+        </div>,
+        document.body
+      )}
       <style>{`
         #shop {
           background-color: var(--bg-shop-color);
@@ -259,6 +282,58 @@ const Shop = ({ addToCart }) => {
           margin: 0;
           font-size: 1.1rem;
         }
+
+        /* Overlay Styles */
+        .shop-archive-overlay {
+          position: fixed;
+          inset: 0;
+          background-color: var(--bg-primary);
+          z-index: 2000;
+          display: flex;
+          flex-direction: column;
+          transform: translateY(100%);
+          transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+          overflow-y: auto;
+        }
+        .shop-archive-overlay.open {
+          transform: translateY(0);
+        }
+        .archive-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 2rem 5%;
+          border-bottom: 2px solid var(--border-color);
+          position: sticky;
+          top: 0;
+          background: var(--bg-primary);
+          z-index: 10;
+        }
+        .archive-title {
+          font-family: var(--font-heading);
+          font-size: 4rem;
+          color: var(--text-primary);
+          margin: 0;
+          transform: skewX(-10deg);
+        }
+        .archive-close {
+          background: transparent;
+          border: none;
+          color: var(--text-primary);
+          cursor: pointer;
+          transition: color 0.3s ease, transform 0.3s ease;
+        }
+        .archive-close:hover {
+          color: var(--primary-orange);
+          transform: rotate(90deg);
+        }
+        .shop-archive-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          gap: 2rem;
+          padding: 4rem 5%;
+        }
+
         @media (max-width: 768px) {
           .shop-header {
             flex-direction: column;
@@ -289,6 +364,9 @@ const Shop = ({ addToCart }) => {
             padding: 1rem 0 0 0;
             background: transparent;
           }
+          
+          .archive-title { font-size: 2.5rem; }
+          .shop-archive-grid { padding: 2rem 5%; }
         }
       `}</style>
     </section>
