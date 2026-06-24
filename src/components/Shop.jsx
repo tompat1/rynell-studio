@@ -75,7 +75,7 @@ const ShopItem = ({ item, addToCart }) => {
 
 const Shop = ({ addToCart }) => {
   return (
-    <section id="shop" className="section-container bg-grunge">
+    <section id="shop" className="section-container">
       <div className="content-wrapper">
         <div className="shop-header">
           <div className="title-group">
@@ -93,8 +93,9 @@ const Shop = ({ addToCart }) => {
       </div>
       <style>{`
         #shop {
-          background-color: var(--bg-primary);
+          background-color: var(--bg-shop-color);
           padding: 8rem 5%;
+          border-top: 4px solid var(--text-primary);
         }
         .shop-header {
           display: flex;

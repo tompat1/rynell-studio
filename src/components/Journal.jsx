@@ -67,7 +67,7 @@ const Journal = () => {
   const [isArchiveOpen, setIsArchiveOpen] = useState(false);
 
   return (
-    <section id="journal" className="section-container bg-grunge">
+    <section id="journal" className="section-container">
       <div className="content-wrapper">
         <div className="journal-header">
           <div className="title-group">
@@ -155,9 +155,11 @@ const Journal = () => {
 
       <style>{`
         #journal {
-          background-color: var(--bg-primary);
+          background-image: var(--bg-journal);
+          background-size: cover;
+          background-position: center;
           padding: 8rem 5%;
-          border-top: 1px solid var(--border-color);
+          border-top: 4px solid var(--text-primary);
         }
         .journal-header {
           display: flex;

@@ -63,7 +63,7 @@ const Collections = () => {
   };
 
   return (
-    <section id="collections" className="section-container bg-halftone">
+    <section id="collections" className="section-container">
       <div className="collections-header">
         <h2 className="section-title">COLLECTIONS</h2>
         <p className="section-description">Curated aesthetic archives. A rotating selection of our latest visual experiments and structural explorations.</p>
@@ -94,9 +94,11 @@ const Collections = () => {
       
       <style>{`
         #collections {
-          background-color: var(--bg-primary);
+          background-image: var(--bg-collections);
+          background-size: cover;
+          background-position: center;
           padding: 8rem 0;
-          border-top: 1px solid var(--border-color);
+          border-top: 4px solid var(--text-primary);
           overflow: hidden;
         }
         .collections-header {

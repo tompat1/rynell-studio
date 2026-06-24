@@ -78,7 +78,7 @@ const Ads = () => {
   };
 
   return (
-    <section id="ads" className="section-container bg-grunge">
+    <section id="ads" className="section-container">
       <div className="ads-header">
         <h2 className="section-title">ADS</h2>
         <p className="section-description">Visual campaigns that break through the noise. Bold imagery, aggressive typography, and uncompromising art direction.</p>
@@ -110,9 +110,11 @@ const Ads = () => {
       </div>
       <style>{`
         #ads {
-          background-color: var(--bg-tertiary);
-          padding: 8rem 0 8rem 0;
-          overflow: hidden;
+          background-image: var(--bg-ads);
+          background-size: cover;
+          background-position: center;
+          padding: 8rem 5%;
+          border-top: 4px solid var(--text-primary);
         }
         .ads-header {
           padding: 0 5%;

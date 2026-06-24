@@ -22,6 +22,14 @@
   --text-secondary: rgba(255, 255, 255, 0.8);
   --border-color: rgba(255, 255, 255, 0.1);
   --pattern-color: rgba(255, 255, 255, 0.15);
+
+  /* Section Backgrounds - Dark Mode */
+  --bg-about: url('/src/assets/section_backgrounds/06_section_bg_dark.webp');
+  --bg-ads: url('/src/assets/section_backgrounds/07_section_bg_dark.webp');
+  --bg-collections: url('/src/assets/section_backgrounds/08_section_bg_dark.webp');
+  --bg-shop: url('/src/assets/section_backgrounds/09_section_bg_dark.webp');
+  --bg-shop-color: #0A1E3F; /* Midnight Ink */
+  --bg-journal: url('/src/assets/section_backgrounds/11_section_bg_dark.webp');
 }
 
 .light-theme {
@@ -33,6 +41,14 @@
   --text-secondary: #333333;
   --border-color: rgba(0, 0, 0, 0.15);
   --pattern-color: rgba(0, 0, 0, 0.15);
+
+  /* Section Backgrounds - Light Mode */
+  --bg-about: url('/src/assets/section_backgrounds/01_section_bg_light.webp');
+  --bg-ads: url('/src/assets/section_backgrounds/02_section_bg_light.webp');
+  --bg-collections: url('/src/assets/section_backgrounds/03_section_bg_light.webp');
+  --bg-shop: url('/src/assets/section_backgrounds/04_section_bg_light.webp');
+  --bg-shop-color: #E6E6E6; /* Newsprint Mist */
+  --bg-journal: url('/src/assets/section_backgrounds/05_section_bg_light.webp');
 }
 
 * {

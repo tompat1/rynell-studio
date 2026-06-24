@@ -3,7 +3,7 @@ import studioPortrait from '../assets/studio_portrait.jpg';
 
 const About = () => {
   return (
-    <section id="about" className="section-container bg-halftone">
+    <section id="about" className="section-container">
       
       {/* Manifesto Section */}
       <div className="about-content">
@@ -30,13 +30,15 @@ const About = () => {
 
       <style>{`
         #about {
-          background-color: var(--bg-secondary);
+          background-image: var(--bg-about);
+          background-size: cover;
+          background-position: center;
           padding: 10rem 5%;
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: 8rem;
-          border-top: 1px solid var(--border-color);
+          border-top: 4px solid var(--text-primary);
         }
         
         /* Manifesto Styles */
