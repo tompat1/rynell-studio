@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import boltSvg from '../assets/lightning_bolt_sticker_vector.svg';
 
 const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -24,11 +25,13 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
           
           {/* Logo */}
           <div 
-            className="navbar-logo" 
+            className="navbar-logo-wrapper" 
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            style={{ cursor: 'pointer' }}
           >
-            RYNELL STUDIO
+            <img src={boltSvg} alt="Bolt" className="nav-bolt-icon" />
+            <div className="navbar-logo">
+              RYNELL STUDIO
+            </div>
           </div>
 
           {/* Desktop Links */}
@@ -112,7 +115,10 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
       {/* Mobile Menu Overlay */}
       <div className={`mobile-menu-overlay ${isMobileMenuOpen ? 'open' : ''}`}>
         <div className="mobile-menu-header">
-          <div className="navbar-logo">RYNELL STUDIO</div>
+          <div className="navbar-logo-wrapper">
+            <img src={boltSvg} alt="Bolt" className="nav-bolt-icon" />
+            <div className="navbar-logo">RYNELL STUDIO</div>
+          </div>
           <button 
             className="mobile-menu-close" 
             onClick={() => setIsMobileMenuOpen(false)}
@@ -170,15 +176,27 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
           padding: 0 5%;
         }
 
+        .navbar-logo-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          cursor: pointer;
+        }
+
+        .nav-bolt-icon {
+          width: 24px;
+          height: auto;
+          filter: drop-shadow(2px 2px 0 var(--border-color));
+        }
+
         .navbar-logo {
           font-family: var(--font-heading);
           font-size: 2.2rem;
-          color: #FFF;
+          color: var(--text-primary);
           letter-spacing: 2px;
           line-height: 1;
           transform: skewX(-10deg);
-          text-shadow: 2px 2px 0 #000;
-          cursor: pointer;
+          text-shadow: 2px 2px 0 var(--border-color);
         }
 
         .navbar-links-desktop {

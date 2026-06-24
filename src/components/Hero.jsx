@@ -1,6 +1,7 @@
 import React from 'react';
 import heroImgDark from '../assets/hero_page_rynell_studio_clean.webp';
 import heroImgLight from '../assets/hero_page_rynell_studio_clean_light.webp';
+import boltSvg from '../assets/lightning_bolt_sticker_vector.svg';
 
 const Hero = () => {
   return (
@@ -48,7 +49,7 @@ const Hero = () => {
 
           <div className="hero-bottom-lockup">
             <div className="hero-logo-box">
-              <span>R</span>
+              <img src={boltSvg} alt="Bolt Accent" className="hero-bolt-icon" />
             </div>
             <p className="hero-bottom-text">
               Creative Strategy. Bold Execution.
@@ -177,10 +178,10 @@ const Hero = () => {
           flex-shrink: 0;
         }
 
-        .hero-logo-box span {
-          font-family: var(--font-heading);
-          color: var(--text-secondary);
-          font-size: 1.5rem;
+        .hero-bolt-icon {
+          width: 22px;
+          height: auto;
+          filter: drop-shadow(1px 1px 0 var(--border-color));
         }
 
         .hero-bottom-text {
