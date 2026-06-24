@@ -214,6 +214,9 @@ const Hero = () => {
           .hero-bottom-lockup {
             margin-top: 3rem;
           }
+          .hero-bolt-icon {
+            display: none;
+          }
           .hero-bottom-text {
             font-size: 1.2rem;
             padding-left: 1rem;
