@@ -81,6 +81,7 @@ const Ads = () => {
     <section id="ads" className="section-container bg-grunge">
       <div className="ads-header">
         <h2 className="section-title">ADS</h2>
+        <p className="section-description">Visual campaigns that break through the noise. Bold imagery, aggressive typography, and uncompromising art direction.</p>
       </div>
       <div 
         className={`ads-carousel ${isDragging ? 'active' : ''}`}
@@ -124,6 +125,14 @@ const Ads = () => {
           margin: 0;
           text-shadow: 4px 4px 0 var(--border-color);
           transform: skewX(-10deg);
+        }
+        .section-description {
+          font-family: var(--font-body);
+          font-size: 1.2rem;
+          color: var(--text-secondary);
+          margin: 1rem 0 0 0;
+          max-width: 600px;
+          line-height: 1.5;
         }
         .ads-carousel {
           width: 100%;

@@ -66,6 +66,7 @@ const Collections = () => {
     <section id="collections" className="section-container bg-halftone">
       <div className="collections-header">
         <h2 className="section-title">COLLECTIONS</h2>
+        <p className="section-description">Curated aesthetic archives. A rotating selection of our latest visual experiments and structural explorations.</p>
       </div>
       
       <div 
@@ -109,6 +110,14 @@ const Collections = () => {
           margin: 0;
           text-shadow: 4px 4px 0 var(--border-color);
           transform: skewX(-10deg);
+        }
+        .section-description {
+          font-family: var(--font-body);
+          font-size: 1.2rem;
+          color: var(--text-secondary);
+          margin: 1rem 0 0 0;
+          max-width: 600px;
+          line-height: 1.5;
         }
         .collections-carousel {
           width: 100%;

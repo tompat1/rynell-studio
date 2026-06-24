@@ -511,6 +511,12 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
           .mobile-menu-toggle {
             display: flex; /* Show hamburger */
           }
+          .mobile-nav-image-placeholder img {
+            filter: grayscale(0%);
+          }
+          .mobile-nav-link-text {
+            color: var(--primary-orange);
+          }
         }
 
         @media (max-width: 768px) {

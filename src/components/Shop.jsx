@@ -78,7 +78,10 @@ const Shop = ({ addToCart }) => {
     <section id="shop" className="section-container bg-grunge">
       <div className="content-wrapper">
         <div className="shop-header">
-          <h2 className="section-title">LATEST DROPS</h2>
+          <div className="title-group">
+            <h2 className="section-title">LATEST DROPS</h2>
+            <p className="section-description">Physical artifacts of our visual philosophy. Limited run apparel and accessories designed for the modern dystopia.</p>
+          </div>
           <button className="view-all-btn">VIEW ALL MERCH</button>
         </div>
         
@@ -106,6 +109,14 @@ const Shop = ({ addToCart }) => {
           margin: 0;
           text-shadow: 4px 4px 0 var(--border-color);
           transform: skewX(-10deg);
+        }
+        .section-description {
+          font-family: var(--font-body);
+          font-size: 1.2rem;
+          color: var(--text-secondary);
+          margin: 1rem 0 0 0;
+          max-width: 600px;
+          line-height: 1.5;
         }
         .view-all-btn {
           background: transparent;
