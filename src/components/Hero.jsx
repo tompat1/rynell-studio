@@ -158,11 +158,13 @@ const Hero = () => {
         }
 
         .hero-bolt-icon {
-          width: 50px;
-          height: auto;
-          filter: drop-shadow(2px 2px 0 #000);
-          flex-shrink: 0;
-        }
+    width: 30%;
+    height: auto;
+    filter: drop-shadow(4px 4px rgba(0, 0, 0, 0.1));
+    flex-shrink: 0;
+}
+
+
 
         .hero-bottom-text {
           font-family: var(--font-body);
