@@ -1,128 +1,200 @@
-import React from 'react';
-import camp1 from '../assets/campaigns/campaign_01.jpg';
-import camp2 from '../assets/campaigns/campaign_02.jpg';
-import camp3 from '../assets/campaigns/campaign_03.jpg';
-import camp4 from '../assets/campaigns/campaign_04.jpg';
-import camp5 from '../assets/campaigns/campaign_05.jpg';
+import React, { useEffect, useRef, useState } from 'react';
+import col1 from '../assets/collection/collection_01.webp';
+import col2 from '../assets/collection/collection_02.webp';
+import col3 from '../assets/collection/collection_03.webp';
+import col4 from '../assets/collection/collection_04.webp';
+import col5 from '../assets/collection/collection_05.webp';
+import col6 from '../assets/collection/collection_06.webp';
+import col7 from '../assets/collection/collection_07.webp';
+import col8 from '../assets/collection/collection_08.webp';
+import col9 from '../assets/collection/collection_09.webp';
+import col10 from '../assets/collection/collection_10.webp';
 
-const campaignData = [
-  { id: 1, image: camp1, title: 'WHISPER CAMPAIGN' },
-  { id: 2, image: camp2, title: 'SCROLL STOPPER' },
-  { id: 3, image: camp3, title: 'VISUAL UNIVERSE' },
-  { id: 4, image: camp4, title: 'MERCH DROP' },
-  { id: 5, image: camp5, title: 'OOH BILLBOARD' },
-];
+const collectionImages = [col1, col2, col3, col4, col5, col6, col7, col8, col9, col10];
 
 const Collections = () => {
+  const scrollRef = useRef(null);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [initialScrollLeft, setInitialScrollLeft] = useState(0);
+
+  // Duplicate the array to create a continuous looping track
+  const displayImages = [...collectionImages, ...collectionImages];
+
+  useEffect(() => {
+    let animationId;
+    let lastTime = performance.now();
+    const speed = 0.08; 
+
+    const scrollLoop = (time) => {
+      if (scrollRef.current && !isHovered && !isDragging) {
+        const delta = time - lastTime;
+        scrollRef.current.scrollLeft += speed * delta;
+        
+        // Loop back when we've scrolled past half the content to simulate infinity
+        if (scrollRef.current.scrollLeft >= scrollRef.current.scrollWidth / 2) {
+          scrollRef.current.scrollLeft = 0;
+        }
+      }
+      lastTime = time;
+      animationId = requestAnimationFrame(scrollLoop);
+    };
+
+    animationId = requestAnimationFrame(scrollLoop);
+    return () => cancelAnimationFrame(animationId);
+  }, [isHovered, isDragging]);
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setInitialScrollLeft(scrollRef.current.scrollLeft);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+    setIsHovered(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2; // Scroll faster than mouse
+    scrollRef.current.scrollLeft = initialScrollLeft - walk;
+  };
+
   return (
-    <section id="collections" className="section-container bg-grunge">
+    <section id="collections" className="section-container bg-halftone">
       <div className="collections-header">
         <h2 className="section-title">COLLECTIONS</h2>
       </div>
-      <div className="collections-carousel">
-        {campaignData.map((item) => (
-          <div key={item.id} className="collection-card">
-            <div className="collection-image">
-              <img src={item.image} alt={item.title} className="collection-img" />
+      
+      <div 
+        className={`collections-carousel ${isDragging ? 'active' : ''}`}
+        ref={scrollRef}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={handleMouseLeave}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+        onTouchStart={() => setIsHovered(true)}
+        onTouchEnd={() => setIsHovered(false)}
+      >
+        <div className="collections-track">
+          {displayImages.map((img, idx) => (
+            <div key={idx} className="collection-item">
+              <img src={img} alt={`Collection ${idx + 1}`} className="collection-img" />
+              <div className="collection-overlay">
+                <span className="collection-number">NO. {String((idx % collectionImages.length) + 1).padStart(2, '0')}</span>
+              </div>
             </div>
-            <div className="collection-overlay">
-              <h3>{item.title}</h3>
-              <button>VIEW CAMPAIGN</button>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
+      
       <style>{`
         #collections {
-          background-color: var(--bg-tertiary);
-          padding: 8rem 0 8rem 5%;
+          background-color: var(--bg-primary);
+          padding: 8rem 0;
+          border-top: 1px solid var(--border-color);
           overflow: hidden;
         }
         .collections-header {
-          max-width: 1400px;
-          margin: 0 auto 4rem auto;
-          padding-right: 5%;
+          padding: 0 5%;
+          margin-bottom: 4rem;
+        }
+        .collections-header .section-title {
+          font-family: var(--font-heading);
+          font-size: 6rem;
+          color: var(--text-primary);
+          margin: 0;
+          text-shadow: 4px 4px 0 var(--border-color);
+          transform: skewX(-10deg);
         }
         .collections-carousel {
-          display: flex;
-          gap: 2rem;
+          width: 100%;
           overflow-x: auto;
-          padding-bottom: 2rem;
-          padding-right: 5%;
-          scrollbar-width: none;
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none;  /* IE and Edge */
+          cursor: grab;
+        }
+        .collections-carousel.active {
+          cursor: grabbing;
         }
         .collections-carousel::-webkit-scrollbar {
           display: none;
         }
-        .collection-card {
-          min-width: 600px;
-          height: 700px;
-          position: relative;
-          background: var(--bg-secondary);
-          flex-shrink: 0;
-          overflow: hidden;
-          cursor: pointer;
-          border: 1px solid var(--border-color);
+        .collections-track {
+          display: flex;
+          gap: 2rem;
+          padding-right: 2rem;
+          padding-left: 5%;
+          width: max-content;
         }
-        .collection-image {
-          width: 100%;
-          height: 100%;
-          background: var(--bg-primary);
-          transition: transform 0.5s ease;
+        .collection-item {
+          position: relative;
+          width: 400px;
+          aspect-ratio: 4/5;
+          overflow: hidden;
+          background: var(--bg-secondary);
+          border: 1px solid var(--border-color);
+          flex-shrink: 0;
         }
         .collection-img {
           width: 100%;
           height: 100%;
           object-fit: cover;
+          transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+          pointer-events: none; /* prevents image drag so we can drag the carousel */
         }
-        .collection-card:hover .collection-image {
+        .collection-item:hover .collection-img {
           transform: scale(1.05);
         }
         .collection-overlay {
           position: absolute;
           inset: 0;
+          background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, transparent 50%);
           display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          background: rgba(0,0,0,0.6);
+          align-items: flex-end;
+          padding: 2rem;
           opacity: 0;
           transition: opacity 0.3s ease;
+          pointer-events: none;
         }
-        .collection-card:hover .collection-overlay {
+        .collection-item:hover .collection-overlay {
           opacity: 1;
         }
-        .collection-overlay h3 {
+        .collection-number {
           font-family: var(--font-heading);
-          font-size: 5rem;
+          font-size: 2.5rem;
           color: #FFF;
-          margin: 0 0 2rem 0;
           transform: translateY(20px);
-          transition: transform 0.3s ease;
-          text-align: center;
-          padding: 0 2rem;
+          transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+          text-shadow: 2px 2px 0 var(--primary-orange);
         }
-        .collection-card:hover .collection-overlay h3 {
+        .collection-item:hover .collection-number {
           transform: translateY(0);
         }
-        .collection-overlay button {
-          background: var(--primary-orange);
-          color: #FFF;
-          border: none;
-          padding: 1rem 2rem;
-          font-family: var(--font-body);
-          font-weight: bold;
-          letter-spacing: 2px;
-          cursor: pointer;
-          transform: translateY(20px);
-          transition: transform 0.4s ease;
-        }
-        .collection-card:hover .collection-overlay button {
-          transform: translateY(0);
-        }
+        
         @media (max-width: 768px) {
-          .collection-card { min-width: 85vw; height: 500px; }
-          .collection-overlay h3 { font-size: 3rem; }
+          .collections-header .section-title { font-size: 4rem; }
+          .collection-item {
+            width: 280px;
+          }
+          .collection-overlay {
+            opacity: 1;
+            background: linear-gradient(0deg, rgba(0,0,0,0.6) 0%, transparent 40%);
+            padding: 1rem;
+          }
+          .collection-number {
+            transform: translateY(0);
+            font-size: 1.8rem;
+          }
         }
       `}</style>
     </section>

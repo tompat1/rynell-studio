@@ -1,22 +1,28 @@
 import React, { useState } from 'react';
-import merch1 from '../assets/merch/merch_01.webp';
-import merch2 from '../assets/merch/merch_02.webp';
-import merch3 from '../assets/merch/merch_03.webp';
-import merch4 from '../assets/merch/merch_04.webp';
-import merch5 from '../assets/merch/merch_05.webp';
-import merch6 from '../assets/merch/merch_06.webp';
-import merch7 from '../assets/merch/merch_07.webp';
-import merch8 from '../assets/merch/merch_08.webp';
+import merch1 from '../assets/merch/bolt_sticker_merch_neutral_01.webp';
+import merch2 from '../assets/merch/cap_merch_tangerine_02.webp';
+import merch3 from '../assets/merch/hoodie_merch_tangerine_03.webp';
+import merch4 from '../assets/merch/tote_merch_milk_04.webp';
+import merch5 from '../assets/merch/stickerpack_merch_neutral_05.webp';
+import merch6 from '../assets/merch/tee_merch_blackout_06.webp';
+import merch7 from '../assets/merch/hoodie_merch_blackout_07.webp';
+import merch8 from '../assets/merch/cap_merch_blackout_07.webp';
+import merch9 from '../assets/merch/poster_merch_blackout_08.webp';
+import merch10 from '../assets/merch/tote_merch_blackout_09.webp';
+import merch11 from '../assets/merch/caseiphone_merch_blackout_10.webp';
 
 const merchData = [
-  { id: 1, image: merch1, title: 'HEAVYWEIGHT LOGO HOODIE', price: 120.00, details: '400gsm Organic Cotton. Boxy fit.', sizes: ['S', 'M', 'L', 'XL'] },
-  { id: 2, image: merch2, title: 'NEON NIGHTS LONG SLEEVE', price: 85.00, details: '100% Cotton. Screen printed graphics.', sizes: ['S', 'M', 'L', 'XL'] },
-  { id: 3, image: merch3, title: 'BRUTALIST GRAPHIC TEE', price: 55.00, details: 'Vintage wash. Distressed collar.', sizes: ['M', 'L', 'XL', 'XXL'] },
-  { id: 4, image: merch4, title: 'STUDIO UTILITY JACKET', price: 210.00, details: 'Heavy canvas. Multipocket design.', sizes: ['S', 'M', 'L'] },
-  { id: 5, image: merch5, title: 'CAMPAIGN BEANIE', price: 35.00, details: 'Acrylic blend. Embroidered logo.', sizes: ['OS'] },
-  { id: 6, image: merch6, title: 'ACID WASH TANK', price: 45.00, details: 'Ribbed cotton. Cropped fit.', sizes: ['XS', 'S', 'M'] },
-  { id: 7, image: merch7, title: 'OVERSIZED TOTE BAG', price: 65.00, details: '100% Canvas. Reinforced straps.', sizes: ['OS'] },
-  { id: 8, image: merch8, title: 'EXPERIMENTAL ZIP-UP', price: 140.00, details: 'French terry. Custom hardware.', sizes: ['S', 'M', 'L', 'XL'] },
+  { id: 1, image: merch1, title: 'BOLT STICKER NEUTRAL', price: 5.00, details: 'Die-cut vinyl decal.', sizes: ['OS'] },
+  { id: 2, image: merch2, title: 'STUDIO CAP TANGERINE', price: 35.00, details: 'Cotton twill. Embroidered logo.', sizes: ['OS'] },
+  { id: 3, image: merch3, title: 'LOGO HOODIE TANGERINE', price: 120.00, details: '400gsm Organic Cotton. Boxy fit.', sizes: ['S', 'M', 'L', 'XL'] },
+  { id: 4, image: merch4, title: 'TOTE BAG MILK', price: 45.00, details: 'Heavy canvas. Reinforced straps.', sizes: ['OS'] },
+  { id: 5, image: merch5, title: 'STICKER PACK NEUTRAL', price: 15.00, details: 'Set of 5 vinyl decals.', sizes: ['OS'] },
+  { id: 6, image: merch6, title: 'BRUTALIST TEE BLACKOUT', price: 55.00, details: 'Vintage wash. Boxy fit.', sizes: ['S', 'M', 'L', 'XL'] },
+  { id: 7, image: merch7, title: 'LOGO HOODIE BLACKOUT', price: 120.00, details: '400gsm Organic Cotton. Boxy fit.', sizes: ['S', 'M', 'L', 'XL'] },
+  { id: 8, image: merch8, title: 'STUDIO CAP BLACKOUT', price: 35.00, details: 'Cotton twill. Embroidered logo.', sizes: ['OS'] },
+  { id: 9, image: merch9, title: 'STUDIO POSTER BLACKOUT', price: 25.00, details: 'A2 size. 200gsm silk paper.', sizes: ['OS'] },
+  { id: 10, image: merch10, title: 'TOTE BAG BLACKOUT', price: 45.00, details: 'Heavy canvas. Reinforced straps.', sizes: ['OS'] },
+  { id: 11, image: merch11, title: 'IPHONE CASE BLACKOUT', price: 30.00, details: 'Matte finish. Drop protection.', sizes: ['13', '14', '15'] },
 ];
 
 const ShopItem = ({ item, addToCart }) => {

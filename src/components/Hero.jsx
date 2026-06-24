@@ -48,9 +48,7 @@ const Hero = () => {
           </p>
 
           <div className="hero-bottom-lockup">
-            <div className="hero-logo-box">
-              <img src={boltSvg} alt="Bolt Accent" className="hero-bolt-icon" />
-            </div>
+            <img src={boltSvg} alt="Bolt Accent" className="hero-bolt-icon" />
             <p className="hero-bottom-text">
               Creative Strategy. Bold Execution.
             </p>
@@ -166,22 +164,11 @@ const Hero = () => {
           margin-top: 6rem;
         }
 
-        .hero-logo-box {
-          width: 40px;
-          height: 40px;
-          border: 2px solid var(--border-color);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 4px;
-          background-color: var(--pattern-color);
-          flex-shrink: 0;
-        }
-
         .hero-bolt-icon {
-          width: 22px;
+          width: 50px;
           height: auto;
-          filter: drop-shadow(1px 1px 0 var(--border-color));
+          filter: drop-shadow(2px 2px 0 #000);
+          flex-shrink: 0;
         }
 
         .hero-bottom-text {

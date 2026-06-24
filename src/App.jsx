@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import Services from './components/Services'
-import Studio from './components/Studio'
+import Ads from './components/Ads'
 import Collections from './components/Collections'
 import Shop from './components/Shop'
 import About from './components/About'
@@ -37,7 +37,7 @@ function App() {
         setTheme={setTheme} 
       />
       <Hero />
-      <Studio />
+      <Ads />
       <Collections />
       <Shop addToCart={addToCart} />
       <About />

@@ -6,7 +6,7 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    'STUDIO', 'COLLECTIONS', 'SHOP', 'ABOUT', 'JOURNAL'
+    'ADS', 'COLLECTIONS', 'SHOP', 'ABOUT', 'JOURNAL'
   ];
 
   useEffect(() => {
@@ -184,7 +184,7 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
         }
 
         .nav-bolt-icon {
-          width: 24px;
+          width: 38px;
           height: auto;
           filter: drop-shadow(2px 2px 0 var(--border-color));
         }
@@ -192,7 +192,7 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
         .navbar-logo {
           font-family: var(--font-heading);
           font-size: 2.2rem;
-          color: var(--text-primary);
+          color: #FFF;
           letter-spacing: 2px;
           line-height: 1;
           transform: skewX(-10deg);
