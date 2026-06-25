@@ -1,4 +1,4 @@
-import  { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAudio } from '../contexts/AudioContext';
 import servicesBgDark from '../assets/design_that_hits_clean.webp';
@@ -11,6 +11,12 @@ import imgAi from '../assets/services/service_ai.png';
 const Services = () => {
   const [activeService, setActiveService] = useState(null);
   const { playTTS, stopAudio, isPlaying } = useAudio();
+
+  useEffect(() => {
+    if (activeService) document.body.classList.add('drawer-open');
+    else document.body.classList.remove('drawer-open');
+    return () => document.body.classList.remove('drawer-open');
+  }, [activeService]);
 
   const servicesData = [
     { 
@@ -74,6 +80,18 @@ const Services = () => {
       )
     }
   ];
+
+  const navigateService = (direction) => {
+    if (!activeService) return;
+    const currentIndex = servicesData.findIndex(s => s.label === activeService.label);
+    if (direction === 'prev' && currentIndex > 0) {
+      setActiveService(servicesData[currentIndex - 1]);
+      if (isPlaying) stopAudio();
+    } else if (direction === 'next' && currentIndex < servicesData.length - 1) {
+      setActiveService(servicesData[currentIndex + 1]);
+      if (isPlaying) stopAudio();
+    }
+  };
 
   return (
     <section className="services-section">
@@ -192,6 +210,23 @@ const Services = () => {
                   </div>
                   <div className="drawer-divider"></div>
                   <p className="drawer-description">{activeService.description}</p>
+                  
+                  <div className="drawer-navigation">
+                    <button 
+                      className="nav-btn" 
+                      onClick={() => navigateService('prev')}
+                      disabled={servicesData.findIndex(s => s.label === activeService.label) === 0}
+                    >
+                      ← PREV
+                    </button>
+                    <button 
+                      className="nav-btn" 
+                      onClick={() => navigateService('next')}
+                      disabled={servicesData.findIndex(s => s.label === activeService.label) === servicesData.length - 1}
+                    >
+                      NEXT →
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

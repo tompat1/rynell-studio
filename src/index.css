@@ -224,6 +224,11 @@ a {
   background-color: var(--primary-orange);
   color: #000;
 }
+body.drawer-open .scroll-top-btn {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(20px) !important;
+}
 
 .read-to-me-btn {
   background: transparent;

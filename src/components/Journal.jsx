@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAudio } from '../contexts/AudioContext';
 import aiFashionImg from '../assets/journal/ai_fashion.png';
@@ -67,6 +67,12 @@ const Journal = () => {
   const [activeArticle, setActiveArticle] = useState(null);
   const [isArchiveOpen, setIsArchiveOpen] = useState(false);
   const { playTTS, stopAudio, isPlaying } = useAudio();
+
+  useEffect(() => {
+    if (activeArticle || isArchiveOpen) document.body.classList.add('drawer-open');
+    else document.body.classList.remove('drawer-open');
+    return () => document.body.classList.remove('drawer-open');
+  }, [activeArticle, isArchiveOpen]);
 
   const navigateArticle = (direction) => {
     if (!activeArticle) return;
@@ -553,35 +559,6 @@ const Journal = () => {
           .archive-title {
             font-size: 2.5rem;
           }
-        }
-
-        .drawer-navigation {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-top: 3rem;
-          padding-top: 2rem;
-          border-top: 1px solid var(--border-color);
-        }
-        .nav-btn {
-          background: transparent;
-          color: var(--primary-orange);
-          border: none;
-          font-family: var(--font-heading);
-          font-size: 1.5rem;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          opacity: 0.8;
-        }
-        .nav-btn:hover:not(:disabled) {
-          opacity: 1;
-          transform: scale(1.05);
-          text-shadow: 2px 2px 0 rgba(255,106,0,0.3);
-        }
-        .nav-btn:disabled {
-          color: var(--text-secondary);
-          opacity: 0.3;
-          cursor: not-allowed;
         }
       `}</style>
     </section>

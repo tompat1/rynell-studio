@@ -1,7 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart }) => {
   const subtotal = cart.reduce((total, item) => total + item.price, 0);
+
+  useEffect(() => {
+    if (isCartOpen) document.body.classList.add('drawer-open');
+    else document.body.classList.remove('drawer-open');
+    return () => document.body.classList.remove('drawer-open');
+  }, [isCartOpen]);
 
   return (
     <>
