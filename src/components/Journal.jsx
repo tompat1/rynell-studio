@@ -68,6 +68,18 @@ const Journal = () => {
   const [isArchiveOpen, setIsArchiveOpen] = useState(false);
   const { playTTS, stopAudio, isPlaying } = useAudio();
 
+  const navigateArticle = (direction) => {
+    if (!activeArticle) return;
+    const currentIndex = journalData.findIndex(a => a.id === activeArticle.id);
+    if (direction === 'prev' && currentIndex > 0) {
+      setActiveArticle(journalData[currentIndex - 1]);
+      if (isPlaying) stopAudio();
+    } else if (direction === 'next' && currentIndex < journalData.length - 1) {
+      setActiveArticle(journalData[currentIndex + 1]);
+      if (isPlaying) stopAudio();
+    }
+  };
+
   return (
     <section id="journal" className="section-container">
       <div className="content-wrapper">
@@ -156,6 +168,23 @@ const Journal = () => {
                   </div>
                   <div className="drawer-divider"></div>
                   <p className="drawer-body">{activeArticle.content}</p>
+                  
+                  <div className="drawer-navigation">
+                    <button 
+                      className="nav-btn" 
+                      onClick={() => navigateArticle('prev')}
+                      disabled={journalData.findIndex(a => a.id === activeArticle.id) === 0}
+                    >
+                      ← PREV
+                    </button>
+                    <button 
+                      className="nav-btn" 
+                      onClick={() => navigateArticle('next')}
+                      disabled={journalData.findIndex(a => a.id === activeArticle.id) === journalData.length - 1}
+                    >
+                      NEXT →
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -524,6 +553,35 @@ const Journal = () => {
           .archive-title {
             font-size: 2.5rem;
           }
+        }
+
+        .drawer-navigation {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-top: 3rem;
+          padding-top: 2rem;
+          border-top: 1px solid var(--border-color);
+        }
+        .nav-btn {
+          background: transparent;
+          color: var(--primary-orange);
+          border: none;
+          font-family: var(--font-heading);
+          font-size: 1.5rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          opacity: 0.8;
+        }
+        .nav-btn:hover:not(:disabled) {
+          opacity: 1;
+          transform: scale(1.05);
+          text-shadow: 2px 2px 0 rgba(255,106,0,0.3);
+        }
+        .nav-btn:disabled {
+          color: var(--text-secondary);
+          opacity: 0.3;
+          cursor: not-allowed;
         }
       `}</style>
     </section>
