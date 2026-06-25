@@ -99,7 +99,11 @@ a {
   font-family: var(--font-heading);
   font-size: 1.2rem;
   color: var(--black);
-  background: var(--yellow);
+  background: 
+    radial-gradient(rgba(0, 0, 0, 0.15) 20%, transparent 20%) 0 0,
+    radial-gradient(rgba(0, 0, 0, 0.15) 20%, transparent 20%) 3px 3px,
+    var(--yellow);
+  background-size: 6px 6px;
   padding: 0.3rem 0.8rem;
   border: 3px solid var(--black);
   box-shadow: 4px 4px 0 var(--black);
