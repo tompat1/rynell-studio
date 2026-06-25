@@ -4,10 +4,6 @@ import camp2 from '../assets/campaigns/campaign_02.jpg';
 import camp3 from '../assets/campaigns/campaign_03.jpg';
 import camp4 from '../assets/campaigns/campaign_04.jpg';
 import camp5 from '../assets/campaigns/campaign_05.jpg';
-import camp6 from '../assets/collection/collection_05.webp';
-import camp7 from '../assets/collection/collection_06.webp';
-import camp8 from '../assets/collection/collection_07.webp';
-import camp9 from '../assets/collection/collection_08.webp';
 
 const campaignData = [
   { id: 1, image: camp1, title: 'WHISPER CAMPAIGN' },
@@ -15,10 +11,6 @@ const campaignData = [
   { id: 3, image: camp3, title: 'VISUAL UNIVERSE' },
   { id: 4, image: camp4, title: 'MERCH DROP' },
   { id: 5, image: camp5, title: 'OOH BILLBOARD' },
-  { id: 6, image: camp6, title: 'STREET LEVEL' },
-  { id: 7, image: camp7, title: 'DIGITAL DISTORTION' },
-  { id: 8, image: camp8, title: 'NEON WASH' },
-  { id: 9, image: camp9, title: 'RAW CAPTURE' },
 ];
 
 const Ads = () => {

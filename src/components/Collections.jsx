@@ -1,10 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
+import col1 from '../assets/collection/collection_01.webp';
 import col2 from '../assets/collection/collection_02.webp';
 import col3 from '../assets/collection/collection_03.webp';
 import col4 from '../assets/collection/collection_04.webp';
+import col5 from '../assets/collection/collection_05.webp';
+import col6 from '../assets/collection/collection_06.webp';
+import col7 from '../assets/collection/collection_07.webp';
+import col8 from '../assets/collection/collection_08.webp';
 import col9 from '../assets/collection/collection_09.webp';
 
-const collectionImages = [col2, col3, col4, col9];
+const collectionImages = [col1, col2, col3, col4, col5, col6, col7, col8, col9];
 
 const Collections = () => {
   const scrollRef = useRef(null);
