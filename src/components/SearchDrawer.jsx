@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 
-// Hardcoded mock data for search
+import { merchData } from './Shop';
+import { journalData } from './Journal';
+import { servicesData } from './Services';
+
+// Construct search data dynamically from real assets
 const SEARCH_DATA = [
-  { id: 'hoodie', type: 'PRODUCT', title: 'Blackout Hoodie', tag: 'Apparel' },
-  { id: 'cap', type: 'PRODUCT', title: 'Tangerine Cap', tag: 'Accessories' },
-  { id: 'tote', type: 'PRODUCT', title: 'Neon Nights Tote', tag: 'Accessories' },
-  { id: 'manifesto', type: 'JOURNAL', title: 'The Brutalist Manifesto', tag: 'Culture' },
-  { id: 'impact', type: 'JOURNAL', title: 'Designing for Impact', tag: 'Design' },
-  { id: 'identity', type: 'SERVICE', title: 'Brand Identity', tag: 'Service' },
-  { id: 'campaign', type: 'SERVICE', title: 'Campaign Creative', tag: 'Service' },
+  ...merchData.map(item => ({ ...item, type: 'PRODUCT', tag: 'Shop', id: `product-${item.id}` })),
+  ...journalData.map(item => ({ ...item, type: 'JOURNAL', tag: 'Journal', id: `journal-${item.id}` })),
+  ...servicesData.map(item => ({ ...item, type: 'SERVICE', tag: 'Service', id: `service-${item.label}` }))
 ];
 
 const SearchDrawer = ({ isOpen, setIsOpen, onSelect }) => {
@@ -57,6 +57,8 @@ const SearchDrawer = ({ isOpen, setIsOpen, onSelect }) => {
           </div>
 
           <div className="search-results">
+            {!searchTerm && <h3 className="search-results-heading">LATEST ADDITIONS</h3>}
+            {searchTerm && filteredData.length > 0 && <h3 className="search-results-heading">SEARCH RESULTS</h3>}
             {searchTerm && filteredData.length === 0 ? (
               <p className="no-results">NO RESULTS FOUND FOR "{searchTerm.toUpperCase()}"</p>
             ) : (
@@ -110,6 +112,13 @@ const SearchDrawer = ({ isOpen, setIsOpen, onSelect }) => {
           display: flex;
           flex-direction: column;
           gap: 1.5rem;
+        }
+        .search-results-heading {
+          font-family: var(--font-heading);
+          font-size: 1.5rem;
+          color: var(--text-secondary);
+          margin-bottom: 0.5rem;
+          letter-spacing: 1px;
         }
         .search-result-item {
           border: 2px solid var(--border-color);

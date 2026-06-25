@@ -16,22 +16,23 @@ const DetailView = ({ item, onClose }) => {
     <div className="detail-view-overlay">
       <div className="detail-view-header">
         <button className="back-btn" onClick={onClose}>
+          CLOSE
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
-          BACK TO SEARCH
         </button>
       </div>
 
       <div className="detail-view-content">
         {item.type === 'PRODUCT' && (
           <div className="placeholder-product">
-            <div className="placeholder-image"></div>
+            <div className="placeholder-image" style={{ backgroundImage: `url(${item.image})`, backgroundSize: 'cover', backgroundPosition: 'center', border: 'none' }}></div>
             <div className="placeholder-info">
               <h1>{item.title}</h1>
               <p className="placeholder-tag">{item.tag.toUpperCase()}</p>
-              <p className="placeholder-price">$XX.XX</p>
+              <p className="placeholder-price">${item.price.toFixed(2)}</p>
+              <p style={{ fontFamily: 'var(--font-body)', color: 'var(--text-secondary)', marginBottom: '3rem', fontSize: '1.2rem' }}>{item.details}</p>
               <button className="checkout-btn">ADD TO CART</button>
             </div>
           </div>
@@ -40,13 +41,9 @@ const DetailView = ({ item, onClose }) => {
         {item.type === 'JOURNAL' && (
           <div className="placeholder-journal">
             <h1 className="journal-title">{item.title}</h1>
-            <p className="journal-meta">PUBLISHED 2026 • {item.tag.toUpperCase()}</p>
-            <div className="placeholder-text-block"></div>
-            <div className="placeholder-text-block short"></div>
-            <div className="placeholder-text-block"></div>
-            <br />
-            <div className="placeholder-text-block"></div>
-            <div className="placeholder-text-block"></div>
+            <p className="journal-meta">PUBLISHED {item.date} • {item.tag.toUpperCase()}</p>
+            <div className="placeholder-image banner" style={{ backgroundImage: `url(${item.image})`, backgroundSize: 'cover', backgroundPosition: 'center', border: 'none' }}></div>
+            <p style={{ fontFamily: 'var(--font-body)', color: 'var(--text-secondary)', fontSize: '1.2rem', lineHeight: '1.8' }}>{item.content}</p>
           </div>
         )}
 
@@ -54,9 +51,8 @@ const DetailView = ({ item, onClose }) => {
           <div className="placeholder-service">
             <h1 className="service-title">{item.title}</h1>
             <p className="service-tag">{item.tag.toUpperCase()}</p>
-            <div className="placeholder-image banner"></div>
-            <div className="placeholder-text-block"></div>
-            <div className="placeholder-text-block short"></div>
+            <div className="placeholder-image banner" style={{ backgroundImage: `url(${item.image})`, backgroundSize: 'cover', backgroundPosition: 'center', border: 'none' }}></div>
+            <p style={{ fontFamily: 'var(--font-body)', color: 'var(--text-secondary)', fontSize: '1.2rem', lineHeight: '1.8' }}>{item.description}</p>
           </div>
         )}
       </div>
@@ -85,6 +81,7 @@ const DetailView = ({ item, onClose }) => {
           border-bottom: 1px solid var(--border-color);
           display: flex;
           align-items: center;
+          justify-content: flex-end;
         }
 
         .back-btn {

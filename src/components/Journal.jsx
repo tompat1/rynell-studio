@@ -11,7 +11,7 @@ import img5 from '../assets/collection/collection_04.webp';
 import img6 from '../assets/design_that_hits_clean.webp';
 import img7 from '../assets/studio_portrait.jpg';
 
-const journalData = [
+export const journalData = [
   {
     id: 1,
     title: 'THE FUTURE OF AI GENERATION IN FASHION',

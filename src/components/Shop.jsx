@@ -12,7 +12,7 @@ import merch9 from '../assets/merch/poster_merch_blackout_08.webp';
 import merch10 from '../assets/merch/tote_merch_blackout_09.webp';
 import merch11 from '../assets/merch/caseiphone_merch_blackout_10.webp';
 
-const merchData = [
+export const merchData = [
   { id: 1, image: merch1, title: 'BOLT STICKER NEUTRAL', price: 5.00, details: 'Die-cut vinyl decal.', sizes: ['OS'] },
   { id: 2, image: merch2, title: 'STUDIO CAP TANGERINE', price: 35.00, details: 'Cotton twill. Embroidered logo.', sizes: ['OS'] },
   { id: 3, image: merch3, title: 'LOGO HOODIE TANGERINE', price: 120.00, details: '400gsm Organic Cotton. Boxy fit.', sizes: ['S', 'M', 'L', 'XL'] },

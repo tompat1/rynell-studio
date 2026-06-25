@@ -8,6 +8,69 @@ import imgCampaign from '../assets/services/service_campaign.png';
 import imgContent from '../assets/services/service_content.png';
 import imgAi from '../assets/services/service_ai.png';
 
+export const servicesData = [
+  { 
+    label: 'BRANDING', 
+    title: 'BRAND IDENTITY',
+    description: 'More than just a logo. We build holistic, scalable brand identities that cut through the noise. From typography systems to visual guidelines, we craft the DNA of your brand.',
+    image: imgBranding,
+    svg: (
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <g transform="translate(0.7, 0.7)">
+          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+          <line x1="7" y1="7" x2="7.01" y2="7" strokeWidth="2" />
+        </g>
+      </svg>
+    )
+  },
+  { 
+    label: 'CAMPAIGN', 
+    title: 'CAMPAIGN CREATIVE',
+    description: 'High-impact visual campaigns designed to convert. We conceptualize and execute bold, multi-channel aesthetics that grab attention and refuse to let go.',
+    image: imgCampaign,
+    svg: (
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+      </svg>
+    )
+  },
+  { 
+    label: 'CONTENT', 
+    title: 'CONTENT CREATION',
+    description: 'Engaging, platform-native content creation. Whether it\'s motion graphics, video, or rich static media, we produce assets that tell your story dynamically.',
+    image: imgContent,
+    svg: (
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+        <line x1="8" y1="21" x2="16" y2="21"></line>
+        <line x1="12" y1="17" x2="12" y2="21"></line>
+        <polygon points="10 7 15 10 10 13 10 7"></polygon>
+      </svg>
+    )
+  },
+  { 
+    label: 'AI-POWERED', 
+    title: 'AI-POWERED ASSETS',
+    description: 'The future of asset generation, guided by human taste. We leverage state-of-the-art AI to rapidly prototype, iterate, and scale visual assets without sacrificing the premium studio finish.',
+    image: imgAi,
+    svg: (
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="2" width="20" height="20" rx="2" ry="2"></rect>
+        <line x1="7" y1="0" x2="7" y2="2"></line>
+        <line x1="17" y1="0" x2="17" y2="2"></line>
+        <line x1="7" y1="22" x2="7" y2="24"></line>
+        <line x1="17" y1="22" x2="17" y2="24"></line>
+        <line x1="22" y1="7" x2="24" y2="7"></line>
+        <line x1="22" y1="17" x2="24" y2="17"></line>
+        <line x1="0" y1="7" x2="2" y2="7"></line>
+        <line x1="0" y1="17" x2="2" y2="17"></line>
+        <text x="12" y="16" fontFamily="sans-serif" fontSize="11" fontWeight="bold" textAnchor="middle" fill="currentColor" stroke="none">AI</text>
+      </svg>
+    )
+  }
+];
+
 const Services = () => {
   const [activeService, setActiveService] = useState(null);
   const { playTTS, stopAudio, isPlaying } = useAudio();
@@ -17,69 +80,6 @@ const Services = () => {
     else document.body.classList.remove('drawer-open');
     return () => document.body.classList.remove('drawer-open');
   }, [activeService]);
-
-  const servicesData = [
-    { 
-      label: 'BRANDING', 
-      title: 'BRAND IDENTITY',
-      description: 'More than just a logo. We build holistic, scalable brand identities that cut through the noise. From typography systems to visual guidelines, we craft the DNA of your brand.',
-      image: imgBranding,
-      svg: (
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <g transform="translate(0.7, 0.7)">
-            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-            <line x1="7" y1="7" x2="7.01" y2="7" strokeWidth="2" />
-          </g>
-        </svg>
-      )
-    },
-    { 
-      label: 'CAMPAIGN', 
-      title: 'CAMPAIGN CREATIVE',
-      description: 'High-impact visual campaigns designed to convert. We conceptualize and execute bold, multi-channel aesthetics that grab attention and refuse to let go.',
-      image: imgCampaign,
-      svg: (
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-        </svg>
-      )
-    },
-    { 
-      label: 'CONTENT', 
-      title: 'CONTENT CREATION',
-      description: 'Engaging, platform-native content creation. Whether it\'s motion graphics, video, or rich static media, we produce assets that tell your story dynamically.',
-      image: imgContent,
-      svg: (
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-          <line x1="8" y1="21" x2="16" y2="21"></line>
-          <line x1="12" y1="17" x2="12" y2="21"></line>
-          <polygon points="10 7 15 10 10 13 10 7"></polygon>
-        </svg>
-      )
-    },
-    { 
-      label: 'AI-POWERED', 
-      title: 'AI-POWERED ASSETS',
-      description: 'The future of asset generation, guided by human taste. We leverage state-of-the-art AI to rapidly prototype, iterate, and scale visual assets without sacrificing the premium studio finish.',
-      image: imgAi,
-      svg: (
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="2" width="20" height="20" rx="2" ry="2"></rect>
-          <line x1="7" y1="0" x2="7" y2="2"></line>
-          <line x1="17" y1="0" x2="17" y2="2"></line>
-          <line x1="7" y1="22" x2="7" y2="24"></line>
-          <line x1="17" y1="22" x2="17" y2="24"></line>
-          <line x1="22" y1="7" x2="24" y2="7"></line>
-          <line x1="22" y1="17" x2="24" y2="17"></line>
-          <line x1="0" y1="7" x2="2" y2="7"></line>
-          <line x1="0" y1="17" x2="2" y2="17"></line>
-          <text x="12" y="16" fontFamily="sans-serif" fontSize="11" fontWeight="bold" textAnchor="middle" fill="currentColor" stroke="none">AI</text>
-        </svg>
-      )
-    }
-  ];
 
   const navigateService = (direction) => {
     if (!activeService) return;
