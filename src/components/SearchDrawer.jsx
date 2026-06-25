@@ -2,16 +2,16 @@ import React, { useState, useEffect } from 'react';
 
 // Hardcoded mock data for search
 const SEARCH_DATA = [
-  { type: 'PRODUCT', title: 'Blackout Hoodie', tag: 'Apparel' },
-  { type: 'PRODUCT', title: 'Tangerine Cap', tag: 'Accessories' },
-  { type: 'PRODUCT', title: 'Neon Nights Tote', tag: 'Accessories' },
-  { type: 'JOURNAL', title: 'The Brutalist Manifesto', tag: 'Culture' },
-  { type: 'JOURNAL', title: 'Designing for Impact', tag: 'Design' },
-  { type: 'SERVICE', title: 'Brand Identity', tag: 'Service' },
-  { type: 'SERVICE', title: 'Campaign Creative', tag: 'Service' },
+  { id: 'hoodie', type: 'PRODUCT', title: 'Blackout Hoodie', tag: 'Apparel' },
+  { id: 'cap', type: 'PRODUCT', title: 'Tangerine Cap', tag: 'Accessories' },
+  { id: 'tote', type: 'PRODUCT', title: 'Neon Nights Tote', tag: 'Accessories' },
+  { id: 'manifesto', type: 'JOURNAL', title: 'The Brutalist Manifesto', tag: 'Culture' },
+  { id: 'impact', type: 'JOURNAL', title: 'Designing for Impact', tag: 'Design' },
+  { id: 'identity', type: 'SERVICE', title: 'Brand Identity', tag: 'Service' },
+  { id: 'campaign', type: 'SERVICE', title: 'Campaign Creative', tag: 'Service' },
 ];
 
-const SearchDrawer = ({ isOpen, setIsOpen }) => {
+const SearchDrawer = ({ isOpen, setIsOpen, onSelect }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -60,8 +60,12 @@ const SearchDrawer = ({ isOpen, setIsOpen }) => {
             {searchTerm && filteredData.length === 0 ? (
               <p className="no-results">NO RESULTS FOUND FOR "{searchTerm.toUpperCase()}"</p>
             ) : (
-              filteredData.map((item, index) => (
-                <div key={index} className="search-result-item">
+              filteredData.map((item) => (
+                <div 
+                  key={item.id} 
+                  className="search-result-item"
+                  onClick={() => onSelect(item)}
+                >
                   <span className="result-type">{item.type}</span>
                   <h3 className="result-title">{item.title}</h3>
                   <span className="result-tag">{item.tag}</span>

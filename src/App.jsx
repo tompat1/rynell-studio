@@ -11,6 +11,7 @@ import Footer from './components/Footer'
 import CartDrawer from './components/CartDrawer'
 import SearchDrawer from './components/SearchDrawer'
 import AccountDrawer from './components/AccountDrawer'
+import DetailView from './components/DetailView'
 import Loader from './components/Loader'
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isAccountOpen, setIsAccountOpen] = useState(false)
+  const [activeDetailView, setActiveDetailView] = useState(null)
   const [theme, setTheme] = useState('dark')
   const [isLoading, setIsLoading] = useState(true)
   const [showScroll, setShowScroll] = useState(false)
@@ -25,6 +27,11 @@ function App() {
   useEffect(() => {
     document.body.className = `${theme}-theme`
   }, [theme])
+
+  const handleSearchSelect = (item) => {
+    setIsSearchOpen(false)
+    setActiveDetailView(item)
+  }
 
   useEffect(() => {
     const checkScrollTop = () => {
@@ -84,8 +91,9 @@ function App() {
         setIsCartOpen={setIsCartOpen} 
         removeFromCart={removeFromCart} 
       />
-      <SearchDrawer isOpen={isSearchOpen} setIsOpen={setIsSearchOpen} />
+      <SearchDrawer isOpen={isSearchOpen} setIsOpen={setIsSearchOpen} onSelect={handleSearchSelect} />
       <AccountDrawer isOpen={isAccountOpen} setIsOpen={setIsAccountOpen} />
+      <DetailView item={activeDetailView} onClose={() => setActiveDetailView(null)} />
     </div>
   )
 }
