@@ -88,6 +88,7 @@ const DetailView = ({ item, onClose, addToCart, setItem, openShopArchive }) => {
             <div className="placeholder-info">
               <h1>{item.title}</h1>
               <p className="placeholder-tag">{item.tag.toUpperCase()}</p>
+              {item.color && <p className="color-label" style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>COLOR: {item.color}</p>}
               <p className="placeholder-price">${item.price.toFixed(2)}</p>
               <p style={{ fontFamily: 'var(--font-body)', color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '1.2rem' }}>{item.details}</p>
               

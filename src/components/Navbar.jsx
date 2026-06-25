@@ -3,7 +3,7 @@ import boltSvg from '../assets/lightning_bolt_sticker_vector.svg';
 import { useAudio } from '../contexts/AudioContext';
 
 // Images for Mobile Menu
-import adImg from '../assets/campaigns/campaign_02.jpg';
+import adImg from '../assets/campaigns/campaign_02.webp';
 import collImg from '../assets/collection/collection_02.webp';
 import shopImg from '../assets/merch/hoodie_merch_blackout_07.webp';
 import aboutImg from '../assets/studio_portrait.jpg';

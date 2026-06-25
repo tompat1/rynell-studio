@@ -6,8 +6,8 @@ import neonNightsImg from '../assets/journal/neon_nights.png';
 import typographyImg from '../assets/journal/brutalist_typography.png';
 
 // New images for new articles
-import img4 from '../assets/campaigns/campaign_01.jpg';
-import img5 from '../assets/collection/collection_04.webp';
+import img4 from '../assets/campaigns/campaign_01.webp';
+import img5 from '../assets/collection/collection_05.webp';
 import img6 from '../assets/design_that_hits_clean.webp';
 import img7 from '../assets/studio_portrait.jpg';
 

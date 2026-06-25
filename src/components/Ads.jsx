@@ -1,17 +1,23 @@
 import React, { useEffect, useRef, useState } from 'react';
-import camp1 from '../assets/campaigns/campaign_01.jpg';
-import camp2 from '../assets/campaigns/campaign_02.jpg';
-import camp3 from '../assets/campaigns/campaign_03.jpg';
-import camp4 from '../assets/campaigns/campaign_04.jpg';
-import camp5 from '../assets/campaigns/campaign_05.jpg';
+const campaignModules = import.meta.glob('../assets/campaigns/*.{png,jpg,jpeg,webp,avif}', { eager: true, import: 'default' });
 
-const campaignData = [
-  { id: 1, image: camp1, title: 'WHISPER CAMPAIGN' },
-  { id: 2, image: camp2, title: 'SCROLL STOPPER' },
-  { id: 3, image: camp3, title: 'VISUAL UNIVERSE' },
-  { id: 4, image: camp4, title: 'MERCH DROP' },
-  { id: 5, image: camp5, title: 'OOH BILLBOARD' },
-];
+const predefinedTitles = {
+  'campaign_01': 'WHISPER CAMPAIGN',
+  'campaign_02': 'SCROLL STOPPER',
+  'campaign_03': 'VISUAL UNIVERSE',
+  'campaign_04': 'MERCH DROP',
+  'campaign_05': 'OOH BILLBOARD',
+};
+
+const campaignData = Object.entries(campaignModules).map(([path, url], index) => {
+  const filename = path.split('/').pop().replace(/\.[^/.]+$/, "");
+  const title = predefinedTitles[filename] || filename.replace(/_/g, ' ').toUpperCase();
+  return {
+    id: index + 1,
+    image: url,
+    title
+  };
+});
 
 const Ads = () => {
   const scrollRef = useRef(null);

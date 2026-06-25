@@ -1,30 +1,57 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import merch1 from '../assets/merch/bolt_sticker_merch_neutral_01.webp';
-import merch2 from '../assets/merch/cap_merch_tangerine_02.webp';
-import merch3 from '../assets/merch/hoodie_merch_tangerine_03.webp';
-import merch4 from '../assets/merch/tote_merch_milk_04.webp';
-import merch5 from '../assets/merch/stickerpack_merch_neutral_05.webp';
-import merch6 from '../assets/merch/tee_merch_blackout_06.webp';
-import merch7 from '../assets/merch/hoodie_merch_blackout_07.webp';
-import merch8 from '../assets/merch/cap_merch_blackout_07.webp';
-import merch9 from '../assets/merch/poster_merch_blackout_08.webp';
-import merch10 from '../assets/merch/tote_merch_blackout_09.webp';
-import merch11 from '../assets/merch/caseiphone_merch_blackout_10.webp';
+const merchModules = import.meta.glob('../assets/merch/*.{png,jpg,jpeg,webp,avif}', { eager: true, import: 'default' });
 
-export const merchData = [
-  { id: 1, image: merch1, title: 'BOLT STICKER NEUTRAL', price: 5.00, details: 'Die-cut vinyl decal.', sizes: ['ONE SIZE'] },
-  { id: 2, image: merch2, title: 'STUDIO CAP TANGERINE', price: 35.00, details: 'Cotton twill. Embroidered logo.', sizes: ['ONE SIZE'] },
-  { id: 3, image: merch3, title: 'LOGO HOODIE TANGERINE', price: 120.00, details: '400gsm Organic Cotton. Boxy fit.', sizes: ['S', 'M', 'L', 'XL'] },
-  { id: 4, image: merch4, title: 'TOTE BAG MILK', price: 45.00, details: 'Heavy canvas. Reinforced straps.', sizes: ['ONE SIZE'] },
-  { id: 5, image: merch5, title: 'STICKER PACK NEUTRAL', price: 15.00, details: 'Set of 5 vinyl decals.', sizes: ['ONE SIZE'] },
-  { id: 6, image: merch6, title: 'BRUTALIST TEE BLACKOUT', price: 55.00, details: 'Vintage wash. Boxy fit.', sizes: ['S', 'M', 'L', 'XL'] },
-  { id: 7, image: merch7, title: 'LOGO HOODIE BLACKOUT', price: 120.00, details: '400gsm Organic Cotton. Boxy fit.', sizes: ['S', 'M', 'L', 'XL'] },
-  { id: 8, image: merch8, title: 'STUDIO CAP BLACKOUT', price: 35.00, details: 'Cotton twill. Embroidered logo.', sizes: ['ONE SIZE'] },
-  { id: 9, image: merch9, title: 'STUDIO POSTER BLACKOUT', price: 25.00, details: 'A2 size. 200gsm silk paper.', sizes: ['ONE SIZE'] },
-  { id: 10, image: merch10, title: 'TOTE BAG BLACKOUT', price: 45.00, details: 'Heavy canvas. Reinforced straps.', sizes: ['ONE SIZE'] },
-  { id: 11, image: merch11, title: 'IPHONE CASE BLACKOUT', price: 30.00, details: 'Matte finish. Drop protection.', sizes: ['13', '14', '15'] },
-];
+const predefinedMerch = {
+  'bolt_sticker_merch_neutral_01': { title: 'BOLT STICKER NEUTRAL', price: 5.00, details: 'Die-cut vinyl decal.', sizes: ['ONE SIZE'] },
+  'cap_merch_tangerine_02': { title: 'STUDIO CAP TANGERINE', price: 35.00, details: 'Cotton twill. Embroidered logo.', sizes: ['ONE SIZE'] },
+  'hoodie_merch_tangerine_03': { title: 'LOGO HOODIE TANGERINE', price: 120.00, details: '400gsm Organic Cotton. Boxy fit.', sizes: ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'] },
+  'tote_merch_milk_04': { title: 'TOTE BAG MILK', price: 45.00, details: 'Heavy canvas. Reinforced straps.', sizes: ['ONE SIZE'] },
+  'stickerpack_merch_neutral_05': { title: 'STICKER PACK NEUTRAL', price: 15.00, details: 'Set of 5 vinyl decals.', sizes: ['ONE SIZE'] },
+  'tee_merch_blackout_06': { title: 'BRUTALIST TEE BLACKOUT INK', price: 55.00, details: 'Vintage wash. Boxy fit.', sizes: ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'] },
+  'hoodie_merch_blackout_07': { title: 'LOGO HOODIE BLACKOUT INK', price: 120.00, details: '400gsm Organic Cotton. Boxy fit.', sizes: ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'] },
+  'cap_merch_blackout_07': { title: 'STUDIO CAP BLACKOUT INK', price: 35.00, details: 'Cotton twill. Embroidered logo.', sizes: ['ONE SIZE'] },
+  'poster_merch_blackout_08': { title: 'STUDIO POSTER BLACKOUT INK', price: 25.00, details: 'A2 size. 200gsm silk paper.', sizes: ['ONE SIZE'] },
+  'tote_merch_blackout_09': { title: 'TOTE BAG BLACKOUT INK', price: 45.00, details: 'Heavy canvas. Reinforced straps.', sizes: ['ONE SIZE'] },
+  'caseiphone_merch_blackout_10': { title: 'IPHONE CASE BLACKOUT INK', price: 30.00, details: 'Matte finish. Drop protection.', sizes: ['13', '14', '15'] },
+};
+
+export const merchData = Object.entries(merchModules).map(([path, url], index) => {
+  const filename = path.split('/').pop().replace(/\.[^/.]+$/, "");
+  const fallbackTitle = filename.replace(/_/g, ' ').toUpperCase().replace(/[0-9]+/g, '').trim();
+  
+  // Keyword detection for textiles to assign sizes automatically
+  const textileKeywords = ['tee', 'hoodie', 'sweater', 'shirt', 'jacket', 'pants', 'shorts', 'crewneck', 'sweatpants', 'zip'];
+  const isTextile = textileKeywords.some(keyword => filename.toLowerCase().includes(keyword));
+  const defaultSizes = isTextile ? ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'] : ['ONE SIZE'];
+  
+  // Color detection
+  const knownColors = [
+    'tangerine_blast', 'panel_blue', 'midnight', 'blackout', 
+    'milk_pop', 'newsprint_mist', 'chrome', 'zap_gold', 
+    'cherry_boom', 'atomic_lime'
+  ];
+  
+  let detectedColor = null;
+  for (const c of knownColors) {
+    if (filename.toLowerCase().includes(c)) {
+      detectedColor = c === 'blackout' ? 'BLACKOUT INK' : c.replace(/_/g, ' ').toUpperCase();
+      break;
+    }
+  }
+  
+  const data = predefinedMerch[filename] || { price: 45.00, details: 'Premium aesthetic artifact.', sizes: defaultSizes };
+  
+  return {
+    id: index + 1,
+    image: url,
+    title: data.title || fallbackTitle,
+    price: data.price,
+    details: data.details,
+    sizes: data.sizes,
+    color: detectedColor
+  };
+});
 
 const ShopItem = ({ item, addToCart }) => {
   const [selectedSize, setSelectedSize] = useState(item.sizes[0]);
@@ -68,6 +95,7 @@ const ShopItem = ({ item, addToCart }) => {
       
       <div className="shop-item-details">
         <h3>{item.title}</h3>
+        {item.color && <p className="color-label" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem', marginBottom: '0.2rem' }}>{item.color}</p>}
         <p className="price">${item.price.toFixed(2)}</p>
       </div>
     </div>
