@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useAudio } from '../contexts/AudioContext';
+import { SEARCH_DATA } from './SearchDrawer';
 
-const DetailView = ({ item, onClose, addToCart }) => {
+const DetailView = ({ item, onClose, addToCart, setItem }) => {
   const [selectedSize, setSelectedSize] = useState(null);
+  const { playTTS, stopAudio, isPlaying } = useAudio();
 
   useEffect(() => {
     if (item) {
@@ -23,6 +26,47 @@ const DetailView = ({ item, onClose, addToCart }) => {
       addToCart({ ...item, size: selectedSize });
       onClose();
     }
+  };
+
+  const handleNavigate = (direction) => {
+    if (!setItem) return;
+    const typeData = SEARCH_DATA.filter(x => x.type === item.type);
+    const currentIndex = typeData.findIndex(x => x.id === item.id);
+    
+    if (direction === 'prev' && currentIndex > 0) {
+      setItem(typeData[currentIndex - 1]);
+      if (isPlaying) stopAudio();
+    } else if (direction === 'next' && currentIndex < typeData.length - 1) {
+      setItem(typeData[currentIndex + 1]);
+      if (isPlaying) stopAudio();
+    }
+  };
+
+  const renderNavigation = () => {
+    if (!item) return null;
+    const typeData = SEARCH_DATA.filter(x => x.type === item.type);
+    const currentIndex = typeData.findIndex(x => x.id === item.id);
+    
+    if (typeData.length <= 1) return null;
+
+    return (
+      <div className="drawer-navigation">
+        <button 
+          className="nav-btn" 
+          onClick={() => handleNavigate('prev')}
+          disabled={currentIndex === 0}
+        >
+          ← PREV
+        </button>
+        <button 
+          className="nav-btn" 
+          onClick={() => handleNavigate('next')}
+          disabled={currentIndex === typeData.length - 1}
+        >
+          NEXT →
+        </button>
+      </div>
+    );
   };
 
   return (
@@ -65,16 +109,26 @@ const DetailView = ({ item, onClose, addToCart }) => {
               )}
               
               <button className="checkout-btn" onClick={handleAddToCart}>ADD TO CART</button>
+              {renderNavigation()}
             </div>
           </div>
         )}
 
         {item.type === 'JOURNAL' && (
           <div className="placeholder-journal">
-            <h1 className="journal-title">{item.title}</h1>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+              <h1 className="journal-title" style={{ margin: 0 }}>{item.title}</h1>
+              <button 
+                className={`read-to-me-btn ${isPlaying ? 'playing' : ''}`}
+                onClick={() => isPlaying ? stopAudio() : playTTS(item.content)}
+              >
+                {isPlaying ? "⏹ STOP" : "▶ READ IT TO ME"}
+              </button>
+            </div>
             <p className="journal-meta">PUBLISHED {item.date} • {item.tag.toUpperCase()}</p>
             <div className="placeholder-image banner" style={{ backgroundImage: `url(${item.image})`, backgroundSize: 'cover', backgroundPosition: 'center', border: 'none' }}></div>
             <p style={{ fontFamily: 'var(--font-body)', color: 'var(--text-secondary)', fontSize: '1.2rem', lineHeight: '1.8' }}>{item.content}</p>
+            {renderNavigation()}
           </div>
         )}
 
@@ -84,6 +138,7 @@ const DetailView = ({ item, onClose, addToCart }) => {
             <p className="service-tag">{item.tag.toUpperCase()}</p>
             <div className="placeholder-image banner" style={{ backgroundImage: `url(${item.image})`, backgroundSize: 'cover', backgroundPosition: 'center', border: 'none' }}></div>
             <p style={{ fontFamily: 'var(--font-body)', color: 'var(--text-secondary)', fontSize: '1.2rem', lineHeight: '1.8' }}>{item.description}</p>
+            {renderNavigation()}
           </div>
         )}
       </div>
@@ -153,6 +208,54 @@ const DetailView = ({ item, onClose, addToCart }) => {
           background: var(--secondary-blue);
           border-color: var(--secondary-blue);
           color: #FFF;
+        }
+
+        /* Read To Me Button */
+        .read-to-me-btn {
+          background: var(--bg-card);
+          color: var(--text-primary);
+          border: 1px solid var(--border-color);
+          padding: 0.5rem 1rem;
+          font-family: var(--font-heading);
+          font-size: 1rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+        .read-to-me-btn:hover {
+          border-color: var(--text-secondary);
+        }
+        .read-to-me-btn.playing {
+          background: var(--primary-orange);
+          color: var(--bg-primary);
+          border-color: var(--primary-orange);
+        }
+
+        /* Navigation */
+        .drawer-navigation {
+          display: flex;
+          justify-content: space-between;
+          margin-top: 3rem;
+          padding-top: 2rem;
+          border-top: 1px solid var(--border-color);
+        }
+        .nav-btn {
+          background: transparent;
+          border: none;
+          color: var(--text-primary);
+          font-family: var(--font-heading);
+          font-size: 1.2rem;
+          cursor: pointer;
+          transition: color 0.2s ease;
+        }
+        .nav-btn:hover:not(:disabled) {
+          color: var(--primary-orange);
+        }
+        .nav-btn:disabled {
+          color: var(--border-color);
+          cursor: not-allowed;
         }
 
         .back-btn {

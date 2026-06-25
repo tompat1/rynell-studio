@@ -5,7 +5,7 @@ import { journalData } from './Journal';
 import { servicesData } from './Services';
 
 // Construct search data dynamically from real assets
-const SEARCH_DATA = [
+export const SEARCH_DATA = [
   ...merchData.map(item => ({ ...item, type: 'PRODUCT', tag: 'Shop', id: `product-${item.id}` })),
   ...journalData.map(item => ({ ...item, type: 'JOURNAL', tag: 'Journal', id: `journal-${item.id}` })),
   ...servicesData.map(item => ({ ...item, type: 'SERVICE', tag: 'Service', id: `service-${item.label}` }))

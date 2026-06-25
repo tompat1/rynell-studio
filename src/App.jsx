@@ -46,8 +46,28 @@ function App() {
   }, [showScroll]);
 
   const addToCart = (item) => {
-    setCart((prevCart) => [...prevCart, item])
+    setCart((prevCart) => {
+      const existingIndex = prevCart.findIndex(cartItem => cartItem.id === item.id && cartItem.size === item.size);
+      if (existingIndex >= 0) {
+        const newCart = [...prevCart];
+        newCart[existingIndex] = { ...newCart[existingIndex], quantity: (newCart[existingIndex].quantity || 1) + 1 };
+        return newCart;
+      }
+      return [...prevCart, { ...item, quantity: 1 }];
+    });
     setIsCartOpen(true) // Auto-open cart on add
+  }
+
+  const updateCartQuantity = (index, delta) => {
+    setCart((prevCart) => {
+      const newCart = [...prevCart];
+      const newQuantity = (newCart[index].quantity || 1) + delta;
+      if (newQuantity <= 0) {
+        return prevCart.filter((_, i) => i !== index);
+      }
+      newCart[index] = { ...newCart[index], quantity: newQuantity };
+      return newCart;
+    });
   }
 
   const removeFromCart = (indexToRemove) => {
@@ -70,7 +90,7 @@ function App() {
 
       {isLoading && <Loader onComplete={() => setIsLoading(false)} />}
       <Navbar 
-        cartCount={cart.length} 
+        cartCount={cart.reduce((total, item) => total + (item.quantity || 1), 0)} 
         setIsCartOpen={setIsCartOpen} 
         setIsSearchOpen={setIsSearchOpen}
         setIsAccountOpen={setIsAccountOpen}
@@ -90,10 +110,11 @@ function App() {
         isCartOpen={isCartOpen} 
         setIsCartOpen={setIsCartOpen} 
         removeFromCart={removeFromCart} 
+        updateCartQuantity={updateCartQuantity}
       />
       <SearchDrawer isOpen={isSearchOpen} setIsOpen={setIsSearchOpen} onSelect={handleSearchSelect} />
       <AccountDrawer isOpen={isAccountOpen} setIsOpen={setIsAccountOpen} />
-      <DetailView item={activeDetailView} onClose={() => setActiveDetailView(null)} addToCart={addToCart} />
+      <DetailView item={activeDetailView} onClose={() => setActiveDetailView(null)} addToCart={addToCart} setItem={setActiveDetailView} />
     </div>
   )
 }

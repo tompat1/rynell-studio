@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 
-const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart }) => {
-  const subtotal = cart.reduce((total, item) => total + item.price, 0);
+const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart, updateCartQuantity }) => {
+  const subtotal = cart.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0);
 
   useEffect(() => {
     if (isCartOpen) document.body.classList.add('drawer-open');
@@ -57,7 +57,12 @@ const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart }) => {
                   <div className="cart-item-details">
                     <h4>{item.title}</h4>
                     <p className="cart-item-size">Size: {item.size}</p>
-                    <p className="cart-item-price">${item.price.toFixed(2)}</p>
+                    <p className="cart-item-price">${(item.price * (item.quantity || 1)).toFixed(2)}</p>
+                    <div className="cart-item-quantity" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+                      <button onClick={() => updateCartQuantity(index, -1)} style={{ width: '24px', height: '24px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-heading)' }}>-</button>
+                      <span style={{ fontSize: '0.9rem', width: '20px', textAlign: 'center', fontFamily: 'var(--font-body)' }}>{item.quantity || 1}</span>
+                      <button onClick={() => updateCartQuantity(index, 1)} style={{ width: '24px', height: '24px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-heading)' }}>+</button>
+                    </div>
                   </div>
                   <button className="remove-item" onClick={() => removeFromCart(index)}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

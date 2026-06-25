@@ -13,16 +13,16 @@ import merch10 from '../assets/merch/tote_merch_blackout_09.webp';
 import merch11 from '../assets/merch/caseiphone_merch_blackout_10.webp';
 
 export const merchData = [
-  { id: 1, image: merch1, title: 'BOLT STICKER NEUTRAL', price: 5.00, details: 'Die-cut vinyl decal.', sizes: ['OS'] },
-  { id: 2, image: merch2, title: 'STUDIO CAP TANGERINE', price: 35.00, details: 'Cotton twill. Embroidered logo.', sizes: ['OS'] },
+  { id: 1, image: merch1, title: 'BOLT STICKER NEUTRAL', price: 5.00, details: 'Die-cut vinyl decal.', sizes: ['ONE SIZE'] },
+  { id: 2, image: merch2, title: 'STUDIO CAP TANGERINE', price: 35.00, details: 'Cotton twill. Embroidered logo.', sizes: ['ONE SIZE'] },
   { id: 3, image: merch3, title: 'LOGO HOODIE TANGERINE', price: 120.00, details: '400gsm Organic Cotton. Boxy fit.', sizes: ['S', 'M', 'L', 'XL'] },
-  { id: 4, image: merch4, title: 'TOTE BAG MILK', price: 45.00, details: 'Heavy canvas. Reinforced straps.', sizes: ['OS'] },
-  { id: 5, image: merch5, title: 'STICKER PACK NEUTRAL', price: 15.00, details: 'Set of 5 vinyl decals.', sizes: ['OS'] },
+  { id: 4, image: merch4, title: 'TOTE BAG MILK', price: 45.00, details: 'Heavy canvas. Reinforced straps.', sizes: ['ONE SIZE'] },
+  { id: 5, image: merch5, title: 'STICKER PACK NEUTRAL', price: 15.00, details: 'Set of 5 vinyl decals.', sizes: ['ONE SIZE'] },
   { id: 6, image: merch6, title: 'BRUTALIST TEE BLACKOUT', price: 55.00, details: 'Vintage wash. Boxy fit.', sizes: ['S', 'M', 'L', 'XL'] },
   { id: 7, image: merch7, title: 'LOGO HOODIE BLACKOUT', price: 120.00, details: '400gsm Organic Cotton. Boxy fit.', sizes: ['S', 'M', 'L', 'XL'] },
-  { id: 8, image: merch8, title: 'STUDIO CAP BLACKOUT', price: 35.00, details: 'Cotton twill. Embroidered logo.', sizes: ['OS'] },
-  { id: 9, image: merch9, title: 'STUDIO POSTER BLACKOUT', price: 25.00, details: 'A2 size. 200gsm silk paper.', sizes: ['OS'] },
-  { id: 10, image: merch10, title: 'TOTE BAG BLACKOUT', price: 45.00, details: 'Heavy canvas. Reinforced straps.', sizes: ['OS'] },
+  { id: 8, image: merch8, title: 'STUDIO CAP BLACKOUT', price: 35.00, details: 'Cotton twill. Embroidered logo.', sizes: ['ONE SIZE'] },
+  { id: 9, image: merch9, title: 'STUDIO POSTER BLACKOUT', price: 25.00, details: 'A2 size. 200gsm silk paper.', sizes: ['ONE SIZE'] },
+  { id: 10, image: merch10, title: 'TOTE BAG BLACKOUT', price: 45.00, details: 'Heavy canvas. Reinforced straps.', sizes: ['ONE SIZE'] },
   { id: 11, image: merch11, title: 'IPHONE CASE BLACKOUT', price: 30.00, details: 'Matte finish. Drop protection.', sizes: ['13', '14', '15'] },
 ];
 
