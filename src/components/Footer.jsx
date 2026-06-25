@@ -35,7 +35,13 @@ const Footer = () => {
         {/* Right Side: Social & Contact */}
         <div className="footer-social">
           <h4>SAY HELLO</h4>
-          <a href="mailto:hello@rynellstudio.com" className="contact-email">hello@rynellstudio.com</a>
+          <a href="#" onClick={(e) => {
+            e.preventDefault();
+            // Trigger contact drawer via a global event or something if we didn't pass it, 
+            // but we can pass onContactClick down through App.jsx to Footer.jsx
+            // Let's assume we dispatch an event since Footer is deep or just pass it in App.jsx
+            document.querySelector('.cta-button').click();
+          }} className="contact-email">hello@rynell.org</a>
           <div className="social-icons">
             {/* Instagram */}
             <a href="#" className="social-icon">

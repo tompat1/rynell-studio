@@ -14,6 +14,8 @@ import AccountDrawer from './components/AccountDrawer'
 import DetailView from './components/DetailView'
 import CheckoutDrawer from './components/CheckoutDrawer'
 import Loader from './components/Loader'
+import ContactDrawer from './components/ContactDrawer'
+import { AudioProvider } from './contexts/AudioContext'
 
 function App() {
   const [cart, setCart] = useState([])
@@ -21,6 +23,7 @@ function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isAccountOpen, setIsAccountOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
+  const [isContactOpen, setIsContactOpen] = useState(false)
   const [isShopArchiveOpen, setIsShopArchiveOpen] = useState(false)
   const [activeDetailView, setActiveDetailView] = useState(null)
   const [theme, setTheme] = useState('dark')
@@ -103,9 +106,10 @@ function App() {
       {isLoading && <Loader onComplete={() => setIsLoading(false)} />}
       <Navbar 
         cartCount={cart.reduce((total, item) => total + (item.quantity || 1), 0)} 
-        setIsCartOpen={setIsCartOpen} 
-        setIsSearchOpen={setIsSearchOpen}
-        setIsAccountOpen={setIsAccountOpen}
+        onCartClick={() => setIsCartOpen(true)} 
+        onSearchClick={() => setIsSearchOpen(true)}
+        onAccountClick={() => setIsAccountOpen(true)}
+        onContactClick={() => setIsContactOpen(true)}
         theme={theme} 
         setTheme={setTheme} 
       />
@@ -127,6 +131,7 @@ function App() {
       />
       <SearchDrawer isOpen={isSearchOpen} setIsOpen={setIsSearchOpen} onSelect={handleSearchSelect} />
       <AccountDrawer isOpen={isAccountOpen} setIsOpen={setIsAccountOpen} />
+      <ContactDrawer isOpen={isContactOpen} setIsOpen={setIsContactOpen} />
       <CheckoutDrawer isOpen={isCheckoutOpen} setIsOpen={setIsCheckoutOpen} cart={cart} clearCart={clearCart} />
       <DetailView 
         item={activeDetailView} 

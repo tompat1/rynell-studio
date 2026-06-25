@@ -9,7 +9,7 @@ import shopImg from '../assets/merch/hoodie_merch_blackout_07.webp';
 import aboutImg from '../assets/studio_portrait.jpg';
 import journalImg from '../assets/journal/neon_nights.png';
 
-const Navbar = ({ cartCount, setIsCartOpen, setIsSearchOpen, setIsAccountOpen, theme, setTheme }) => {
+const Navbar = ({ cartCount, onCartClick, onSearchClick, onAccountClick, onContactClick, theme, setTheme }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isMuted, toggleMute } = useAudio();
@@ -103,21 +103,21 @@ const Navbar = ({ cartCount, setIsCartOpen, setIsSearchOpen, setIsAccountOpen, t
                 )}
               </button>
 
-              <button className="icon-btn" aria-label="Search" onClick={() => setIsSearchOpen(true)}>
+              <button className="icon-btn" aria-label="Search" onClick={onSearchClick}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8"></circle>
                   <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
               </button>
               
-              <button className="icon-btn" aria-label="Account" onClick={() => setIsAccountOpen(true)}>
+              <button className="icon-btn" aria-label="Account" onClick={onAccountClick}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
               </button>
 
-              <button className="icon-btn cart-icon-btn" aria-label="Cart" onClick={() => setIsCartOpen(true)}>
+              <button className="icon-btn cart-icon-btn" aria-label="Cart" onClick={onCartClick}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="9" cy="21" r="1"></circle>
                   <circle cx="20" cy="21" r="1"></circle>
@@ -129,7 +129,7 @@ const Navbar = ({ cartCount, setIsCartOpen, setIsSearchOpen, setIsAccountOpen, t
               </button>
             </div>
 
-            <a href="mailto:hello@rynell.studio" className="cta-button">LET'S TALK</a>
+            <button onClick={onContactClick} className="cta-button">LET'S TALK</button>
             <button 
               className="mobile-menu-toggle" 
               onClick={() => setIsMobileMenuOpen(true)}
@@ -176,7 +176,7 @@ const Navbar = ({ cartCount, setIsCartOpen, setIsSearchOpen, setIsAccountOpen, t
               <span className="mobile-nav-link-text">{item.name}</span>
             </a>
           ))}
-          <a href="mailto:hello@rynell.studio" className="mobile-cta-button">LET'S TALK</a>
+          <button onClick={() => { setIsMobileMenuOpen(false); onContactClick(); }} className="mobile-cta-button" style={{ border: 'none', cursor: 'pointer' }}>LET'S TALK</button>
         </div>
 
         {/* Minified Mobile Footer */}
