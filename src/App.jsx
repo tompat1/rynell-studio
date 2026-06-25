@@ -10,12 +10,14 @@ import Journal from './components/Journal'
 import Footer from './components/Footer'
 import CartDrawer from './components/CartDrawer'
 import Loader from './components/Loader'
+import { useAudio } from './contexts/AudioContext'
 
 function App() {
   const [cart, setCart] = useState([])
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [theme, setTheme] = useState('dark')
   const [isLoading, setIsLoading] = useState(true)
+  const { isMuted, toggleMute } = useAudio()
 
   useEffect(() => {
     document.body.className = `${theme}-theme`
@@ -32,6 +34,14 @@ function App() {
 
   return (
     <div className={`app ${theme}-theme`}>
+      <button 
+        className="global-mute-btn" 
+        onClick={toggleMute}
+        title={isMuted ? "Unmute Voice" : "Mute Voice"}
+      >
+        {isMuted ? "🔇" : "🔊"}
+      </button>
+
       {isLoading && <Loader onComplete={() => setIsLoading(false)} />}
       <Navbar 
         cartCount={cart.length} 

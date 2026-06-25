@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import boltSvg from '../assets/lightning_bolt_sticker_vector.svg';
 import loaderBg from '../assets/loader_clean_bg.webp';
 import loaderMobileBg from '../assets/loader_mobile_bg.webp';
+import { useAudio } from '../contexts/AudioContext';
 
 const Loader = ({ onComplete }) => {
-  const [progress, setProgress] = useState(0);
   const [isFading, setIsFading] = useState(false);
 
   const [progressPercentage, setProgressPercentage] = useState(0);
@@ -12,6 +12,15 @@ const Loader = ({ onComplete }) => {
   const [isPreloaded, setIsPreloaded] = useState(false); // real network status
   const [timeElapsed, setTimeElapsed] = useState(false); // visual timer status
   const MIN_LOADING_TIME = 5000;
+  const { playTTS } = useAudio();
+
+  const handleFinish = () => {
+    setIsFading(true);
+    setTimeout(() => {
+      onComplete();
+      playTTS("Welcome to Rynell Studio. Stay original. Stay you.");
+    }, 500);
+  };
 
   // 1. Track Real Network Loading to unlock the NEXT button
   useEffect(() => {
@@ -95,17 +104,15 @@ const Loader = ({ onComplete }) => {
   useEffect(() => {
     if (isPreloaded && timeElapsed) {
       const t = setTimeout(() => {
-        setIsFading(true);
-        setTimeout(() => onComplete(), 500);
+        handleFinish();
       }, 500);
       return () => clearTimeout(t);
     }
-  }, [isPreloaded, timeElapsed, onComplete]);
+  }, [isPreloaded, timeElapsed]);
 
   const handleSkip = () => {
     if (!isPreloaded) return;
-    setIsFading(true);
-    setTimeout(() => onComplete(), 500);
+    handleFinish();
   };
 
   return (

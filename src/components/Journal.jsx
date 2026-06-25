@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useAudio } from '../contexts/AudioContext';
 import aiFashionImg from '../assets/journal/ai_fashion.png';
 import neonNightsImg from '../assets/journal/neon_nights.png';
 import typographyImg from '../assets/journal/brutalist_typography.png';
@@ -65,6 +66,7 @@ const journalData = [
 const Journal = () => {
   const [activeArticle, setActiveArticle] = useState(null);
   const [isArchiveOpen, setIsArchiveOpen] = useState(false);
+  const { playTTS, stopAudio, isPlaying } = useAudio();
 
   return (
     <section id="journal" className="section-container">
@@ -142,7 +144,16 @@ const Journal = () => {
                 
                 <div className="journal-drawer-text">
                   <span className="drawer-date">{activeArticle.date}</span>
-                  <h3 className="drawer-title">{activeArticle.title}</h3>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                    <h3 className="drawer-title" style={{ margin: 0 }}>{activeArticle.title}</h3>
+                    <button 
+                      className={`read-to-me-btn ${isPlaying ? 'playing' : ''}`}
+                      onClick={() => isPlaying ? stopAudio() : playTTS(activeArticle.content)}
+                      style={{ marginBottom: 0 }}
+                    >
+                      {isPlaying ? "⏹ STOP" : "▶ READ IT TO ME"}
+                    </button>
+                  </div>
                   <div className="drawer-divider"></div>
                   <p className="drawer-body">{activeArticle.content}</p>
                 </div>

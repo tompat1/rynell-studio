@@ -1,16 +1,23 @@
 import  { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useAudio } from '../contexts/AudioContext';
 import servicesBgDark from '../assets/design_that_hits_clean.webp';
 import servicesBgLight from '../assets/design_that_hits_clean_light.webp';
+import imgBranding from '../assets/services/service_branding.png';
+import imgCampaign from '../assets/services/service_campaign.png';
+import imgContent from '../assets/services/service_content.png';
+import imgAi from '../assets/services/service_ai.png';
 
 const Services = () => {
   const [activeService, setActiveService] = useState(null);
+  const { playTTS, stopAudio, isPlaying } = useAudio();
 
   const servicesData = [
     { 
       label: 'BRANDING', 
       title: 'BRAND IDENTITY',
       description: 'More than just a logo. We build holistic, scalable brand identities that cut through the noise. From typography systems to visual guidelines, we craft the DNA of your brand.',
+      image: imgBranding,
       svg: (
         <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <g transform="translate(0.7, 0.7)">
@@ -24,6 +31,7 @@ const Services = () => {
       label: 'CAMPAIGN', 
       title: 'CAMPAIGN CREATIVE',
       description: 'High-impact visual campaigns designed to convert. We conceptualize and execute bold, multi-channel aesthetics that grab attention and refuse to let go.',
+      image: imgCampaign,
       svg: (
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
@@ -35,6 +43,7 @@ const Services = () => {
       label: 'CONTENT', 
       title: 'CONTENT CREATION',
       description: 'Engaging, platform-native content creation. Whether it\'s motion graphics, video, or rich static media, we produce assets that tell your story dynamically.',
+      image: imgContent,
       svg: (
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
@@ -48,6 +57,7 @@ const Services = () => {
       label: 'AI-POWERED', 
       title: 'AI-POWERED ASSETS',
       description: 'The future of asset generation, guided by human taste. We leverage state-of-the-art AI to rapidly prototype, iterate, and scale visual assets without sacrificing the premium studio finish.',
+      image: imgAi,
       svg: (
         <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <rect x="2" y="2" width="20" height="20" rx="2" ry="2"></rect>
@@ -158,15 +168,28 @@ const Services = () => {
             
             {activeService && (
               <div className="drawer-content">
-                <div className="drawer-image-placeholder">
-                  <div className="placeholder-pattern"></div>
+                <div className="drawer-image-placeholder" style={{ padding: 0 }}>
+                  {activeService.image ? (
+                    <img src={activeService.image} alt={activeService.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <div className="placeholder-pattern"></div>
+                  )}
                 </div>
                 
                 <div className="drawer-text-content">
                   <div className="drawer-icon">
                     {activeService.svg}
                   </div>
-                  <h3 className="drawer-title">{activeService.title}</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                    <h3 className="drawer-title" style={{ margin: 0 }}>{activeService.title}</h3>
+                    <button 
+                      className={`read-to-me-btn ${isPlaying ? 'playing' : ''}`}
+                      onClick={() => isPlaying ? stopAudio() : playTTS(activeService.description)}
+                      style={{ marginBottom: 0 }}
+                    >
+                      {isPlaying ? "⏹ STOP" : "▶ READ IT TO ME"}
+                    </button>
+                  </div>
                   <div className="drawer-divider"></div>
                   <p className="drawer-description">{activeService.description}</p>
                 </div>
