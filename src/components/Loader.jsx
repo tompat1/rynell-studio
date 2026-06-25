@@ -7,34 +7,103 @@ const Loader = ({ onComplete }) => {
   const [progress, setProgress] = useState(0);
   const [isFading, setIsFading] = useState(false);
 
+  const [progressPercentage, setProgressPercentage] = useState(0);
+  const [currentFile, setCurrentFile] = useState('SCANNING ASSETS...');
+  const [isPreloaded, setIsPreloaded] = useState(false); // real network status
+  const [timeElapsed, setTimeElapsed] = useState(false); // visual timer status
+  const MIN_LOADING_TIME = 5000;
+
+  // 1. Track Real Network Loading to unlock the NEXT button
   useEffect(() => {
+    const images = Array.from(document.images);
+    let total = images.length;
+    let loaded = 0;
+
+    if (total === 0) {
+      setIsPreloaded(true);
+      return;
+    }
+
+    const listeners = [];
+    const handleImageLoad = () => {
+      loaded++;
+      if (loaded >= total) setIsPreloaded(true);
+    };
+
+    images.forEach(img => {
+      if (img.complete) {
+        handleImageLoad();
+      } else {
+        const loadHandler = () => handleImageLoad();
+        img.addEventListener('load', loadHandler);
+        img.addEventListener('error', loadHandler);
+        listeners.push({ img, loadHandler });
+      }
+    });
+
+    return () => {
+      listeners.forEach(({ img, loadHandler }) => {
+        img.removeEventListener('load', loadHandler);
+        img.removeEventListener('error', loadHandler);
+      });
+    };
+  }, []);
+
+  // 2. Drive the 5s visual animation and text flashing
+  useEffect(() => {
+    const images = Array.from(document.images)
+      .map(img => img.src.split('/').pop().split('?')[0])
+      .filter(name => name);
+    
+    if (images.length === 0) images.push('CORE_STYLES.CSS', 'APP_BUNDLE.JS', 'UI_COMPONENTS.JSX');
+
     let startTime;
     let animationFrame;
-    const duration = 7000;
+    let textInterval;
 
     const animate = (timestamp) => {
       if (!startTime) startTime = timestamp;
       const elapsed = timestamp - startTime;
-      const newProgress = Math.min((elapsed / duration) * 100, 100);
+      const newProgress = Math.min((elapsed / MIN_LOADING_TIME) * 100, 100);
       
-      setProgress(newProgress);
+      setProgressPercentage(Math.floor(newProgress));
 
       if (newProgress < 100) {
         animationFrame = requestAnimationFrame(animate);
       } else {
-        setTimeout(() => {
-          setIsFading(true);
-          setTimeout(() => onComplete(), 500);
-        }, 400);
+        setTimeElapsed(true);
+        setCurrentFile('ALL SYSTEMS READY.');
+        clearInterval(textInterval);
       }
     };
 
     animationFrame = requestAnimationFrame(animate);
 
-    return () => cancelAnimationFrame(animationFrame);
-  }, [onComplete]);
+    let textIndex = 0;
+    textInterval = setInterval(() => {
+      setCurrentFile(`PRELOADING: ${images[textIndex % images.length].toUpperCase()}`);
+      textIndex++;
+    }, 150);
+
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      clearInterval(textInterval);
+    };
+  }, []);
+
+  // Auto-close when both visual timer (5s) AND network preload are complete
+  useEffect(() => {
+    if (isPreloaded && timeElapsed) {
+      const t = setTimeout(() => {
+        setIsFading(true);
+        setTimeout(() => onComplete(), 500);
+      }, 500);
+      return () => clearTimeout(t);
+    }
+  }, [isPreloaded, timeElapsed, onComplete]);
 
   const handleSkip = () => {
+    if (!isPreloaded) return;
     setIsFading(true);
     setTimeout(() => onComplete(), 500);
   };
@@ -55,7 +124,7 @@ const Loader = ({ onComplete }) => {
 
         <div className="loader-status">
           <img src={boltSvg} alt="bolt" className="status-bolt left" />
-          <span className="status-text">LOADING...</span>
+          <span className="status-text">{currentFile}</span>
           <img src={boltSvg} alt="bolt" className="status-bolt right" />
         </div>
 
@@ -65,7 +134,7 @@ const Loader = ({ onComplete }) => {
               {/* The actual filled bar */}
               <div 
                 className="progress-fill" 
-                style={{ width: `${progress}%` }}
+                style={{ width: `${progressPercentage}%` }}
               >
                 {/* The glowing spark at the edge */}
                 <div className="progress-flare"></div>
@@ -73,7 +142,7 @@ const Loader = ({ onComplete }) => {
             </div>
           </div>
           <div className="progress-percentage">
-            {Math.ceil(100 - progress)}%
+            {progressPercentage}%
           </div>
         </div>
 
@@ -140,11 +209,16 @@ const Loader = ({ onComplete }) => {
         }
         .status-text {
           font-family: var(--font-heading);
-          font-size: 2.2rem;
+          font-size: 1.5rem;
           color: #FFF;
-          letter-spacing: 4px;
+          letter-spacing: 2px;
           font-style: italic;
           text-shadow: 2px 2px 0 var(--primary-orange);
+          text-align: center;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 400px;
         }
         .status-bolt {
           width: 24px;
@@ -203,7 +277,7 @@ const Loader = ({ onComplete }) => {
           height: 100%;
           background: linear-gradient(90deg, #FF6A00 0%, #FFB400 100%);
           border-radius: 50px;
-          /* Removed transition for smooth requestAnimationFrame updates */
+          transition: width 0.3s ease-out;
           position: relative;
           box-shadow: 0 0 15px rgba(255, 106, 0, 0.8);
         }
@@ -244,23 +318,24 @@ const Loader = ({ onComplete }) => {
           letter-spacing: 3px;
           padding: 0.8rem 3rem;
           border: none;
-          cursor: pointer;
+          cursor: ${isPreloaded ? 'pointer' : 'not-allowed'};
           transform: skewX(-10deg);
           box-shadow: 4px 4px 0 #000;
-          transition: transform 0.2s ease, background-color 0.2s ease;
+          transition: transform 0.2s ease, background-color 0.2s ease, opacity 0.3s ease;
           position: absolute;
           bottom: -4rem;
+          opacity: ${isPreloaded ? 1 : 0.4};
         }
         .loader-next-btn:hover {
-          transform: skewX(-10deg) translateY(-2px);
-          background-color: #ff5722;
+          transform: ${isPreloaded ? 'skewX(-10deg) translateY(-2px)' : 'skewX(-10deg)'};
+          background-color: ${isPreloaded ? '#ff5722' : 'var(--primary-orange)'};
         }
 
         @media (max-width: 768px) {
           .loader-bg-overlay {
             background-image: var(--bg-mobile);
           }
-          .status-text { font-size: 1.5rem; }
+          .status-text { font-size: 1rem; }
           .progress-container {
             flex-direction: column;
             gap: 0.5rem;
