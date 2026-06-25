@@ -93,7 +93,7 @@ function App() {
       />
       <SearchDrawer isOpen={isSearchOpen} setIsOpen={setIsSearchOpen} onSelect={handleSearchSelect} />
       <AccountDrawer isOpen={isAccountOpen} setIsOpen={setIsAccountOpen} />
-      <DetailView item={activeDetailView} onClose={() => setActiveDetailView(null)} />
+      <DetailView item={activeDetailView} onClose={() => setActiveDetailView(null)} addToCart={addToCart} />
     </div>
   )
 }

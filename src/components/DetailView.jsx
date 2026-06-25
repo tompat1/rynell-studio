@@ -1,16 +1,29 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const DetailView = ({ item, onClose }) => {
+const DetailView = ({ item, onClose, addToCart }) => {
+  const [selectedSize, setSelectedSize] = useState(null);
+
   useEffect(() => {
     if (item) {
       document.body.classList.add('drawer-open');
+      if (item.type === 'PRODUCT' && item.sizes && item.sizes.length > 0) {
+        setSelectedSize(item.sizes[0]);
+      }
     } else {
       document.body.classList.remove('drawer-open');
+      setSelectedSize(null);
     }
     return () => document.body.classList.remove('drawer-open');
   }, [item]);
 
   if (!item) return null;
+
+  const handleAddToCart = () => {
+    if (addToCart && item.type === 'PRODUCT') {
+      addToCart({ ...item, size: selectedSize });
+      onClose();
+    }
+  };
 
   return (
     <div className="detail-view-overlay">
@@ -32,8 +45,26 @@ const DetailView = ({ item, onClose }) => {
               <h1>{item.title}</h1>
               <p className="placeholder-tag">{item.tag.toUpperCase()}</p>
               <p className="placeholder-price">${item.price.toFixed(2)}</p>
-              <p style={{ fontFamily: 'var(--font-body)', color: 'var(--text-secondary)', marginBottom: '3rem', fontSize: '1.2rem' }}>{item.details}</p>
-              <button className="checkout-btn">ADD TO CART</button>
+              <p style={{ fontFamily: 'var(--font-body)', color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '1.2rem' }}>{item.details}</p>
+              
+              {item.sizes && item.sizes.length > 0 && (
+                <div className="detail-size-selector">
+                  <p className="size-label">SIZE</p>
+                  <div className="size-options">
+                    {item.sizes.map(size => (
+                      <button 
+                        key={size}
+                        className={`size-btn ${selectedSize === size ? 'active' : ''}`}
+                        onClick={() => setSelectedSize(size)}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <button className="checkout-btn" onClick={handleAddToCart}>ADD TO CART</button>
             </div>
           </div>
         )}
@@ -82,6 +113,46 @@ const DetailView = ({ item, onClose }) => {
           display: flex;
           align-items: center;
           justify-content: flex-end;
+        }
+
+        .checkout-btn:hover {
+          background: var(--primary-orange);
+          color: #FFF;
+          border-color: var(--primary-orange);
+        }
+
+        /* Size Selector */
+        .detail-size-selector {
+          margin-bottom: 2rem;
+        }
+        .size-label {
+          font-family: var(--font-heading);
+          color: var(--text-secondary);
+          margin-bottom: 0.5rem;
+          font-size: 1.2rem;
+        }
+        .size-options {
+          display: flex;
+          gap: 0.5rem;
+          flex-wrap: wrap;
+        }
+        .size-btn {
+          background: transparent;
+          border: 1px solid var(--border-color);
+          color: var(--text-primary);
+          font-family: var(--font-body);
+          font-size: 1rem;
+          padding: 0.5rem 1rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .size-btn:hover {
+          border-color: var(--text-secondary);
+        }
+        .size-btn.active {
+          background: var(--secondary-blue);
+          border-color: var(--secondary-blue);
+          color: #FFF;
         }
 
         .back-btn {
