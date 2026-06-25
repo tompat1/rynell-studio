@@ -88,7 +88,7 @@ const Journal = () => {
 
   return (
     <section id="journal" className="section-container" style={{ position: 'relative' }}>
-      <div className="section-label">07 // JOURNAL</div>
+      <div className="section-label">JOURNAL</div>
       <div className="content-wrapper">
         <div className="journal-header">
           <div className="title-group">

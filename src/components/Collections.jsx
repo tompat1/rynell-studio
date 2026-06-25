@@ -64,7 +64,7 @@ const Collections = () => {
 
   return (
     <section id="collections" className="collections-section" style={{ position: 'relative' }}>
-      <div className="section-label">02 // COLLECTIONS</div>
+      <div className="section-label">COLLECTIONS</div>
       <div className="collections-header">
         <h2 className="section-title">COLLECTIONS</h2>
         <p className="section-description">Curated aesthetic archives. A rotating selection of our latest visual experiments and structural explorations.</p>

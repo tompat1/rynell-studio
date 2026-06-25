@@ -6,7 +6,7 @@ import boltSvg from "../assets/lightning_bolt_sticker_vector.svg";
 const Hero = () => {
   return (
     <section id="hero" className="hero-section" style={{ position: 'relative' }}>
-      <div className="section-label">01 // INTRO</div>
+      <div className="section-label">INTRO</div>
       {/* Big and Bold Background Image */}
       <div className="hero-bg-container">
         <img

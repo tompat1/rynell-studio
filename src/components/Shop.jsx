@@ -79,7 +79,7 @@ const Shop = ({ addToCart }) => {
 
   return (
     <section id="shop" style={{ position: 'relative' }}>
-      <div className="section-label">03 // SHOP</div>
+      <div className="section-label">SHOP</div>
       <div className="section-container">
         <div className="content-wrapper">
         <div className="shop-header">

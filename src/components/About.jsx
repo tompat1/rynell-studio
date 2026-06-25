@@ -8,7 +8,7 @@ const About = () => {
 
   return (
     <section id="about" className="section-container" style={{ position: 'relative' }}>
-      <div className="section-label">05 // ABOUT</div>
+      <div className="section-label">ABOUT</div>
       
       {/* Manifesto Section */}
       <div className="about-content">
