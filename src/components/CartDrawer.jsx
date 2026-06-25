@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 
-const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart, updateCartQuantity }) => {
+const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart, updateCartQuantity, onCheckout }) => {
   const subtotal = cart.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0);
 
   useEffect(() => {
@@ -82,7 +82,7 @@ const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart, updateCar
               <span>SUBTOTAL</span>
               <span>${subtotal.toFixed(2)}</span>
             </div>
-            <button className="checkout-btn">CHECKOUT</button>
+            <button className="checkout-btn" onClick={onCheckout}>CHECKOUT</button>
           </div>
         )}
       </div>

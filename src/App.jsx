@@ -12,6 +12,7 @@ import CartDrawer from './components/CartDrawer'
 import SearchDrawer from './components/SearchDrawer'
 import AccountDrawer from './components/AccountDrawer'
 import DetailView from './components/DetailView'
+import CheckoutDrawer from './components/CheckoutDrawer'
 import Loader from './components/Loader'
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isAccountOpen, setIsAccountOpen] = useState(false)
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [activeDetailView, setActiveDetailView] = useState(null)
   const [theme, setTheme] = useState('dark')
   const [isLoading, setIsLoading] = useState(true)
@@ -74,6 +76,15 @@ function App() {
     setCart((prevCart) => prevCart.filter((_, index) => index !== indexToRemove))
   }
 
+  const handleCheckout = () => {
+    setIsCartOpen(false);
+    setIsCheckoutOpen(true);
+  }
+
+  const clearCart = () => {
+    setCart([]);
+  }
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -111,9 +122,11 @@ function App() {
         setIsCartOpen={setIsCartOpen} 
         removeFromCart={removeFromCart} 
         updateCartQuantity={updateCartQuantity}
+        onCheckout={handleCheckout}
       />
       <SearchDrawer isOpen={isSearchOpen} setIsOpen={setIsSearchOpen} onSelect={handleSearchSelect} />
       <AccountDrawer isOpen={isAccountOpen} setIsOpen={setIsAccountOpen} />
+      <CheckoutDrawer isOpen={isCheckoutOpen} setIsOpen={setIsCheckoutOpen} cart={cart} clearCart={clearCart} />
       <DetailView item={activeDetailView} onClose={() => setActiveDetailView(null)} addToCart={addToCart} setItem={setActiveDetailView} />
     </div>
   )
