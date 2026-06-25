@@ -13,9 +13,9 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { name: 'ADS', image: adImg },
     { name: 'COLLECTIONS', image: collImg },
     { name: 'SHOP', image: shopImg },
+    { name: 'ADS', image: adImg },
     { name: 'ABOUT', image: aboutImg },
     { name: 'JOURNAL', image: journalImg }
   ];
