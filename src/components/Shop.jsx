@@ -74,9 +74,7 @@ const ShopItem = ({ item, addToCart }) => {
   );
 };
 
-const Shop = ({ addToCart }) => {
-  const [isArchiveOpen, setIsArchiveOpen] = useState(false);
-
+const Shop = ({ addToCart, isArchiveOpen, setIsArchiveOpen }) => {
   return (
     <section id="shop" style={{ position: 'relative' }}>
       <div className="section-label">SHOP</div>

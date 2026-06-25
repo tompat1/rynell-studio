@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAudio } from '../contexts/AudioContext';
 import { SEARCH_DATA } from './SearchDrawer';
 
-const DetailView = ({ item, onClose, addToCart, setItem }) => {
+const DetailView = ({ item, onClose, addToCart, setItem, openShopArchive }) => {
   const [selectedSize, setSelectedSize] = useState(null);
   const { playTTS, stopAudio, isPlaying } = useAudio();
 
@@ -108,7 +108,19 @@ const DetailView = ({ item, onClose, addToCart, setItem }) => {
                 </div>
               )}
               
-              <button className="checkout-btn" onClick={handleAddToCart}>ADD TO CART</button>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button className="checkout-btn" onClick={handleAddToCart} style={{ flex: 2 }}>ADD TO CART</button>
+                <button 
+                  className="checkout-btn" 
+                  onClick={() => {
+                    onClose();
+                    if (openShopArchive) openShopArchive();
+                  }} 
+                  style={{ flex: 1, background: 'transparent', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
+                >
+                  ALL MERCH
+                </button>
+              </div>
               {renderNavigation()}
             </div>
           </div>

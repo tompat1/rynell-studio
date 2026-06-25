@@ -21,6 +21,7 @@ function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isAccountOpen, setIsAccountOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
+  const [isShopArchiveOpen, setIsShopArchiveOpen] = useState(false)
   const [activeDetailView, setActiveDetailView] = useState(null)
   const [theme, setTheme] = useState('dark')
   const [isLoading, setIsLoading] = useState(true)
@@ -110,7 +111,7 @@ function App() {
       />
       <Hero />
       <Collections />
-      <Shop addToCart={addToCart} />
+      <Shop addToCart={addToCart} isArchiveOpen={isShopArchiveOpen} setIsArchiveOpen={setIsShopArchiveOpen} />
       <Ads />
       <About />
       <Services />
@@ -127,7 +128,13 @@ function App() {
       <SearchDrawer isOpen={isSearchOpen} setIsOpen={setIsSearchOpen} onSelect={handleSearchSelect} />
       <AccountDrawer isOpen={isAccountOpen} setIsOpen={setIsAccountOpen} />
       <CheckoutDrawer isOpen={isCheckoutOpen} setIsOpen={setIsCheckoutOpen} cart={cart} clearCart={clearCart} />
-      <DetailView item={activeDetailView} onClose={() => setActiveDetailView(null)} addToCart={addToCart} setItem={setActiveDetailView} />
+      <DetailView 
+        item={activeDetailView} 
+        onClose={() => setActiveDetailView(null)} 
+        addToCart={addToCart} 
+        setItem={setActiveDetailView} 
+        openShopArchive={() => setIsShopArchiveOpen(true)}
+      />
     </div>
   )
 }
