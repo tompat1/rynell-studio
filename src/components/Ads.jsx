@@ -78,7 +78,8 @@ const Ads = () => {
   };
 
   return (
-    <section id="ads" className="section-container">
+    <section id="ads" className="ads-section" style={{ position: 'relative' }}>
+      <div className="section-label">04 // CAMPAIGN</div>
       <div className="ads-header">
         <h2 className="section-title">ADS</h2>
         <p className="section-description">Visual campaigns that break through the noise. Bold imagery, aggressive typography, and uncompromising art direction.</p>

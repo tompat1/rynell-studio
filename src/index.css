@@ -91,6 +91,20 @@ a {
 .text-yellow { color: var(--yellow); }
 .text-dark { color: var(--black); }
 
+/* Section Label */
+.section-label {
+  position: absolute;
+  top: 2rem;
+  left: 5%;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  z-index: 10;
+  pointer-events: none;
+}
+
 /* Comic Text Effect */
 .comic-text {
   font-family: var(--font-heading);

@@ -7,7 +7,8 @@ const About = () => {
   const manifestoText = "Rynell Studio is a multi-disciplinary creative force specializing in aggressive, high-impact visual design. From conceptual branding to explosive campaign visuals and AI-driven asset generation, we deliver work that doesn't just look good—it hits hard. We operate at the bleeding edge of visual culture, blending raw human creativity with state-of-the-art AI tooling to deliver uncompromising aesthetics.";
 
   return (
-    <section id="about" className="section-container">
+    <section id="about" className="section-container" style={{ position: 'relative' }}>
+      <div className="section-label">05 // ABOUT</div>
       
       {/* Manifesto Section */}
       <div className="about-content">

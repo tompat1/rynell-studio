@@ -94,7 +94,8 @@ const Services = () => {
   };
 
   return (
-    <section className="services-section">
+    <section id="services" className="services-section" style={{ position: 'relative' }}>
+      <div className="section-label">06 // SERVICES</div>
       
       {/* Explosive Pop-Art Background Image */}
       <div className="services-bg-container">

@@ -78,8 +78,10 @@ const Shop = ({ addToCart }) => {
   const [isArchiveOpen, setIsArchiveOpen] = useState(false);
 
   return (
-    <section id="shop" className="section-container">
-      <div className="content-wrapper">
+    <section id="shop" style={{ position: 'relative' }}>
+      <div className="section-label">03 // SHOP</div>
+      <div className="section-container">
+        <div className="content-wrapper">
         <div className="shop-header">
           <div className="title-group">
             <h2 className="section-title">LATEST DROPS</h2>
@@ -369,6 +371,7 @@ const Shop = ({ addToCart }) => {
           .shop-archive-grid { padding: 2rem 5%; }
         }
       `}</style>
+      </div>
     </section>
   );
 };
