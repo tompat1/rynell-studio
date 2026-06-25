@@ -3,6 +3,7 @@ import boltSvg from '../assets/lightning_bolt_sticker_vector.svg';
 import loaderBg from '../assets/loader_clean_bg.webp';
 import loaderMobileBg from '../assets/loader_mobile_bg.webp';
 import { useAudio } from '../contexts/AudioContext';
+import { synthesizeSpeech } from '../services/elevenlabs';
 
 const Loader = ({ onComplete }) => {
   const [isFading, setIsFading] = useState(false);
@@ -13,12 +14,29 @@ const Loader = ({ onComplete }) => {
   const [timeElapsed, setTimeElapsed] = useState(false); // visual timer status
   const MIN_LOADING_TIME = 5000;
   const { playTTS } = useAudio();
+  const [preloadedAudioUrl, setPreloadedAudioUrl] = useState(null);
+
+  // Preload audio instantly when loader mounts
+  useEffect(() => {
+    const preloadAudio = async () => {
+      const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
+      const voiceId = import.meta.env.VITE_ELEVENLABS_VOICE_ID;
+      if (apiKey && voiceId) {
+        const url = await synthesizeSpeech("Welcome to Rynell Studio. Stay original. Stay you.", voiceId, apiKey);
+        setPreloadedAudioUrl(url);
+      }
+    };
+    preloadAudio();
+  }, []);
 
   const handleFinish = () => {
     setIsFading(true);
     setTimeout(() => {
       onComplete();
-      playTTS("Welcome to Rynell Studio. Stay original. Stay you.");
+      playTTS("Welcome to Rynell Studio. Stay original. Stay you.", { 
+        preloadedUrl: preloadedAudioUrl,
+        playbackRate: 0.85
+      });
     }, 500);
   };
 

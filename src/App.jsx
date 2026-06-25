@@ -10,18 +10,29 @@ import Journal from './components/Journal'
 import Footer from './components/Footer'
 import CartDrawer from './components/CartDrawer'
 import Loader from './components/Loader'
-import { useAudio } from './contexts/AudioContext'
 
 function App() {
   const [cart, setCart] = useState([])
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [theme, setTheme] = useState('dark')
   const [isLoading, setIsLoading] = useState(true)
-  const { isMuted, toggleMute } = useAudio()
+  const [showScroll, setShowScroll] = useState(false)
 
   useEffect(() => {
     document.body.className = `${theme}-theme`
   }, [theme])
+
+  useEffect(() => {
+    const checkScrollTop = () => {
+      if (!showScroll && window.scrollY > 400) {
+        setShowScroll(true);
+      } else if (showScroll && window.scrollY <= 400) {
+        setShowScroll(false);
+      }
+    };
+    window.addEventListener('scroll', checkScrollTop);
+    return () => window.removeEventListener('scroll', checkScrollTop);
+  }, [showScroll]);
 
   const addToCart = (item) => {
     setCart((prevCart) => [...prevCart, item])
@@ -32,14 +43,18 @@ function App() {
     setCart((prevCart) => prevCart.filter((_, index) => index !== indexToRemove))
   }
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   return (
     <div className={`app ${theme}-theme`}>
       <button 
-        className="global-mute-btn" 
-        onClick={toggleMute}
-        title={isMuted ? "Unmute Voice" : "Mute Voice"}
+        className={`scroll-top-btn ${showScroll ? 'visible' : ''}`}
+        onClick={scrollToTop}
+        title="Back to top"
       >
-        {isMuted ? "🔇" : "🔊"}
+        ↑
       </button>
 
       {isLoading && <Loader onComplete={() => setIsLoading(false)} />}

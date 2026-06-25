@@ -20,7 +20,7 @@ export const AudioProvider = ({ children }) => {
     });
   };
 
-  const playTTS = async (text) => {
+  const playTTS = async (text, options = {}) => {
     if (isMuted) return;
 
     if (isPlaying && audioRef.current) {
@@ -30,13 +30,17 @@ export const AudioProvider = ({ children }) => {
 
     setIsPlaying(true);
 
-    const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
-    const voiceId = import.meta.env.VITE_ELEVENLABS_VOICE_ID;
+    let audioUrl = options.preloadedUrl;
 
-    const audioUrl = await synthesizeSpeech(text, voiceId, apiKey);
+    if (!audioUrl) {
+      const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
+      const voiceId = import.meta.env.VITE_ELEVENLABS_VOICE_ID;
+      audioUrl = await synthesizeSpeech(text, voiceId, apiKey);
+    }
     
     if (audioUrl && audioRef.current) {
       audioRef.current.src = audioUrl;
+      audioRef.current.playbackRate = options.playbackRate || 1.0;
       audioRef.current.play().catch(e => {
         console.error("Audio playback failed", e);
         setIsPlaying(false);
@@ -44,7 +48,9 @@ export const AudioProvider = ({ children }) => {
 
       audioRef.current.onended = () => {
         setIsPlaying(false);
-        URL.revokeObjectURL(audioUrl);
+        if (!options.preloadedUrl) {
+          URL.revokeObjectURL(audioUrl);
+        }
       };
     } else {
       setIsPlaying(false);
