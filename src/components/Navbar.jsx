@@ -9,7 +9,7 @@ import shopImg from '../assets/merch/hoodie_merch_blackout_07.webp';
 import aboutImg from '../assets/studio_portrait.jpg';
 import journalImg from '../assets/journal/neon_nights.png';
 
-const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
+const Navbar = ({ cartCount, setIsCartOpen, setIsSearchOpen, setIsAccountOpen, theme, setTheme }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isMuted, toggleMute } = useAudio();
@@ -103,14 +103,14 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
                 )}
               </button>
 
-              <button className="icon-btn" aria-label="Search">
+              <button className="icon-btn" aria-label="Search" onClick={() => setIsSearchOpen(true)}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8"></circle>
                   <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
               </button>
               
-              <button className="icon-btn" aria-label="Account">
+              <button className="icon-btn" aria-label="Account" onClick={() => setIsAccountOpen(true)}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>

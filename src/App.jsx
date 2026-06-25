@@ -9,11 +9,15 @@ import About from './components/About'
 import Journal from './components/Journal'
 import Footer from './components/Footer'
 import CartDrawer from './components/CartDrawer'
+import SearchDrawer from './components/SearchDrawer'
+import AccountDrawer from './components/AccountDrawer'
 import Loader from './components/Loader'
 
 function App() {
   const [cart, setCart] = useState([])
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [isAccountOpen, setIsAccountOpen] = useState(false)
   const [theme, setTheme] = useState('dark')
   const [isLoading, setIsLoading] = useState(true)
   const [showScroll, setShowScroll] = useState(false)
@@ -61,6 +65,8 @@ function App() {
       <Navbar 
         cartCount={cart.length} 
         setIsCartOpen={setIsCartOpen} 
+        setIsSearchOpen={setIsSearchOpen}
+        setIsAccountOpen={setIsAccountOpen}
         theme={theme} 
         setTheme={setTheme} 
       />
@@ -78,6 +84,8 @@ function App() {
         setIsCartOpen={setIsCartOpen} 
         removeFromCart={removeFromCart} 
       />
+      <SearchDrawer isOpen={isSearchOpen} setIsOpen={setIsSearchOpen} />
+      <AccountDrawer isOpen={isAccountOpen} setIsOpen={setIsAccountOpen} />
     </div>
   )
 }

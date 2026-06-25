@@ -9,6 +9,16 @@ const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart }) => {
     return () => document.body.classList.remove('drawer-open');
   }, [isCartOpen]);
 
+  const handleContinueShopping = () => {
+    setIsCartOpen(false);
+    const shopElement = document.getElementById('shop');
+    if (shopElement) {
+      shopElement.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      window.location.hash = '#shop';
+    }
+  };
+
   return (
     <>
       {/* Backdrop */}
@@ -33,7 +43,7 @@ const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart }) => {
           {cart.length === 0 ? (
             <div className="empty-cart">
               <p>Your cart is empty.</p>
-              <button className="continue-shopping" onClick={() => setIsCartOpen(false)}>
+              <button className="continue-shopping" onClick={handleContinueShopping}>
                 CONTINUE SHOPPING
               </button>
             </div>

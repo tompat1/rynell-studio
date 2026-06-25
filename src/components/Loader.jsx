@@ -16,8 +16,11 @@ const Loader = ({ onComplete }) => {
   const { playTTS } = useAudio();
   const [preloadedAudioUrl, setPreloadedAudioUrl] = useState(null);
 
-  // Preload audio instantly when loader mounts
+  // Preload audio instantly when loader mounts, if they haven't heard it yet
   useEffect(() => {
+    const hasHeardGreeting = localStorage.getItem('hasHeardGreeting');
+    if (hasHeardGreeting) return;
+
     const preloadAudio = async () => {
       const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
       const voiceId = import.meta.env.VITE_ELEVENLABS_VOICE_ID;
@@ -33,10 +36,15 @@ const Loader = ({ onComplete }) => {
     setIsFading(true);
     setTimeout(() => {
       onComplete();
-      playTTS("Welcome to Rynell Studio. Stay original. Stay you.", { 
-        preloadedUrl: preloadedAudioUrl,
-        playbackRate: 0.85
-      });
+      
+      const hasHeardGreeting = localStorage.getItem('hasHeardGreeting');
+      if (!hasHeardGreeting) {
+        playTTS("Welcome to Rynell Studio. Stay original. Stay you.", { 
+          preloadedUrl: preloadedAudioUrl,
+          playbackRate: 0.85
+        });
+        localStorage.setItem('hasHeardGreeting', 'true');
+      }
     }, 500);
   };
 
