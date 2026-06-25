@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import boltSvg from '../assets/lightning_bolt_sticker_vector.svg';
+import { useAudio } from '../contexts/AudioContext';
 
 // Images for Mobile Menu
 import adImg from '../assets/campaigns/campaign_02.jpg';
@@ -11,6 +12,7 @@ import journalImg from '../assets/journal/neon_nights.png';
 const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isMuted, toggleMute } = useAudio();
 
   const navItems = [
     { name: 'COLLECTIONS', image: collImg },
@@ -58,6 +60,25 @@ const Navbar = ({ cartCount, setIsCartOpen, theme, setTheme }) => {
           <div className="navbar-actions">
             
             <div className="nav-icons">
+              <button 
+                className="icon-btn mute-toggle-btn" 
+                aria-label={isMuted ? "Unmute Voice" : "Mute Voice"}
+                onClick={toggleMute}
+              >
+                {isMuted ? (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <line x1="23" y1="9" x2="17" y2="15"></line>
+                    <line x1="17" y1="9" x2="23" y2="15"></line>
+                  </svg>
+                ) : (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                  </svg>
+                )}
+              </button>
+
               <button 
                 className="icon-btn theme-toggle-btn" 
                 aria-label="Toggle Theme"
