@@ -69,6 +69,36 @@ const Hero = () => {
           width: 100%;
           height: 100%;
           z-index: 0;
+          overflow: hidden;
+        }
+
+        .hero-bg-container::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -120%;
+          width: 60%;
+          height: 100%;
+          background: linear-gradient(
+            105deg,
+            transparent 30%,
+            rgba(255, 255, 255, 0.04) 45%,
+            rgba(255, 255, 255, 0.13) 50%,
+            rgba(255, 255, 255, 0.04) 55%,
+            transparent 70%
+          );
+          transform: skewX(-15deg);
+          animation: hero-glint 6s ease-in-out infinite;
+          pointer-events: none;
+          z-index: 2;
+        }
+
+        @keyframes hero-glint {
+          0%   { left: -120%; opacity: 0; }
+          5%   { opacity: 1; }
+          40%  { left: 160%; opacity: 1; }
+          45%  { opacity: 0; }
+          100% { left: 160%; opacity: 0; }
         }
 
         .hero-bg-img {
