@@ -100,7 +100,7 @@ function App() {
         onClick={scrollToTop}
         title="Back to top"
       >
-        ↑
+        <span>↑</span>
       </button>
 
       {isLoading && <Loader onComplete={() => setIsLoading(false)} />}

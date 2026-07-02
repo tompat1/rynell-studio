@@ -209,6 +209,16 @@ const Shop = ({ addToCart, isArchiveOpen, setIsArchiveOpen }) => {
           border: 1px solid var(--border-color);
           overflow: hidden;
         }
+        /* Halftone dot grid */
+        .shop-image-container::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background-image: radial-gradient(rgba(0, 0, 0, 0.18) 1.2px, transparent 1.2px);
+          background-size: 7px 7px;
+          z-index: 1;
+          pointer-events: none;
+        }
         .shop-product-img {
           width: 100%;
           height: 100%;
@@ -222,6 +232,7 @@ const Shop = ({ addToCart, isArchiveOpen, setIsArchiveOpen }) => {
         /* Quick Add Overlay */
         .quick-add-overlay {
           position: absolute;
+          z-index: 3;
           bottom: 0;
           left: 0;
           width: 100%;
