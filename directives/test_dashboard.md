@@ -29,3 +29,18 @@ Build a responsive visual dashboard mockup for a data-monitoring app, and create
 ## 🔄 Step 3: Self-Annealing Validation
 *   **Task:** Run the script from Step 2.
 *   If the script fails (e.g., directory `.tmp/` missing), the agent must create the directory, fix the script, run it again, and update this directive with the fix under an "Edge Cases" section.
+
+---
+
+## ⚠️ Edge Cases
+
+### Missing Directory for JSON Output
+*   **Symptom:** Running `execution/generate_mock_data.py` failed with `FileNotFoundError: [Errno 2] No such file or directory: '.tmp/current_metrics.json'` when the `.tmp/` directory did not exist.
+*   **Resolution:** 
+    1. Created the directory manually using `mkdir -p .tmp`.
+    2. Modified the script to automatically check for and create the output path's directory before writing:
+       ```python
+       os.makedirs(os.path.dirname(output_file), exist_ok=True)
+       ```
+    3. Confirmed successful execution after applying the change.
+

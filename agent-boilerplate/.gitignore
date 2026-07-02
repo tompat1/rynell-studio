@@ -7,15 +7,16 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Node modules & builds
+node_modules/
+dist/
+dist-ssr/
 *.local
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
@@ -31,6 +32,6 @@ dist-ssr
 # Temporary / intermediate files (see AGENTS.md)
 .tmp/
 
-# Google OAuth credentials
+# Credentials / OAuth tokens
 credentials.json
 token.json
