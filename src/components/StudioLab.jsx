@@ -176,7 +176,9 @@ const StudioLab = () => {
 
           if (statusData.status === 'processing' || statusData.status === 'in_progress') {
             setStatus('PROCESSING');
-            if (selectedModel === 'logo') {
+            if (selectedModel === 'qwen_edit') {
+              setStatusMessage('CLOUDFLARE WORKERS AI GPU: EXECUTING QWEN IMAGE EDIT MATRIX...');
+            } else if (selectedModel === 'logo') {
               setStatusMessage('RUNPOD GPU ENGINE: TRACING VECTOR CURVES (VTRACER SVG)...');
             } else {
               setStatusMessage('REPLICATE GPU ENGINE: RECONSTRUCTING MATRIX TO 8K ULTRA RESOLUTION...');
@@ -184,7 +186,7 @@ const StudioLab = () => {
           } else if (statusData.status === 'succeeded' || statusData.status === 'completed') {
             clearInterval(pollInterval);
             setStatus('SUCCESS');
-            setStatusMessage('PROCESS COMPLETE: 8K ULTRA RENDER READY.');
+            setStatusMessage(selectedModel === 'qwen_edit' ? 'PROCESS COMPLETE: FREE QWEN AI EDIT READY.' : 'PROCESS COMPLETE: 8K ULTRA RENDER READY.');
             setOutputUrl(statusData.outputUrl || aiFashion);
           } else if (statusData.status === 'failed') {
             clearInterval(pollInterval);

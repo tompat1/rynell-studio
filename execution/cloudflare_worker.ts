@@ -193,6 +193,17 @@ export default {
         const jobId = url.pathname.replace('/api/jobs/', '');
         const provider = url.searchParams.get('provider') || 'replicate';
 
+        if (provider === 'cloudflare_ai') {
+          return new Response(
+            JSON.stringify({
+              jobId,
+              status: 'completed',
+              outputUrl: null
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
         if (provider === 'runpod') {
           const statusResp = await fetch(`https://api.runpod.ai/v2/vtracer-vectorine/status/${jobId}`, {
             headers: { 'Authorization': `Bearer ${env.RUNPOD_API_KEY}` }
