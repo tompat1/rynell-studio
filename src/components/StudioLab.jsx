@@ -16,6 +16,9 @@ const StudioLab = () => {
   const [outputUrl, setOutputUrl] = useState(null);
   const [turnstileToken, setTurnstileToken] = useState('pass-token');
   const [turnstileStatus, setTurnstileStatus] = useState('VERIFIED'); // VERIFYING, VERIFIED, EXPIRED, ERROR
+  const [qwenPrompt, setQwenPrompt] = useState('Remove photobomber and text from background');
+  const [refFile, setRefFile] = useState(null);
+  const [refPreviewUrl, setRefPreviewUrl] = useState(null);
   const turnstileContainerRef = useRef(null);
   const turnstileWidgetId = useRef(null);
 
@@ -360,6 +363,88 @@ const StudioLab = () => {
               )}
             </div>
 
+            {/* Qwen AI Dedicated Prompting & Reference Image Workspace */}
+            {selectedModel === 'qwen_edit' && (
+              <div className="qwen-workspace-card">
+                <div className="qwen-workspace-header">
+                  <span className="qwen-badge-label">🤖 QWEN AI PROMPTING WORKSPACE</span>
+                  <span className="qwen-free-tag">100% FREE</span>
+                </div>
+
+                {/* Reference Picture Upload Box (Optional reference image for style, face, or texture) */}
+                <div className="ref-upload-box">
+                  <label className="ref-upload-label">
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={(e) => {
+                        const f = e.target.files[0];
+                        if (f) {
+                          setRefFile(f);
+                          setRefPreviewUrl(URL.createObjectURL(f));
+                        }
+                      }} 
+                      style={{ display: 'none' }} 
+                    />
+                    {refPreviewUrl ? (
+                      <div className="ref-preview-content">
+                        <img src={refPreviewUrl} alt="Reference" className="ref-thumb-img" />
+                        <div className="ref-meta-info">
+                          <span className="ref-name-text">REFERENCE: {refFile ? refFile.name : "STYLE_REF.PNG"}</span>
+                          <button 
+                            className="remove-ref-btn" 
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRefFile(null); setRefPreviewUrl(null); }}
+                          >
+                            REMOVE REFERENCE
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="empty-ref-prompt">
+                        <span className="ref-icon-symbol">🖼️</span>
+                        <span className="ref-title-text">ADD REFERENCE PICTURE (OPTIONAL)</span>
+                        <span className="ref-sub-text">Used for style transfer, face IP consistency & texture matching</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
+
+                {/* AI Prompt Textarea */}
+                <div className="qwen-prompt-field-wrapper">
+                  <label className="prompt-field-title">NATURAL LANGUAGE EDIT PROMPT:</label>
+                  <textarea
+                    className="qwen-prompt-textarea"
+                    rows="3"
+                    value={qwenPrompt}
+                    onChange={(e) => setQwenPrompt(e.target.value)}
+                    placeholder="Describe what you want Qwen AI to edit (e.g., 'Remove photobomber, rewrite store sign to RYNELL STUDIO, change jacket to electric orange')..."
+                  />
+                </div>
+
+                {/* Quick Recipe Pills */}
+                <div className="recipes-group-wrapper">
+                  <span className="recipes-group-title">QUICK PROMPT RECIPES:</span>
+                  <div className="recipe-pills-container">
+                    {[
+                      'Remove unwanted background objects and text',
+                      'Rewrite sign text to "RYNELL STUDIO" cleanly',
+                      'Change outfit color to electric tangerine',
+                      'Maintain character face, change hair to cyberpunk blue',
+                      'Convert portrait into brutalist art illustration'
+                    ].map((recipe, idx) => (
+                      <button
+                        key={idx}
+                        className={`recipe-pill-item ${qwenPrompt === recipe ? 'active' : ''}`}
+                        onClick={() => setQwenPrompt(recipe)}
+                      >
+                        + {recipe}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Turnstile Security Widget & Dynamic Status Bar */}
             <div className="turnstile-wrapper">
               <div className="turnstile-status-bar">
@@ -386,7 +471,7 @@ const StudioLab = () => {
                 onClick={handleStartProcess}
                 disabled={!previewUrl}
               >
-                GENERATE {selectedModel === 'logo' ? 'VECTOR (SVG)' : '8K ULTRA ENHANCEMENT'}
+                {selectedModel === 'qwen_edit' ? '⚡ EXECUTE FREE QWEN AI EDIT' : selectedModel === 'logo' ? 'GENERATE VECTOR (SVG)' : 'GENERATE 8K ULTRA ENHANCEMENT'}
               </button>
             )}
 
@@ -580,6 +665,174 @@ const StudioLab = () => {
           display: flex;
           align-items: center;
           gap: 0.6rem;
+        }
+
+        .qwen-workspace-card {
+          display: flex;
+          flex-direction: column;
+          gap: 1.2rem;
+          background: #09090C;
+          border: 3px solid #00E5FF;
+          padding: 1.5rem;
+          box-shadow: 6px 6px 0 #000;
+        }
+
+        .qwen-workspace-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 2px solid #222;
+          padding-bottom: 0.8rem;
+        }
+
+        .qwen-badge-label {
+          font-family: var(--font-heading);
+          font-size: 1.1rem;
+          color: #00E5FF;
+          letter-spacing: 1px;
+        }
+
+        .qwen-free-tag {
+          font-family: var(--font-heading);
+          font-size: 0.85rem;
+          background: #00FF66;
+          color: #000;
+          padding: 0.2rem 0.6rem;
+          font-weight: bold;
+        }
+
+        .ref-upload-box {
+          border: 2px dashed #00E5FF;
+          background: #000;
+          padding: 1rem;
+          text-align: center;
+        }
+
+        .ref-upload-label { cursor: pointer; display: block; }
+
+        .empty-ref-prompt {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.3rem;
+        }
+
+        .ref-icon-symbol { font-size: 1.8rem; }
+
+        .ref-title-text {
+          font-family: var(--font-heading);
+          font-size: 0.95rem;
+          color: #00E5FF;
+          letter-spacing: 1px;
+        }
+
+        .ref-sub-text {
+          font-family: var(--font-body);
+          font-size: 0.75rem;
+          color: #888;
+        }
+
+        .ref-preview-content {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .ref-thumb-img {
+          width: 60px;
+          height: 60px;
+          object-fit: cover;
+          border: 2px solid #00E5FF;
+        }
+
+        .ref-meta-info {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.3rem;
+        }
+
+        .ref-name-text {
+          font-family: var(--font-heading);
+          font-size: 0.85rem;
+          color: #FFF;
+        }
+
+        .remove-ref-btn {
+          font-family: var(--font-heading);
+          font-size: 0.75rem;
+          padding: 0.2rem 0.5rem;
+          background: #FF0055;
+          color: #FFF;
+          border: none;
+          cursor: pointer;
+        }
+
+        .qwen-prompt-field-wrapper {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .prompt-field-title {
+          font-family: var(--font-heading);
+          font-size: 0.9rem;
+          color: #00E5FF;
+          letter-spacing: 1px;
+        }
+
+        .qwen-prompt-textarea {
+          width: 100%;
+          background: #000;
+          border: 2px solid #333;
+          color: #FFF;
+          padding: 0.8rem;
+          font-family: var(--font-body);
+          font-size: 0.95rem;
+          resize: vertical;
+          outline: none;
+        }
+
+        .qwen-prompt-textarea:focus {
+          border-color: #00E5FF;
+        }
+
+        .recipes-group-wrapper {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .recipes-group-title {
+          font-family: var(--font-heading);
+          font-size: 0.8rem;
+          color: #888;
+          letter-spacing: 1px;
+        }
+
+        .recipe-pills-container {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.4rem;
+        }
+
+        .recipe-pill-item {
+          font-family: var(--font-body);
+          font-size: 0.75rem;
+          padding: 0.3rem 0.6rem;
+          background: #14141A;
+          color: #AAA;
+          border: 1px solid #333;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          text-align: left;
+        }
+
+        .recipe-pill-item:hover, .recipe-pill-item.active {
+          background: #00E5FF;
+          color: #000;
+          border-color: #00E5FF;
+          font-weight: bold;
         }
 
         .studio-lab-section {
