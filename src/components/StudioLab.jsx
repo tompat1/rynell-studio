@@ -515,39 +515,31 @@ const StudioLab = () => {
               </div>
             </div>
 
-            {/* Processing Action Button */}
-            {status === 'IDLE' && (
-              <button 
-                className="action-btn process-btn" 
-                onClick={handleStartProcess}
-              >
-                {selectedModel === 'qwen_edit' ? '⚡ EXECUTE FREE QWEN AI EDIT' : selectedModel === 'logo' ? 'GENERATE VECTOR (SVG)' : 'GENERATE 8K ULTRA ENHANCEMENT'}
-              </button>
-            )}
-
-            {/* Live Progress Spinner Indicator */}
-            {['UPLOADING', 'QUEUED', 'PROCESSING'].includes(status) && (
-              <div className="processing-status-card">
-                <div className="spinner spinner-lg"></div>
-                <div className="status-text-block">
-                  <h4 className="status-heading">{status}...</h4>
-                  <p className="status-msg">{statusMessage}</p>
-                </div>
-              </div>
-            )}
-
-            {status === 'SUCCESS' && (
-              <div className="success-action-group">
-                <a 
-                  href={outputUrl} 
-                  download={selectedModel === 'qwen_edit' ? 'QWEN_EDITED_ASSET.png' : selectedModel === 'logo' ? 'VECTORINE_GRAPHIC.svg' : 'RYNELL_STUDIO_8K_RENDER.png'} 
-                  className="action-btn download-btn"
+            {/* Processing Action Buttons & Continuous Edit Flow */}
+            {['IDLE', 'SUCCESS'].includes(status) && (
+              <div className="action-buttons-stack">
+                <button 
+                  className="action-btn process-btn" 
+                  onClick={handleStartProcess}
                 >
-                  📥 DOWNLOAD {selectedModel === 'qwen_edit' ? 'QWEN EDITED ASSET' : selectedModel === 'logo' ? 'SVG VECTOR' : '8K IMAGE'}
-                </a>
-                <button className="action-btn reset-btn" onClick={handleReset}>
-                  PROCESS ANOTHER FILE
+                  {selectedModel === 'qwen_edit' ? (status === 'SUCCESS' ? '⚡ APPLY ANOTHER QWEN EDIT' : '⚡ EXECUTE FREE QWEN AI EDIT') : selectedModel === 'logo' ? 'GENERATE VECTOR (SVG)' : 'GENERATE 8K ULTRA ENHANCEMENT'}
                 </button>
+
+                {status === 'SUCCESS' && (
+                  <a 
+                    href={outputUrl} 
+                    download={selectedModel === 'qwen_edit' ? 'QWEN_EDITED_ASSET.png' : selectedModel === 'logo' ? 'VECTORINE_GRAPHIC.svg' : 'RYNELL_STUDIO_8K_RENDER.png'} 
+                    className="action-btn download-btn"
+                  >
+                    📥 DOWNLOAD {selectedModel === 'qwen_edit' ? 'QWEN EDITED ASSET' : selectedModel === 'logo' ? 'SVG VECTOR' : '8K IMAGE'}
+                  </a>
+                )}
+
+                {status === 'SUCCESS' && (
+                  <button className="action-btn reset-btn" onClick={handleReset}>
+                    PROCESS ANOTHER FILE
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -1156,6 +1148,13 @@ const StudioLab = () => {
           font-size: 0.85rem;
           color: var(--text-secondary);
           margin: 0;
+        }
+
+        .action-buttons-stack {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          width: 100%;
         }
 
         .success-action-group {
