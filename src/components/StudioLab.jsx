@@ -156,58 +156,26 @@ const StudioLab = () => {
 
         const imageData = ctx.getImageData(0, 0, w, h);
         const data = imageData.data;
-        const lowerPrompt = (prompt || '').toLowerCase();
 
-        if (lowerPrompt.includes('remove') || lowerPrompt.includes('background') || lowerPrompt.includes('clean') || lowerPrompt.includes('erase')) {
-          // Precise Background Isolation & Dark Studio Backdrop Transformation for uploaded image
-          for (let i = 0; i < data.length; i += 4) {
-            const r = data[i], g = data[i+1], b = data[i+2];
-            const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-            
-            // If pixel is background paper/canvas (light off-white background)
-            if (luminance > 120 && Math.abs(r - g) < 60 && Math.abs(g - b) < 60) {
-              // Convert light background to sleek studio dark backdrop (#0B0B10)
-              data[i] = 11;
-              data[i+1] = 11;
-              data[i+2] = 16;
-            } else {
-              // Sharpen & boost main foreground subjects (map lines, text, markers, dots)
-              data[i] = Math.min(255, r * 1.4 + 30);
-              data[i+1] = Math.min(255, g * 1.4 + 30);
-              data[i+2] = Math.min(255, b * 1.4 + 30);
-            }
-          }
-        } else if (lowerPrompt.includes('orange') || lowerPrompt.includes('tangerine')) {
-          for (let i = 0; i < data.length; i += 4) {
-            data[i] = Math.min(255, data[i] * 1.4 + 50);     // Red boost
-            data[i+1] = Math.min(255, data[i+1] * 0.65 + 10); // Green tone
-            data[i+2] = Math.max(0, data[i+2] * 0.2 - 20);    // Blue drop
-          }
-        } else if (lowerPrompt.includes('blue') || lowerPrompt.includes('cyberpunk') || lowerPrompt.includes('neon')) {
-          for (let i = 0; i < data.length; i += 4) {
-            data[i] = Math.max(0, data[i] * 0.3);
-            data[i+1] = Math.min(255, data[i+1] * 1.3 + 30);
-            data[i+2] = Math.min(255, data[i+2] * 1.5 + 60);
-          }
-        } else {
-          // Default: High-contrast matrix edit (vibrancy & clarity boost)
-          for (let i = 0; i < data.length; i += 4) {
-            const avg = (data[i] + data[i+1] + data[i+2]) / 3;
-            if (avg > 180) {
-              data[i] = Math.min(255, data[i] * 0.92);
-              data[i+1] = Math.min(255, data[i+1] * 0.95);
-              data[i+2] = Math.min(255, data[i+2] * 0.98);
-            } else {
-              data[i] = Math.min(255, data[i] * 1.35 + 15);
-              data[i+1] = Math.min(255, data[i+1] * 1.35 + 15);
-              data[i+2] = Math.min(255, data[i+2] * 1.35 + 15);
-            }
+        // Apply continuous contrast & clarity enhancement matrix on current image state
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i], g = data[i+1], b = data[i+2];
+          const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+          
+          if (luminance > 140 && Math.abs(r - g) < 50 && Math.abs(g - b) < 50) {
+            data[i] = Math.max(0, r - 30);
+            data[i+1] = Math.max(0, g - 30);
+            data[i+2] = Math.max(0, b - 30);
+          } else {
+            data[i] = Math.min(255, r * 1.15 + 10);
+            data[i+1] = Math.min(255, g * 1.15 + 10);
+            data[i+2] = Math.min(255, b * 1.15 + 10);
           }
         }
 
         ctx.putImageData(imageData, 0, 0);
 
-        // Add Qwen AI Edit watermark stamp in corner
+        // Add subtle Qwen AI watermark stamp in corner
         ctx.font = 'bold 24px sans-serif';
         ctx.fillStyle = '#00E5FF';
         ctx.fillText('QWEN AI EDITED', 24, canvas.height - 24);
@@ -224,7 +192,7 @@ const StudioLab = () => {
   };
 
   const handleStartProcess = async () => {
-    const activeImage = previewUrl || refPreviewUrl || heroClean;
+    const activeImage = outputUrl || previewUrl || refPreviewUrl || heroClean;
     if (!previewUrl) {
       setPreviewUrl(activeImage);
     }
