@@ -125,7 +125,7 @@ const StudioLab = () => {
         setTimeout(async () => {
           setStatus('SUCCESS');
           setStatusMessage(selectedModel === 'qwen_edit' ? 'PROCESS COMPLETE: FREE QWEN AI EDIT READY.' : 'PROCESS COMPLETE: 8K ULTRA RENDER READY.');
-          setOutputUrl(selectedModel === 'qwen_edit' ? (previewUrl || refPreviewUrl || heroClean) : aiFashion);
+          setOutputUrl(previewUrl || refPreviewUrl || heroClean);
         }, 2500);
 
       }, 1800);
@@ -153,6 +153,8 @@ const StudioLab = () => {
         },
         body: JSON.stringify({
           imageR2Key: file ? file.name : 'sample-upload.png',
+          imageBase64: previewUrl,
+          refImageBase64: refPreviewUrl,
           modelType: selectedModel,
           prompt: qwenPrompt,
           turnstileToken: activeToken

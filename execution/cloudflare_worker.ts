@@ -58,12 +58,14 @@ export default {
       try {
         const body = (await request.json().catch(() => ({}))) as {
           imageR2Key?: string;
+          imageBase64?: string;
+          refImageBase64?: string;
           modelType?: string;
           prompt?: string;
           turnstileToken?: string;
         };
 
-        const { imageR2Key, modelType, prompt, turnstileToken } = body;
+        const { imageR2Key, imageBase64, refImageBase64, modelType, prompt, turnstileToken } = body;
 
         // 1. Security Check: Cloudflare Turnstile Verification
         if (turnstileToken && !turnstileToken.includes('pass') && turnstileToken !== '1x00000000000000000000AA') {
@@ -91,9 +93,22 @@ export default {
           if (env.AI) {
             try {
               const userPrompt = prompt || 'high quality studio asset, detailed, masterpiece, clean background';
-              const aiImageStream = await env.AI.run('@cf/bytedance/stable-diffusion-xl-lightning', {
-                prompt: userPrompt
-              });
+              let aiImageStream: any;
+
+              try {
+                let aiOptions: any = { prompt: userPrompt };
+                if (imageBase64 && typeof imageBase64 === 'string') {
+                  const base64Clean = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+                  const imgBuffer = Buffer.from(base64Clean, 'base64');
+                  aiOptions.image = Array.from(new Uint8Array(imgBuffer));
+                }
+                aiImageStream = await env.AI.run('@cf/bytedance/stable-diffusion-xl-lightning', aiOptions);
+              } catch (_) {
+                // Fallback to text prompt model execution if image parameter isn't supported by SDXL-Lightning
+                aiImageStream = await env.AI.run('@cf/bytedance/stable-diffusion-xl-lightning', {
+                  prompt: userPrompt
+                });
+              }
 
               // Convert binary image stream to Base64 Data URI safely using Buffer
               const buffer = await new Response(aiImageStream).arrayBuffer();
