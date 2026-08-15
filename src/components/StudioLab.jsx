@@ -984,13 +984,13 @@ const StudioLab = () => {
         }
 
         .turnstile-widget-box {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          padding: 0.6rem;
-          background: var(--bg-card);
-          border: 2px dashed var(--border-color);
-          min-height: 65px;
+          height: 0;
+          overflow: hidden;
+          opacity: 0;
+          pointer-events: none;
+          margin: 0;
+          padding: 0;
+          border: none;
         }
 
         .turnstile-status-bar {
