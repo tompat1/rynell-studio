@@ -122,8 +122,8 @@ const StudioLab = () => {
 
         setTimeout(() => {
           setStatus('SUCCESS');
-          setStatusMessage('PROCESS COMPLETE: 8K ULTRA RENDER READY.');
-          setOutputUrl(aiFashion);
+          setStatusMessage(selectedModel === 'qwen_edit' ? 'PROCESS COMPLETE: FREE QWEN AI EDIT READY.' : 'PROCESS COMPLETE: 8K ULTRA RENDER READY.');
+          setOutputUrl(selectedModel === 'qwen_edit' ? (previewUrl || refPreviewUrl || heroClean) : aiFashion);
         }, 2500);
 
       }, 1800);
@@ -187,7 +187,7 @@ const StudioLab = () => {
             clearInterval(pollInterval);
             setStatus('SUCCESS');
             setStatusMessage(selectedModel === 'qwen_edit' ? 'PROCESS COMPLETE: FREE QWEN AI EDIT READY.' : 'PROCESS COMPLETE: 8K ULTRA RENDER READY.');
-            setOutputUrl(statusData.outputUrl || aiFashion);
+            setOutputUrl(statusData.outputUrl || (selectedModel === 'qwen_edit' ? (previewUrl || refPreviewUrl || heroClean) : aiFashion));
           } else if (statusData.status === 'failed') {
             clearInterval(pollInterval);
             console.warn("Worker status failed, running matrix preview:", statusData.error);
@@ -491,10 +491,10 @@ const StudioLab = () => {
               <div className="success-action-group">
                 <a 
                   href={outputUrl} 
-                  download="RYNELL_STUDIO_8K_RENDER.png" 
+                  download={selectedModel === 'qwen_edit' ? 'QWEN_EDITED_ASSET.png' : selectedModel === 'logo' ? 'VECTORINE_GRAPHIC.svg' : 'RYNELL_STUDIO_8K_RENDER.png'} 
                   className="action-btn download-btn"
                 >
-                  📥 DOWNLOAD {selectedModel === 'logo' ? 'SVG VECTOR' : '8K IMAGE'}
+                  📥 DOWNLOAD {selectedModel === 'qwen_edit' ? 'QWEN EDITED ASSET' : selectedModel === 'logo' ? 'SVG VECTOR' : '8K IMAGE'}
                 </a>
                 <button className="action-btn reset-btn" onClick={handleReset}>
                   PROCESS ANOTHER FILE
@@ -509,10 +509,10 @@ const StudioLab = () => {
 
             {outputUrl ? (
               <BeforeAfterSlider 
-                beforeImage={previewUrl || heroClean}
+                beforeImage={previewUrl || refPreviewUrl || heroClean}
                 afterImage={outputUrl}
-                beforeLabel="ORIGINAL INPUT"
-                afterLabel={selectedModel === 'logo' ? 'VECTORINE SVG' : 'AI ENHANCED (8K)'}
+                beforeLabel={selectedModel === 'qwen_edit' ? (previewUrl ? 'ORIGINAL SOURCE' : 'REFERENCE PICTURE') : 'ORIGINAL INPUT'}
+                afterLabel={selectedModel === 'qwen_edit' ? 'QWEN AI EDITED' : selectedModel === 'logo' ? 'VECTORINE SVG' : 'AI ENHANCED (8K)'}
               />
             ) : previewUrl ? (
               <div className="single-preview-wrapper">
