@@ -117,15 +117,16 @@ export default {
         }
 
         // 4. Replicate Routing (Real-ESRGAN & High Fidelity 8K Upscaling)
-        let replicateVersion = 'xinntao/realesrgan:1b976a4d3b315e050ffadeef6a3212ab563993ed'; // Standard Photo Real-ESRGAN
+        const REPLICATE_VERSION = '1b976a4d456ed9e4d1a846597b7614e79eadad3032e9124fa63859db0fd59b56';
         let faceEnhance = true;
         let scaleFactor = 4;
+        let internalVersion = 'General - RealESRGANplus';
 
         if (modelType === 'illustration') {
-          replicateVersion = 'xinntao/realesrgan-anime:anime-x4plus-version-id';
+          internalVersion = 'Anime - anime6B';
           faceEnhance = false;
         } else if (modelType === 'complex_art') {
-          replicateVersion = 'nightmareai/real-esrgan:42fe626e41cc2ea6c816242a321ca549d5ed0f0d6574c6f5d0263f350c3132e0';
+          internalVersion = 'General - v3';
           faceEnhance = true;
           scaleFactor = 4;
         }
@@ -137,11 +138,13 @@ export default {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            version: replicateVersion.includes(':') ? replicateVersion.split(':')[1] : replicateVersion,
+            version: REPLICATE_VERSION,
             input: {
-              image: imageUrl,
+              img: imageUrl,
+              version: internalVersion,
               scale: scaleFactor,
-              face_enhance: faceEnhance
+              face_enhance: faceEnhance,
+              tile: 0
             }
           })
         });
