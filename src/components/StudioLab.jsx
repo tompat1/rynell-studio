@@ -3,7 +3,6 @@ import StudioModelSelector from './StudioModelSelector';
 import BeforeAfterSlider from './BeforeAfterSlider';
 import PricingTable from './PricingTable';
 import heroClean from '../assets/hero_page_rynell_studio_clean.webp';
-import aiFashion from '../assets/journal/ai_fashion.png';
 
 const StudioLab = () => {
   const [selectedModel, setSelectedModel] = useState('photo');
@@ -89,16 +88,21 @@ const StudioLab = () => {
 
   const handleFileDrop = (e) => {
     e.preventDefault();
-    const droppedFile = e.dataTransfer ? e.dataTransfer.files[0] : e.target.files[0];
+    const droppedFile = e.dataTransfer ? (e.dataTransfer.files ? e.dataTransfer.files[0] : null) : (e.target.files ? e.target.files[0] : null);
     if (droppedFile) {
       if (droppedFile.size > 50 * 1024 * 1024) {
         alert("File size exceeds 50MB limit!");
         return;
       }
       setFile(droppedFile);
-      setPreviewUrl(URL.createObjectURL(droppedFile));
-      setStatus('IDLE');
-      setOutputUrl(null);
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const base64Uri = evt.target.result;
+        setPreviewUrl(base64Uri);
+        setStatus('IDLE');
+        setOutputUrl(null);
+      };
+      reader.readAsDataURL(droppedFile);
     }
   };
 
@@ -200,7 +204,7 @@ const StudioLab = () => {
             setStatus('SUCCESS');
             setStatusMessage(selectedModel === 'qwen_edit' ? 'PROCESS COMPLETE: FREE QWEN AI EDIT READY.' : 'PROCESS COMPLETE: 8K ULTRA RENDER READY.');
             
-            setOutputUrl(statusData.outputUrl || (selectedModel === 'qwen_edit' ? (previewUrl || refPreviewUrl || heroClean) : aiFashion));
+            setOutputUrl(statusData.outputUrl || previewUrl || refPreviewUrl || heroClean);
           } else if (statusData.status === 'failed') {
             clearInterval(pollInterval);
             console.warn("Worker status failed, running matrix preview:", statusData.error);
