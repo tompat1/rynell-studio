@@ -132,9 +132,9 @@ const StudioLab = () => {
   };
 
   const handleStartProcess = async () => {
+    const activeImage = previewUrl || refPreviewUrl || heroClean;
     if (!previewUrl) {
-      alert("Please upload an image first!");
-      return;
+      setPreviewUrl(activeImage);
     }
 
     const activeToken = turnstileToken || 'pass-token';
@@ -469,7 +469,6 @@ const StudioLab = () => {
               <button 
                 className="action-btn process-btn" 
                 onClick={handleStartProcess}
-                disabled={!previewUrl}
               >
                 {selectedModel === 'qwen_edit' ? '⚡ EXECUTE FREE QWEN AI EDIT' : selectedModel === 'logo' ? 'GENERATE VECTOR (SVG)' : 'GENERATE 8K ULTRA ENHANCEMENT'}
               </button>
