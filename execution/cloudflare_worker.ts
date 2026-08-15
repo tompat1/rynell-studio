@@ -15,13 +15,14 @@ const ALLOWED_ORIGINS = [
   'https://studio.rynell.org',
   'https://vectorine.rynell.org',
   'https://rynell.org',
+  'https://rynell-ai-gateway.thomasrynell.workers.dev',
   'http://localhost:5173',
   'http://localhost:3000'
 ];
 
 function getCorsHeaders(request: Request): HeadersInit {
   const origin = request.headers.get('Origin') || '';
-  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : (origin || '*');
 
   return {
     'Access-Control-Allow-Origin': allowedOrigin,
