@@ -1,12 +1,25 @@
 import React from 'react';
 
-export const MODELS = [
+export const FREE_MODELS = [
+  {
+    id: 'qwen_edit',
+    title: 'QWEN AI IMAGE EDIT & ENHANCE',
+    subtitle: 'CLOUDFLARE WORKERS AI EDGE GPU',
+    desc: 'Native Cloudflare Workers AI engine for intelligent image editing, style transfer, and prompt reconstruction with zero egress latency.',
+    badge: '100% FREE',
+    isDeluxe: false,
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+      </svg>
+    )
+  },
   {
     id: 'photo',
     title: 'PHOTOGRAPHY & PORTRAITS',
     subtitle: 'REAL-ESRGAN + FACE RECONSTRUCTION',
     desc: 'Restores facial pores, micro-textures, and eyes. Prevents painterly smudging on raw photographic sources.',
-    badge: 'STANDARD (4K/8K)',
+    badge: '100% FREE',
     isDeluxe: false,
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -20,7 +33,7 @@ export const MODELS = [
     title: 'ART & ILLUSTRATION',
     subtitle: 'ANIME-X4PLUS / DIGITAL PAINTING',
     desc: 'Cleans compression artifacts while preserving smooth color transitions and clean drawn ink lines.',
-    badge: 'STANDARD (4K/8K)',
+    badge: '100% FREE',
     isDeluxe: false,
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -30,7 +43,10 @@ export const MODELS = [
         <circle cx="11" cy="11" r="2"/>
       </svg>
     )
-  },
+  }
+];
+
+export const DELUXE_MODELS = [
   {
     id: 'logo',
     title: 'LOGOS & GRAPHICS (VECTORINE)',
@@ -43,19 +59,6 @@ export const MODELS = [
         <polygon points="12 2 2 7 12 12 22 7 12 2"/>
         <polyline points="2 17 12 22 22 17"/>
         <polyline points="2 12 12 17 22 12"/>
-      </svg>
-    )
-  },
-  {
-    id: 'qwen_edit',
-    title: 'QWEN AI IMAGE EDIT & ENHANCE',
-    subtitle: 'CLOUDFLARE WORKERS AI EDGE GPU',
-    desc: 'Native Cloudflare Workers AI engine for intelligent image editing, style transfer, and prompt reconstruction with zero egress latency.',
-    badge: 'NEW WORKERS AI',
-    isDeluxe: false,
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
       </svg>
     )
   },
@@ -74,59 +77,135 @@ export const MODELS = [
   }
 ];
 
+export const MODELS = [...FREE_MODELS, ...DELUXE_MODELS];
+
 const StudioModelSelector = ({ selectedModel, onModelChange, isPremiumUser, onOpenUpgrade }) => {
+  const renderCard = (model) => {
+    const isLocked = model.isDeluxe && !isPremiumUser;
+    const isSelected = selectedModel === model.id;
+
+    return (
+      <div
+        key={model.id}
+        onClick={() => {
+          if (isLocked) {
+            if (onOpenUpgrade) onOpenUpgrade();
+          } else {
+            onModelChange(model.id);
+          }
+        }}
+        className={`model-card ${isSelected ? 'selected' : ''} ${isLocked ? 'locked' : ''}`}
+      >
+        <div className="model-card-header">
+          <div className="icon-badge-group">
+            <span className="model-icon">{model.icon}</span>
+            <h4 className="model-name">{model.title}</h4>
+          </div>
+
+          <span className={`tier-tag ${model.isDeluxe ? 'deluxe' : 'free'}`}>
+            {model.isDeluxe ? (isPremiumUser ? 'UNLOCKED' : 'DELUXE 💎') : '100% FREE'}
+          </span>
+        </div>
+
+        <span className="model-subtitle">{model.subtitle}</span>
+        <p className="model-desc">{model.desc}</p>
+
+        {isLocked && (
+          <div className="lock-overlay">
+            <span className="lock-icon">🔒 DELUXE MODE</span>
+            <span className="unlock-prompt">Click to unlock 8K Vectorine</span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="model-selector-container">
-      <h3 className="selector-title">
+      <h3 className="selector-main-title">
         SELECT PROCESSING ENGINE
       </h3>
 
-      <div className="model-grid">
-        {MODELS.map((model) => {
-          const isLocked = model.isDeluxe && !isPremiumUser;
-          const isSelected = selectedModel === model.id;
-
-          return (
-            <div
-              key={model.id}
-              onClick={() => {
-                if (isLocked) {
-                  if (onOpenUpgrade) onOpenUpgrade();
-                } else {
-                  onModelChange(model.id);
-                }
-              }}
-              className={`model-card ${isSelected ? 'selected' : ''} ${isLocked ? 'locked' : ''}`}
-            >
-              <div className="model-card-header">
-                <div className="icon-badge-group">
-                  <span className="model-icon">{model.icon}</span>
-                  <h4 className="model-name">{model.title}</h4>
-                </div>
-
-                <span className={`tier-tag ${model.isDeluxe ? 'deluxe' : 'free'}`}>
-                  {model.isDeluxe ? (isPremiumUser ? 'UNLOCKED' : 'DELUXE 💎') : 'FREE'}
-                </span>
-              </div>
-
-              <span className="model-subtitle">{model.subtitle}</span>
-              <p className="model-desc">{model.desc}</p>
-
-              {isLocked && (
-                <div className="lock-overlay">
-                  <span className="lock-icon">🔒 DELUXE MODE</span>
-                  <span className="unlock-prompt">Click to unlock 8K Vectorine</span>
-                </div>
-              )}
-            </div>
-          );
-        })}
+      {/* Free Tier Group */}
+      <div className="engine-group-wrapper">
+        <div className="group-label-bar green-bar">
+          <span className="group-title-text">⚡ FREE ENGINE TIER</span>
+          <span className="group-sub-tag">NO CREDITS REQUIRED • UNLIMITED EGRESS</span>
+        </div>
+        <div className="model-grid">
+          {FREE_MODELS.map(renderCard)}
+        </div>
       </div>
 
+      {/* Paid Deluxe Group */}
+      <div className="engine-group-wrapper">
+        <div className="group-label-bar orange-bar">
+          <span className="group-title-text">💎 DELUXE PRO ENGINES</span>
+          <span className="group-sub-tag">GPU VECTOR TRACING & HEAVY 8K RE-SAMPLING</span>
+        </div>
+        <div className="model-grid">
+          {DELUXE_MODELS.map(renderCard)}
+        </div>
+      </div>
       <style>{`
         .model-selector-container {
           width: 100%;
-          margin-bottom: 2rem;
+          margin-bottom: 2.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        .selector-main-title {
+          font-family: var(--font-heading);
+          font-size: 1.8rem;
+          color: var(--text-primary);
+          letter-spacing: 2px;
+          margin-bottom: 0.5rem;
+        }
+
+        .engine-group-wrapper {
+          display: flex;
+          flex-direction: column;
+          gap: 0.8rem;
+        }
+
+        .group-label-bar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.5rem 1rem;
+          border-left: 4px solid var(--primary-orange);
+          background: rgba(255, 255, 255, 0.03);
+          font-family: var(--font-heading);
+        }
+
+        .group-label-bar.green-bar {
+          border-left-color: #00FF66;
+        }
+
+        .group-label-bar.orange-bar {
+          border-left-color: var(--primary-orange);
+        }
+
+        .group-title-text {
+          font-size: 1.1rem;
+          color: var(--text-primary);
+          letter-spacing: 1px;
+        }
+
+        .green-bar .group-title-text {
+          color: #00FF66;
+        }
+
+        .orange-bar .group-title-text {
+          color: var(--primary-orange);
+        }
+
+        .group-sub-tag {
+          font-size: 0.75rem;
+          color: var(--text-secondary);
+          letter-spacing: 1px;
         }
 
         .selector-title {
