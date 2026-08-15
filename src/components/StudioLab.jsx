@@ -167,6 +167,13 @@ const StudioLab = () => {
         return;
       }
 
+      if (processData.outputUrl) {
+        setStatus('SUCCESS');
+        setStatusMessage(selectedModel === 'qwen_edit' ? 'PROCESS COMPLETE: FREE QWEN AI EDIT READY.' : 'PROCESS COMPLETE: 8K ULTRA RENDER READY.');
+        setOutputUrl(processData.outputUrl);
+        return;
+      }
+
       const { jobId, provider } = processData;
       setStatus('QUEUED');
       setStatusMessage(`JOB QUEUED [${jobId.slice(0, 8)}]: ALLOCATING GPU INSTANCE (${provider.toUpperCase()})...`);

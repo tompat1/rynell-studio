@@ -56,13 +56,14 @@ export default {
     // Endpoint 1: Start Upscale / Vectorize / Qwen Edit Job
     if (url.pathname === '/api/process' && request.method === 'POST') {
       try {
-        const body = (await request.json()) as {
-          imageR2Key: string;
-          modelType: 'photo' | 'illustration' | 'logo' | 'complex_art' | 'qwen_edit';
-          turnstileToken: string;
+        const body = (await request.json().catch(() => ({}))) as {
+          imageR2Key?: string;
+          modelType?: string;
+          prompt?: string;
+          turnstileToken?: string;
         };
 
-        const { imageR2Key, modelType, turnstileToken } = body;
+        const { imageR2Key, modelType, prompt, turnstileToken } = body;
 
         // 1. Security Check: Cloudflare Turnstile Verification
         if (turnstileToken && !turnstileToken.includes('pass') && turnstileToken !== '1x00000000000000000000AA') {
