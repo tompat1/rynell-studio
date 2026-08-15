@@ -3,7 +3,7 @@ import { useAudio } from '../contexts/AudioContext';
 import studioPortrait from '../assets/studio_portrait.jpg';
 
 const About = () => {
-  const { playTTS, stopAudio, isPlaying } = useAudio();
+  const { playTTS, stopAudio, isPlaying, isSynthesizing } = useAudio();
   const manifestoText = "Rynell Studio is a multi-disciplinary creative force specializing in aggressive, high-impact visual design. From conceptual branding to explosive campaign visuals and AI-driven asset generation, we deliver work that doesn't just look good—it hits hard. We operate at the bleeding edge of visual culture, blending raw human creativity with state-of-the-art AI tooling to deliver uncompromising aesthetics.";
 
   return (
@@ -24,11 +24,21 @@ const About = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '2rem' }}>
             <h2 className="section-title" style={{ margin: 0 }}>THE STUDIO</h2>
             <button 
-              className={`read-to-me-btn ${isPlaying ? 'playing' : ''}`}
+              className={`read-to-me-btn ${isPlaying ? 'playing' : ''} ${isSynthesizing ? 'loading' : ''}`}
               onClick={() => isPlaying ? stopAudio() : playTTS(manifestoText)}
+              disabled={isSynthesizing}
               style={{ marginBottom: 0, marginTop: '-1rem' }}
             >
-              {isPlaying ? "⏹ STOP" : "▶ READ IT TO ME"}
+              {isSynthesizing ? (
+                <>
+                  <span className="spinner spinner-sm" style={{ borderTopColor: 'currentColor' }}></span>
+                  GENERATING...
+                </>
+              ) : isPlaying ? (
+                "⏹ STOP"
+              ) : (
+                "▶ READ IT TO ME"
+              )}
             </button>
           </div>
           <p className="studio-manifesto-text">

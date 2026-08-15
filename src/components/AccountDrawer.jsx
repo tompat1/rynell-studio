@@ -2,16 +2,24 @@ import React, { useState, useEffect } from 'react';
 
 const AccountDrawer = ({ isOpen, setIsOpen }) => {
   const [isLogin, setIsLogin] = useState(true);
+  const [status, setStatus] = useState('IDLE'); // IDLE, PROCESSING, SUCCESS
 
   useEffect(() => {
-    if (isOpen) document.body.classList.add('drawer-open');
-    else document.body.classList.remove('drawer-open');
+    if (isOpen) {
+      document.body.classList.add('drawer-open');
+      setStatus('IDLE');
+    } else {
+      document.body.classList.remove('drawer-open');
+    }
     return () => document.body.classList.remove('drawer-open');
   }, [isOpen]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert('Mock Submit! Backend not connected yet.');
+    setStatus('PROCESSING');
+    setTimeout(() => {
+      setStatus('SUCCESS');
+    }, 1500);
   };
 
   return (
@@ -33,41 +41,68 @@ const AccountDrawer = ({ isOpen, setIsOpen }) => {
         </div>
 
         <div className="drawer-body-scrollable">
-          <form className="brutalist-form" onSubmit={handleSubmit}>
-            {!isLogin && (
-              <div className="form-group">
-                <label>FULL NAME</label>
-                <input type="text" placeholder="YOUR NAME" required />
+          {status === 'IDLE' && (
+            <>
+              <form className="brutalist-form" onSubmit={handleSubmit}>
+                {!isLogin && (
+                  <div className="form-group">
+                    <label>FULL NAME</label>
+                    <input type="text" placeholder="YOUR NAME" required />
+                  </div>
+                )}
+                
+                <div className="form-group">
+                  <label>EMAIL ADDRESS</label>
+                  <input type="email" placeholder="YOUR@EMAIL.COM" required />
+                </div>
+
+                <div className="form-group">
+                  <label>PASSWORD</label>
+                  <input type="password" placeholder="••••••••" required />
+                </div>
+
+                <button type="submit" className="checkout-btn" style={{ marginTop: '2rem' }}>
+                  {isLogin ? 'SIGN IN' : 'REGISTER'}
+                </button>
+              </form>
+
+              <div className="auth-toggle">
+                <p>
+                  {isLogin ? "Don't have an account?" : "Already have an account?"}
+                  <button 
+                    type="button" 
+                    className="text-btn" 
+                    onClick={() => setIsLogin(!isLogin)}
+                  >
+                    {isLogin ? 'CREATE ONE' : 'LOG IN'}
+                  </button>
+                </p>
               </div>
-            )}
-            
-            <div className="form-group">
-              <label>EMAIL ADDRESS</label>
-              <input type="email" placeholder="YOUR@EMAIL.COM" required />
+            </>
+          )}
+
+          {status === 'PROCESSING' && (
+            <div className="processing-state" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '2rem' }}>
+              <div className="spinner"></div>
+              <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '2rem', color: 'var(--text-primary)' }}>
+                {isLogin ? 'AUTHENTICATING...' : 'CREATING ACCOUNT...'}
+              </h3>
             </div>
+          )}
 
-            <div className="form-group">
-              <label>PASSWORD</label>
-              <input type="password" placeholder="••••••••" required />
+          {status === 'SUCCESS' && (
+            <div className="success-state" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '2rem', textAlign: 'center' }}>
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--primary-orange)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '2.5rem', color: 'var(--text-primary)' }}>
+                {isLogin ? 'WELCOME BACK' : 'ACCOUNT CREATED'}
+              </h3>
+              <p style={{ fontFamily: 'var(--font-body)', color: 'var(--text-secondary)' }}>You are now authenticated in the studio system.</p>
+              <button className="checkout-btn" onClick={() => setIsOpen(false)}>CLOSE</button>
             </div>
-
-            <button type="submit" className="checkout-btn" style={{ marginTop: '2rem' }}>
-              {isLogin ? 'SIGN IN' : 'REGISTER'}
-            </button>
-          </form>
-
-          <div className="auth-toggle">
-            <p>
-              {isLogin ? "Don't have an account?" : "Already have an account?"}
-              <button 
-                type="button" 
-                className="text-btn" 
-                onClick={() => setIsLogin(!isLogin)}
-              >
-                {isLogin ? 'CREATE ONE' : 'LOG IN'}
-              </button>
-            </p>
-          </div>
+          )}
         </div>
       </div>
 

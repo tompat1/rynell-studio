@@ -66,7 +66,7 @@ export const journalData = [
 const Journal = () => {
   const [activeArticle, setActiveArticle] = useState(null);
   const [isArchiveOpen, setIsArchiveOpen] = useState(false);
-  const { playTTS, stopAudio, isPlaying } = useAudio();
+  const { playTTS, stopAudio, isPlaying, isSynthesizing } = useAudio();
 
   useEffect(() => {
     if (activeArticle || isArchiveOpen) document.body.classList.add('drawer-open');
@@ -166,11 +166,21 @@ const Journal = () => {
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
                     <h3 className="drawer-title" style={{ margin: 0 }}>{activeArticle.title}</h3>
                     <button 
-                      className={`read-to-me-btn ${isPlaying ? 'playing' : ''}`}
+                      className={`read-to-me-btn ${isPlaying ? 'playing' : ''} ${isSynthesizing ? 'loading' : ''}`}
                       onClick={() => isPlaying ? stopAudio() : playTTS(activeArticle.content)}
+                      disabled={isSynthesizing}
                       style={{ marginBottom: 0 }}
                     >
-                      {isPlaying ? "⏹ STOP" : "▶ READ IT TO ME"}
+                      {isSynthesizing ? (
+                        <>
+                          <span className="spinner spinner-sm" style={{ borderTopColor: 'currentColor' }}></span>
+                          GENERATING...
+                        </>
+                      ) : isPlaying ? (
+                        "⏹ STOP"
+                      ) : (
+                        "▶ READ IT TO ME"
+                      )}
                     </button>
                   </div>
                   <div className="drawer-divider"></div>

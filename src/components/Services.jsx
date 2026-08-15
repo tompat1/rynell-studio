@@ -73,7 +73,7 @@ export const servicesData = [
 
 const Services = () => {
   const [activeService, setActiveService] = useState(null);
-  const { playTTS, stopAudio, isPlaying } = useAudio();
+  const { playTTS, stopAudio, isPlaying, isSynthesizing } = useAudio();
 
   useEffect(() => {
     if (activeService) document.body.classList.add('drawer-open');
@@ -202,11 +202,21 @@ const Services = () => {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
                     <h3 className="drawer-title" style={{ margin: 0 }}>{activeService.title}</h3>
                     <button 
-                      className={`read-to-me-btn ${isPlaying ? 'playing' : ''}`}
+                      className={`read-to-me-btn ${isPlaying ? 'playing' : ''} ${isSynthesizing ? 'loading' : ''}`}
                       onClick={() => isPlaying ? stopAudio() : playTTS(activeService.description)}
+                      disabled={isSynthesizing}
                       style={{ marginBottom: 0 }}
                     >
-                      {isPlaying ? "⏹ STOP" : "▶ READ IT TO ME"}
+                      {isSynthesizing ? (
+                        <>
+                          <span className="spinner spinner-sm" style={{ borderTopColor: 'currentColor' }}></span>
+                          GENERATING...
+                        </>
+                      ) : isPlaying ? (
+                        "⏹ STOP"
+                      ) : (
+                        "▶ READ IT TO ME"
+                      )}
                     </button>
                   </div>
                   <div className="drawer-divider"></div>

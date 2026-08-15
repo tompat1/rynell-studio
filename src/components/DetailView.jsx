@@ -4,7 +4,7 @@ import { SEARCH_DATA } from './SearchDrawer';
 
 const DetailView = ({ item, onClose, addToCart, setItem, openShopArchive }) => {
   const [selectedSize, setSelectedSize] = useState(null);
-  const { playTTS, stopAudio, isPlaying } = useAudio();
+  const { playTTS, stopAudio, isPlaying, isSynthesizing } = useAudio();
 
   useEffect(() => {
     if (item) {
@@ -132,10 +132,20 @@ const DetailView = ({ item, onClose, addToCart, setItem, openShopArchive }) => {
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
               <h1 className="journal-title" style={{ margin: 0 }}>{item.title}</h1>
               <button 
-                className={`read-to-me-btn ${isPlaying ? 'playing' : ''}`}
+                className={`read-to-me-btn ${isPlaying ? 'playing' : ''} ${isSynthesizing ? 'loading' : ''}`}
                 onClick={() => isPlaying ? stopAudio() : playTTS(item.content)}
+                disabled={isSynthesizing}
               >
-                {isPlaying ? "⏹ STOP" : "▶ READ IT TO ME"}
+                {isSynthesizing ? (
+                  <>
+                    <span className="spinner spinner-sm" style={{ borderTopColor: 'currentColor' }}></span>
+                    GENERATING...
+                  </>
+                ) : isPlaying ? (
+                  "⏹ STOP"
+                ) : (
+                  "▶ READ IT TO ME"
+                )}
               </button>
             </div>
             <p className="journal-meta">PUBLISHED {item.date} • {item.tag.toUpperCase()}</p>

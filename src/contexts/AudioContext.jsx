@@ -6,6 +6,7 @@ const AudioContext = createContext();
 export const AudioProvider = ({ children }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isSynthesizing, setIsSynthesizing] = useState(false);
   const audioRef = useRef(null);
 
   useEffect(() => {
@@ -28,17 +29,18 @@ export const AudioProvider = ({ children }) => {
       audioRef.current.currentTime = 0;
     }
 
-    setIsPlaying(true);
-
     let audioUrl = options.preloadedUrl;
 
     if (!audioUrl) {
+      setIsSynthesizing(true);
       const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
       const voiceId = import.meta.env.VITE_ELEVENLABS_VOICE_ID;
       audioUrl = await synthesizeSpeech(text, voiceId, apiKey);
+      setIsSynthesizing(false);
     }
     
     if (audioUrl && audioRef.current) {
+      setIsPlaying(true);
       audioRef.current.src = audioUrl;
       audioRef.current.playbackRate = options.playbackRate || 1.0;
       audioRef.current.play().catch(e => {
@@ -63,10 +65,11 @@ export const AudioProvider = ({ children }) => {
       audioRef.current.currentTime = 0;
     }
     setIsPlaying(false);
+    setIsSynthesizing(false);
   };
 
   return (
-    <AudioContext.Provider value={{ isMuted, toggleMute, playTTS, stopAudio, isPlaying }}>
+    <AudioContext.Provider value={{ isMuted, toggleMute, playTTS, stopAudio, isPlaying, isSynthesizing }}>
       {children}
     </AudioContext.Provider>
   );

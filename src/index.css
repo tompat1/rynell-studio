@@ -274,6 +274,34 @@ body.drawer-open .scroll-top-btn {
   transform: translateY(20px) !important;
 }
 
+/* Global Spinner & Loading Utilities */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--primary-orange);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.spinner-sm {
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
+}
+
+.spinner-lg {
+  width: 60px;
+  height: 60px;
+  border-width: 5px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .read-to-me-btn {
   background: transparent;
   color: var(--primary-orange);
@@ -284,13 +312,17 @@ body.drawer-open .scroll-top-btn {
   cursor: pointer;
   margin-bottom: 1rem;
   transition: all 0.2s ease;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
 }
 .read-to-me-btn:hover, .read-to-me-btn.playing {
   background: var(--primary-orange);
   color: #000;
+}
+.read-to-me-btn.loading {
+  opacity: 0.8;
+  cursor: wait;
 }
 
 /* Drawer Navigation */
@@ -322,3 +354,4 @@ body.drawer-open .scroll-top-btn {
   opacity: 0.3;
   cursor: not-allowed;
 }
+
