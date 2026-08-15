@@ -16,6 +16,7 @@ import CheckoutDrawer from './components/CheckoutDrawer'
 import Loader from './components/Loader'
 import ContactDrawer from './components/ContactDrawer'
 import StudioLab from './components/StudioLab'
+import QwenStudio from './components/QwenStudio'
 import { AudioProvider } from './contexts/AudioContext'
 
 function App() {
@@ -116,6 +117,7 @@ function App() {
       />
       <Hero />
       <StudioLab />
+      <QwenStudio />
       <Collections />
       <Shop addToCart={addToCart} isArchiveOpen={isShopArchiveOpen} setIsArchiveOpen={setIsShopArchiveOpen} />
       <Ads />

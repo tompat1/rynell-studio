@@ -16,6 +16,7 @@ const Navbar = ({ cartCount, onCartClick, onSearchClick, onAccountClick, onConta
 
   const navItems = [
     { name: 'AI LABS', link: '#studio-lab', image: adImg },
+    { name: 'QWEN EDIT (FREE)', link: '#qwen-studio', image: adImg },
     { name: 'COLLECTIONS', link: '#collections', image: collImg },
     { name: 'SHOP', link: '#shop', image: shopImg },
     { name: 'ADS', link: '#ads', image: adImg },
