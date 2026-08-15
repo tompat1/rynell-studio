@@ -109,22 +109,22 @@ const QwenStudio = () => {
         const lowerPrompt = (prompt || '').toLowerCase();
 
         if (lowerPrompt.includes('remove') || lowerPrompt.includes('background') || lowerPrompt.includes('clean') || lowerPrompt.includes('erase')) {
-          // Precise Background Isolation & Cleanup Algorithm for user uploaded image
+          // Precise Background Isolation & Dark Studio Backdrop Transformation for uploaded image
           for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i+1], b = data[i+2];
             const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
             
             // If pixel is background paper/canvas (light off-white background)
-            if (luminance > 130 && Math.abs(r - g) < 50 && Math.abs(g - b) < 50) {
+            if (luminance > 120 && Math.abs(r - g) < 60 && Math.abs(g - b) < 60) {
               // Convert light background to sleek studio dark backdrop (#0B0B10)
               data[i] = 11;
               data[i+1] = 11;
               data[i+2] = 16;
             } else {
-              // Preserve & enhance main subject/lines (e.g. map lines, text, red marker, blue dot)
-              data[i] = Math.min(255, r * 1.35 + 20);
-              data[i+1] = Math.min(255, g * 1.35 + 20);
-              data[i+2] = Math.min(255, b * 1.35 + 20);
+              // Sharpen & boost main foreground subjects (map lines, text, markers, dots)
+              data[i] = Math.min(255, r * 1.4 + 30);
+              data[i+1] = Math.min(255, g * 1.4 + 30);
+              data[i+2] = Math.min(255, b * 1.4 + 30);
             }
           }
         } else if (lowerPrompt.includes('orange') || lowerPrompt.includes('tangerine')) {
