@@ -5,7 +5,7 @@ const BeforeAfterSlider = ({ beforeImage, afterImage, beforeLabel = "ORIGINAL (1
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef(null);
 
-  const handleMove = (clientX) => {
+  const updatePosition = (clientX) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const x = clientX - rect.left;
@@ -15,16 +15,23 @@ const BeforeAfterSlider = ({ beforeImage, afterImage, beforeLabel = "ORIGINAL (1
     setSliderPosition(percentage);
   };
 
-  const handleTouchMove = (e) => {
-    if (isDragging && e.touches.length > 0) {
-      handleMove(e.touches[0].clientX);
+  const handlePointerDown = (e) => {
+    setIsDragging(true);
+    e.currentTarget.setPointerCapture(e.pointerId);
+    updatePosition(e.clientX);
+  };
+
+  const handlePointerMove = (e) => {
+    if (isDragging || e.buttons === 1) {
+      updatePosition(e.clientX);
     }
   };
 
-  const handleMouseMove = (e) => {
-    if (isDragging) {
-      handleMove(e.clientX);
-    }
+  const handlePointerUp = (e) => {
+    setIsDragging(false);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch (_) {}
   };
 
   return (
@@ -32,17 +39,14 @@ const BeforeAfterSlider = ({ beforeImage, afterImage, beforeLabel = "ORIGINAL (1
       <div 
         ref={containerRef}
         className="slider-container"
-        onMouseDown={() => setIsDragging(true)}
-        onMouseUp={() => setIsDragging(false)}
-        onMouseLeave={() => setIsDragging(false)}
-        onMouseMove={handleMouseMove}
-        onTouchStart={() => setIsDragging(true)}
-        onTouchEnd={() => setIsDragging(false)}
-        onTouchMove={handleTouchMove}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
       >
         {/* Underneath: After (Enhanced 8K) Image */}
         <div className="img-layer after-layer">
-          <img src={afterImage} alt="Enhanced 8K" />
+          <img src={afterImage} alt="Enhanced 8K" draggable="false" />
           <span className="slider-badge after-badge">{afterLabel}</span>
         </div>
 
@@ -51,7 +55,7 @@ const BeforeAfterSlider = ({ beforeImage, afterImage, beforeLabel = "ORIGINAL (1
           className="img-layer before-layer"
           style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
         >
-          <img src={beforeImage} alt="Original Low Res" />
+          <img src={beforeImage} alt="Original Low Res" draggable="false" />
           <span className="slider-badge before-badge">{beforeLabel}</span>
         </div>
 
@@ -76,6 +80,7 @@ const BeforeAfterSlider = ({ beforeImage, afterImage, beforeLabel = "ORIGINAL (1
           max-width: 900px;
           margin: 0 auto;
           user-select: none;
+          -webkit-user-select: none;
         }
 
         .slider-container {
@@ -87,6 +92,7 @@ const BeforeAfterSlider = ({ beforeImage, afterImage, beforeLabel = "ORIGINAL (1
           box-shadow: 8px 8px 0 var(--primary-orange);
           background-color: #000;
           cursor: ew-resize;
+          touch-action: none;
         }
 
         .img-layer {
@@ -94,6 +100,7 @@ const BeforeAfterSlider = ({ beforeImage, afterImage, beforeLabel = "ORIGINAL (1
           inset: 0;
           width: 100%;
           height: 100%;
+          pointer-events: none;
         }
 
         .img-layer img {
@@ -101,6 +108,8 @@ const BeforeAfterSlider = ({ beforeImage, afterImage, beforeLabel = "ORIGINAL (1
           height: 100%;
           object-fit: cover;
           display: block;
+          user-select: none;
+          pointer-events: none;
         }
 
         .slider-badge {
@@ -113,6 +122,7 @@ const BeforeAfterSlider = ({ beforeImage, afterImage, beforeLabel = "ORIGINAL (1
           border: 2px solid #000;
           box-shadow: 3px 3px 0 #000;
           z-index: 10;
+          pointer-events: none;
         }
 
         .before-badge {
