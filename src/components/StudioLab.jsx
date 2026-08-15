@@ -415,54 +415,50 @@ const StudioLab = () => {
               onOpenUpgrade={() => setIsPricingOpen(true)}
             />
 
-            {/* Dropzone Container */}
-            <div 
-              className={`dropzone-container ${previewUrl ? 'has-file' : ''}`}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={handleFileDrop}
-            >
-              <input 
-                type="file" 
-                id="studio-file-input" 
-                accept="image/png, image/jpeg, image/webp" 
-                onChange={handleFileDrop}
-                style={{ display: 'none' }}
-              />
+            {/* Dropzone Container - Dual Side-by-Side Grid for Qwen Edit Mode */}
+            {selectedModel === 'qwen_edit' ? (
+              <div className="qwen-dual-upload-grid">
+                
+                {/* Box 1: Primary Source Image to Edit */}
+                <div 
+                  className={`dropzone-container qwen-half-dropzone ${previewUrl ? 'has-file' : ''}`}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={handleFileDrop}
+                >
+                  <input 
+                    type="file" 
+                    id="studio-file-input" 
+                    accept="image/png, image/jpeg, image/webp" 
+                    onChange={handleFileDrop}
+                    style={{ display: 'none' }}
+                  />
 
-              {!previewUrl ? (
-                <label htmlFor="studio-file-input" className="dropzone-label">
-                  <div className="dropzone-icon">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary-orange)" strokeWidth="2">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                      <polyline points="17 8 12 3 7 8"/>
-                      <line x1="12" y1="3" x2="12" y2="15"/>
-                    </svg>
-                  </div>
-                  <h4 className="dropzone-title">DROP IMAGE HERE OR CLICK TO UPLOAD</h4>
-                  <span className="dropzone-info">SUPPORTS PNG, JPG, WEBP • MAX 50MB (8K MAX)</span>
-                </label>
-              ) : (
-                <div className="file-preview-card">
-                  <img src={previewUrl} alt="Upload Preview" className="preview-thumb" />
-                  <div className="preview-info">
-                    <span className="file-name">{file ? file.name : "SOURCE_IMAGE.PNG"}</span>
-                    <span className="file-size">{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "ORIGINAL RES"}</span>
-                    <button className="change-file-btn" onClick={handleReset}>REPLACE FILE</button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Qwen AI Dedicated Prompting & Reference Image Workspace */}
-            {selectedModel === 'qwen_edit' && (
-              <div className="qwen-workspace-card">
-                <div className="qwen-workspace-header">
-                  <span className="qwen-badge-label">🤖 QWEN AI PROMPTING WORKSPACE</span>
-                  <span className="qwen-free-tag">100% FREE</span>
+                  {!previewUrl ? (
+                    <label htmlFor="studio-file-input" className="dropzone-label">
+                      <div className="dropzone-icon">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--primary-orange)" strokeWidth="2">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                          <polyline points="17 8 12 3 7 8"/>
+                          <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                      </div>
+                      <h4 className="dropzone-title">1. MAIN SOURCE IMAGE</h4>
+                      <span className="dropzone-info">DROP IMAGE OR CLICK TO UPLOAD</span>
+                    </label>
+                  ) : (
+                    <div className="file-preview-card">
+                      <img src={previewUrl} alt="Upload Preview" className="preview-thumb" />
+                      <div className="preview-info">
+                        <span className="file-name">{file ? file.name : "SOURCE_IMAGE.PNG"}</span>
+                        <span className="file-size">{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "ORIGINAL RES"}</span>
+                        <button className="change-file-btn" onClick={handleReset}>REPLACE FILE</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Reference Picture Upload Box (Optional reference image for style, face, or texture) */}
-                <div className="ref-upload-box">
+                {/* Box 2: Reference Picture Upload Box */}
+                <div className="ref-upload-box qwen-half-dropzone">
                   <label className="ref-upload-label">
                     <input 
                       type="file" 
@@ -480,7 +476,7 @@ const StudioLab = () => {
                       <div className="ref-preview-content">
                         <img src={refPreviewUrl} alt="Reference" className="ref-thumb-img" />
                         <div className="ref-meta-info">
-                          <span className="ref-name-text">REFERENCE: {refFile ? refFile.name : "STYLE_REF.PNG"}</span>
+                          <span className="ref-name-text">2. REFERENCE: {refFile ? refFile.name : "STYLE_REF.PNG"}</span>
                           <button 
                             className="remove-ref-btn" 
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRefFile(null); setRefPreviewUrl(null); }}
@@ -492,11 +488,60 @@ const StudioLab = () => {
                     ) : (
                       <div className="empty-ref-prompt">
                         <span className="ref-icon-symbol">🖼️</span>
-                        <span className="ref-title-text">ADD REFERENCE PICTURE (OPTIONAL)</span>
-                        <span className="ref-sub-text">Used for style transfer, face IP consistency & texture matching</span>
+                        <span className="ref-title-text">2. REFERENCE PICTURE (OPTIONAL)</span>
+                        <span className="ref-sub-text">For style transfer, face IP consistency & textures</span>
                       </div>
                     )}
                   </label>
+                </div>
+
+              </div>
+            ) : (
+              /* Standard Single Dropzone Container for Photo 8K, Art 8K, Vectorine */
+              <div 
+                className={`dropzone-container ${previewUrl ? 'has-file' : ''}`}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleFileDrop}
+              >
+                <input 
+                  type="file" 
+                  id="studio-file-input" 
+                  accept="image/png, image/jpeg, image/webp" 
+                  onChange={handleFileDrop}
+                  style={{ display: 'none' }}
+                />
+
+                {!previewUrl ? (
+                  <label htmlFor="studio-file-input" className="dropzone-label">
+                    <div className="dropzone-icon">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary-orange)" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                      </svg>
+                    </div>
+                    <h4 className="dropzone-title">DROP IMAGE HERE OR CLICK TO UPLOAD</h4>
+                    <span className="dropzone-info">SUPPORTS PNG, JPG, WEBP • MAX 50MB (8K MAX)</span>
+                  </label>
+                ) : (
+                  <div className="file-preview-card">
+                    <img src={previewUrl} alt="Upload Preview" className="preview-thumb" />
+                    <div className="preview-info">
+                      <span className="file-name">{file ? file.name : "SOURCE_IMAGE.PNG"}</span>
+                      <span className="file-size">{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "ORIGINAL RES"}</span>
+                      <button className="change-file-btn" onClick={handleReset}>REPLACE FILE</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Qwen AI Dedicated Prompting & Recipe Workspace */}
+            {selectedModel === 'qwen_edit' && (
+              <div className="qwen-workspace-card">
+                <div className="qwen-workspace-header">
+                  <span className="qwen-badge-label">🤖 QWEN AI PROMPTING WORKSPACE</span>
+                  <span className="qwen-free-tag">100% FREE</span>
                 </div>
 
                 {/* AI Prompt Textarea */}
@@ -754,6 +799,28 @@ const StudioLab = () => {
           display: flex;
           align-items: center;
           gap: 0.6rem;
+        }
+
+        .qwen-dual-upload-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.2rem;
+          width: 100%;
+        }
+
+        .qwen-half-dropzone {
+          min-height: 140px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          margin-bottom: 0;
+        }
+
+        @media (max-width: 768px) {
+          .qwen-dual-upload-grid {
+            grid-template-columns: 1fr;
+          }
         }
 
         .qwen-workspace-card {
