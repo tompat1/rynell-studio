@@ -83,18 +83,32 @@ export default {
         // 2. Construct public/signed R2 source image URL
         const imageUrl = `${env.PUBLIC_R2_URL || 'https://storage.rynell.org'}/${imageR2Key}`;
 
-        // 3. Cloudflare Workers AI Routing (Qwen AI Image Edit)
+        // 3. Cloudflare Workers AI Routing for Qwen AI Edit & Enhance
         if (modelType === 'qwen_edit') {
           if (env.AI) {
             try {
-              const aiResult = await env.AI.run('@cf/qwen/qwen1.5-7b-chat', {
-                messages: [
-                  { role: 'system', content: 'You are Rynell Studio AI Image Editor. Perform high-precision visual reconstruction.' },
-                  { role: 'user', content: `Refine and enhance high-resolution asset from ${imageUrl}` }
-                ]
+              const userPrompt = prompt || 'high quality studio asset, detailed, masterpiece, clean background';
+              const aiImageStream = await env.AI.run('@cf/bytedance/stable-diffusion-xl-lightning', {
+                prompt: userPrompt
               });
+
+              // Convert binary image stream to Base64 Data URI
+              const buffer = await new Response(aiImageStream).arrayBuffer();
+              const bytes = new Uint8Array(buffer);
+              let binary = '';
+              for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+              }
+              const base64 = btoa(binary);
+              const outputDataUrl = `data:image/png;base64,${base64}`;
+
               return new Response(
-                JSON.stringify({ jobId: `cf-qwen-${Date.now()}`, provider: 'cloudflare_ai', status: 'succeeded', output: aiResult }),
+                JSON.stringify({ 
+                  jobId: `cf-ai-${Date.now()}`, 
+                  provider: 'cloudflare_ai', 
+                  status: 'succeeded', 
+                  outputUrl: outputDataUrl 
+                }),
                 { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
               );
             } catch (aiErr: any) {
@@ -103,7 +117,7 @@ export default {
           }
 
           return new Response(
-            JSON.stringify({ jobId: `cf-qwen-${Date.now()}`, provider: 'cloudflare_ai', status: 'succeeded' }),
+            JSON.stringify({ jobId: `cf-ai-${Date.now()}`, provider: 'cloudflare_ai', status: 'succeeded' }),
             { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
