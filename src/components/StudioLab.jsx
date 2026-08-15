@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import StudioModelSelector from './StudioModelSelector';
 import BeforeAfterSlider from './BeforeAfterSlider';
 import PricingTable from './PricingTable';
@@ -14,7 +14,69 @@ const StudioLab = () => {
   const [status, setStatus] = useState('IDLE'); // IDLE, UPLOADING, QUEUED, PROCESSING, SUCCESS, ERROR
   const [statusMessage, setStatusMessage] = useState('');
   const [outputUrl, setOutputUrl] = useState(null);
-  const [turnstileToken, setTurnstileToken] = useState('demo-turnstile-pass-token');
+  const [turnstileToken, setTurnstileToken] = useState(null);
+  const [turnstileStatus, setTurnstileStatus] = useState('VERIFYING'); // VERIFYING, VERIFIED, EXPIRED, ERROR
+  const turnstileContainerRef = useRef(null);
+  const turnstileWidgetId = useRef(null);
+
+  useEffect(() => {
+    // Inject Cloudflare Turnstile API Script dynamically if not present
+    const scriptId = 'cf-turnstile-script';
+    let script = document.getElementById(scriptId);
+
+    const initTurnstile = () => {
+      if (window.turnstile && turnstileContainerRef.current && turnstileWidgetId.current === null) {
+        try {
+          const sitekey = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
+          turnstileWidgetId.current = window.turnstile.render(turnstileContainerRef.current, {
+            sitekey: sitekey,
+            theme: 'dark',
+            callback: (token) => {
+              setTurnstileToken(token);
+              setTurnstileStatus('VERIFIED');
+            },
+            'error-callback': () => {
+              setTurnstileStatus('ERROR');
+              setTurnstileToken(null);
+            },
+            'expired-callback': () => {
+              setTurnstileStatus('EXPIRED');
+              setTurnstileToken(null);
+            }
+          });
+        } catch (e) {
+          console.warn("Turnstile render note:", e);
+        }
+      }
+    };
+
+    if (!script) {
+      script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        initTurnstile();
+      };
+      document.head.appendChild(script);
+    } else {
+      if (window.turnstile) {
+        initTurnstile();
+      } else {
+        script.addEventListener('load', initTurnstile);
+      }
+    }
+
+    return () => {
+      if (window.turnstile && turnstileWidgetId.current !== null) {
+        try {
+          window.turnstile.remove(turnstileWidgetId.current);
+          turnstileWidgetId.current = null;
+        } catch (_) {}
+      }
+    };
+  }, []);
 
   const handleFileDrop = (e) => {
     e.preventDefault();
@@ -211,11 +273,23 @@ const StudioLab = () => {
               )}
             </div>
 
-            {/* Turnstile Security Badge Indicator */}
-            <div className="turnstile-status-bar">
-              <span className="shield-icon">🛡️</span>
-              <span className="turnstile-text">SECURITY: CLOUDFLARE TURNSTILE VERIFIED</span>
-              <span className="status-dot green"></span>
+            {/* Turnstile Security Widget & Dynamic Status Bar */}
+            <div className="turnstile-wrapper">
+              <div className="turnstile-status-bar">
+                <span className="shield-icon">🛡️</span>
+                <span className="turnstile-text">
+                  {turnstileStatus === 'VERIFIED' && 'SECURITY: CLOUDFLARE TURNSTILE VERIFIED'}
+                  {turnstileStatus === 'VERIFYING' && 'SECURITY: VERIFYING BOT PROTECTION...'}
+                  {turnstileStatus === 'EXPIRED' && 'SECURITY: CHALLENGE EXPIRED - RE-VERIFY'}
+                  {turnstileStatus === 'ERROR' && 'SECURITY: TURNSTILE VERIFICATION ERROR'}
+                </span>
+                <span className={`status-dot ${turnstileStatus === 'VERIFIED' ? 'green' : turnstileStatus === 'VERIFYING' ? 'yellow' : 'red'}`}></span>
+              </div>
+              
+              {/* Cloudflare Turnstile Interactive Widget Container */}
+              <div className="turnstile-widget-box">
+                <div ref={turnstileContainerRef} id="cf-turnstile-container"></div>
+              </div>
             </div>
 
             {/* Processing Action Button */}
@@ -457,6 +531,23 @@ const StudioLab = () => {
           text-decoration: underline;
         }
 
+        .turnstile-wrapper {
+          display: flex;
+          flex-direction: column;
+          gap: 0.8rem;
+          width: 100%;
+        }
+
+        .turnstile-widget-box {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 0.6rem;
+          background: var(--bg-card);
+          border: 2px dashed var(--border-color);
+          min-height: 65px;
+        }
+
         .turnstile-status-bar {
           display: flex;
           align-items: center;
@@ -475,6 +566,24 @@ const StudioLab = () => {
           background-color: #00FF66;
           border-radius: 50%;
           box-shadow: 0 0 10px #00FF66;
+          margin-left: auto;
+        }
+
+        .status-dot.yellow {
+          width: 10px;
+          height: 10px;
+          background-color: var(--yellow);
+          border-radius: 50%;
+          box-shadow: 0 0 10px var(--yellow);
+          margin-left: auto;
+        }
+
+        .status-dot.red {
+          width: 10px;
+          height: 10px;
+          background-color: #FF0055;
+          border-radius: 50%;
+          box-shadow: 0 0 10px #FF0055;
           margin-left: auto;
         }
 
