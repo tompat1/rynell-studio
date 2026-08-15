@@ -317,19 +317,19 @@ const StudioLab = () => {
           </button>
         </div>
 
+        {/* Model Engine Selector - Full Width Above Workbench Grid */}
+        <StudioModelSelector 
+          selectedModel={selectedModel}
+          onModelChange={setSelectedModel}
+          isPremiumUser={userTier.isPremium}
+          onOpenUpgrade={() => setIsPricingOpen(true)}
+        />
+
         {/* Workbench Grid */}
         <div className="lab-workbench-grid">
           
           {/* Left Controls & File Upload Area */}
           <div className="lab-control-panel">
-            
-            {/* Model Engine Selector */}
-            <StudioModelSelector 
-              selectedModel={selectedModel}
-              onModelChange={setSelectedModel}
-              isPremiumUser={userTier.isPremium}
-              onOpenUpgrade={() => setIsPricingOpen(true)}
-            />
 
             {/* Dropzone Container - Dual Side-by-Side Grid for Qwen Edit Mode */}
             {selectedModel === 'qwen_edit' ? (
