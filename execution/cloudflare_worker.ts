@@ -3,6 +3,8 @@
  * Handles Turnstile security validation, R2 image storage, Replicate 8K upscaling, and RunPod Vector Tracing.
  */
 
+import { Buffer } from 'node:buffer';
+
 export interface Env {
   R2_BUCKET: R2Bucket;
   REPLICATE_API_TOKEN: string;
@@ -92,14 +94,9 @@ export default {
                 prompt: userPrompt
               });
 
-              // Convert binary image stream to Base64 Data URI
+              // Convert binary image stream to Base64 Data URI safely using Buffer
               const buffer = await new Response(aiImageStream).arrayBuffer();
-              const bytes = new Uint8Array(buffer);
-              let binary = '';
-              for (let i = 0; i < bytes.byteLength; i++) {
-                binary += String.fromCharCode(bytes[i]);
-              }
-              const base64 = btoa(binary);
+              const base64 = Buffer.from(buffer).toString('base64');
               const outputDataUrl = `data:image/png;base64,${base64}`;
 
               return new Response(
@@ -113,6 +110,15 @@ export default {
               );
             } catch (aiErr: any) {
               console.warn("Cloudflare Workers AI execution note:", aiErr);
+              return new Response(
+                JSON.stringify({ 
+                  jobId: `cf-ai-${Date.now()}`, 
+                  provider: 'cloudflare_ai', 
+                  status: 'failed', 
+                  error: aiErr.message || String(aiErr) 
+                }),
+                { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              );
             }
           }
 
