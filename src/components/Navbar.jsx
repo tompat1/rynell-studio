@@ -15,11 +15,12 @@ const Navbar = ({ cartCount, onCartClick, onSearchClick, onAccountClick, onConta
   const { isMuted, toggleMute } = useAudio();
 
   const navItems = [
-    { name: 'COLLECTIONS', image: collImg },
-    { name: 'SHOP', image: shopImg },
-    { name: 'ADS', image: adImg },
-    { name: 'ABOUT', image: aboutImg },
-    { name: 'JOURNAL', image: journalImg }
+    { name: 'AI LABS', link: '#studio-lab', image: adImg },
+    { name: 'COLLECTIONS', link: '#collections', image: collImg },
+    { name: 'SHOP', link: '#shop', image: shopImg },
+    { name: 'ADS', link: '#ads', image: adImg },
+    { name: 'ABOUT', link: '#about', image: aboutImg },
+    { name: 'JOURNAL', link: '#journal', image: journalImg }
   ];
 
   useEffect(() => {
@@ -50,7 +51,7 @@ const Navbar = ({ cartCount, onCartClick, onSearchClick, onAccountClick, onConta
           {/* Desktop Links */}
           <div className="navbar-links-desktop">
             {navItems.map((item) => (
-              <a key={item.name} href={`#${item.name.toLowerCase()}`} className="nav-link">
+              <a key={item.name} href={item.link || `#${item.name.toLowerCase()}`} className="nav-link">
                 {item.name}
               </a>
             ))}

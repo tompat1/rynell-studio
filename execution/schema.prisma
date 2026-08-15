@@ -1,0 +1,70 @@
+// Prisma Schema for Rynell Studio AI & Vectorine Monetization
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  stripeCustId  String?        @unique @map("stripe_customer_id")
+  tier          UserTier       @default(FREE)
+  createdAt     DateTime       @default(now()) @map("created_at")
+  jobs          ProcessingJob[]
+  subscriptions Subscription[]
+
+  @@map("users")
+}
+
+enum UserTier {
+  FREE
+  PREMIUM_DELUXE
+}
+
+model Subscription {
+  id               String             @id
+  userId           String             @map("user_id")
+  user             User               @relation(fields: [userId], references: [id])
+  status           SubscriptionStatus
+  priceId          String             @map("price_id")
+  currentPeriodEnd DateTime           @map("current_period_end")
+
+  @@map("subscriptions")
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+model ProcessingJob {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  user        User      @relation(fields: [userId], references: [id])
+  jobType     JobType   @map("job_type")
+  status      JobStatus @default(QUEUED)
+  inputR2Key  String    @map("input_r2_key")
+  outputR2Key String?   @map("output_r2_key")
+  modelUsed   String    @map("model_used")
+  expiresAt   DateTime  @map("expires_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@map("processing_jobs")
+}
+
+enum JobType {
+  UPSCALE_8K
+  VECTOR_TRACING
+}
+
+enum JobStatus {
+  QUEUED
+  PROCESSING
+  SUCCESS
+  FAILED
+}
