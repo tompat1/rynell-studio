@@ -87,60 +87,6 @@ const QwenStudio = () => {
     }
   };
 
-  const processQwenImageEdit = (imageSrc, prompt = '') => {
-    return new Promise((resolve) => {
-      if (!imageSrc) {
-        resolve(null);
-        return;
-      }
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const w = img.naturalWidth || img.width || 1024;
-        const h = img.naturalHeight || img.height || 1024;
-        canvas.width = w;
-        canvas.height = h;
-
-        ctx.drawImage(img, 0, 0, w, h);
-
-        const imageData = ctx.getImageData(0, 0, w, h);
-        const data = imageData.data;
-
-        // Apply continuous contrast & clarity enhancement matrix on current image state
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i], g = data[i+1], b = data[i+2];
-          const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-          
-          if (luminance > 140 && Math.abs(r - g) < 50 && Math.abs(g - b) < 50) {
-            data[i] = Math.max(0, r - 30);
-            data[i+1] = Math.max(0, g - 30);
-            data[i+2] = Math.max(0, b - 30);
-          } else {
-            data[i] = Math.min(255, r * 1.15 + 10);
-            data[i+1] = Math.min(255, g * 1.15 + 10);
-            data[i+2] = Math.min(255, b * 1.15 + 10);
-          }
-        }
-
-        ctx.putImageData(imageData, 0, 0);
-
-        // Add subtle Qwen AI watermark stamp in corner
-        ctx.font = 'bold 24px sans-serif';
-        ctx.fillStyle = '#00E5FF';
-        ctx.fillText('QWEN AI EDITED', 24, canvas.height - 24);
-
-        resolve(canvas.toDataURL('image/png'));
-      };
-
-      img.onerror = () => {
-        resolve(imageSrc);
-      };
-
-      img.src = imageSrc;
-    });
-  };
-
   const handleExecuteQwenEdit = async () => {
     if (!promptText.trim()) {
       alert("Please enter an edit instruction!");
@@ -151,29 +97,33 @@ const QwenStudio = () => {
     setStatusMessage('CLOUDFLARE WORKERS AI GPU: EXECUTING QWEN IMAGE EDIT MATRIX...');
 
     const sourceImage = outputUrl || previewUrl || heroClean;
-    const editedDataUrl = await processQwenImageEdit(sourceImage, promptText);
 
     try {
-      await fetch(`${WORKER_ENDPOINT}/api/process`, {
+      const resp = await fetch(`${WORKER_ENDPOINT}/api/process`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           imageR2Key: file ? file.name : 'qwen-source-asset.png',
-          imageBase64: previewUrl,
+          imageBase64: sourceImage,
           modelType: 'qwen_edit',
           prompt: promptText,
           turnstileToken: 'pass-token'
         })
-      }).catch(() => ({}));
+      });
 
-      setStatus('SUCCESS');
-      setStatusMessage('QWEN AI EDIT COMPLETE: ZERO COMPRESSION LOSS.');
-      setOutputUrl(editedDataUrl);
+      const data = await resp.json().catch(() => ({}));
 
+      if (data && data.outputUrl) {
+        setStatus('SUCCESS');
+        setStatusMessage('QWEN AI EDIT COMPLETE: ZERO COMPRESSION LOSS.');
+        setOutputUrl(data.outputUrl);
+      } else {
+        setStatus('ERROR');
+        setStatusMessage(`Cloudflare Worker note: ${data.error || 'Execution failed'}`);
+      }
     } catch (e) {
-      setStatus('SUCCESS');
-      setStatusMessage('QWEN AI EDIT COMPLETE: ULTRA RESOLUTION READY.');
-      setOutputUrl(editedDataUrl);
+      setStatus('ERROR');
+      setStatusMessage(`Network error: ${e.message}`);
     }
   };
 

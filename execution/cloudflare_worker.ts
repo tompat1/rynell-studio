@@ -95,16 +95,20 @@ export default {
               const userPrompt = prompt || 'high quality studio asset, detailed, masterpiece, clean background';
               let aiImageStream: any;
 
-              try {
-                let aiOptions: any = { prompt: userPrompt };
-                if (imageBase64 && typeof imageBase64 === 'string') {
-                  const base64Clean = imageBase64.replace(/^data:image\/\w+;base64,/, '');
-                  const imgBuffer = Buffer.from(base64Clean, 'base64');
-                  aiOptions.image = Array.from(new Uint8Array(imgBuffer));
-                }
-                aiImageStream = await env.AI.run('@cf/bytedance/stable-diffusion-xl-lightning', aiOptions);
-              } catch (_) {
-                // Fallback to text prompt model execution if image parameter isn't supported by SDXL-Lightning
+              if (imageBase64 && typeof imageBase64 === 'string') {
+                const base64Clean = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+                const imgBuffer = Buffer.from(base64Clean, 'base64');
+                const imageBytes = Array.from(new Uint8Array(imgBuffer));
+
+                // Execute true Image-to-Image AI transformation on user's uploaded image bytes
+                aiImageStream = await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-img2img', {
+                  image: imageBytes,
+                  prompt: userPrompt,
+                  strength: 0.45,
+                  guidance: 7.5,
+                  num_steps: 20
+                });
+              } else {
                 aiImageStream = await env.AI.run('@cf/bytedance/stable-diffusion-xl-lightning', {
                   prompt: userPrompt
                 });
@@ -125,7 +129,7 @@ export default {
                 { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
               );
             } catch (aiErr: any) {
-              console.warn("Cloudflare Workers AI execution note:", aiErr);
+              console.error("Cloudflare Workers AI execution error:", aiErr);
               return new Response(
                 JSON.stringify({ 
                   jobId: `cf-ai-${Date.now()}`, 

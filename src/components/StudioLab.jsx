@@ -137,60 +137,6 @@ const StudioLab = () => {
     }, 1200);
   };
 
-  const processQwenImageEdit = (imageSrc, prompt = '') => {
-    return new Promise((resolve) => {
-      if (!imageSrc) {
-        resolve(null);
-        return;
-      }
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const w = img.naturalWidth || img.width || 1024;
-        const h = img.naturalHeight || img.height || 1024;
-        canvas.width = w;
-        canvas.height = h;
-
-        ctx.drawImage(img, 0, 0, w, h);
-
-        const imageData = ctx.getImageData(0, 0, w, h);
-        const data = imageData.data;
-
-        // Apply continuous contrast & clarity enhancement matrix on current image state
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i], g = data[i+1], b = data[i+2];
-          const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-          
-          if (luminance > 140 && Math.abs(r - g) < 50 && Math.abs(g - b) < 50) {
-            data[i] = Math.max(0, r - 30);
-            data[i+1] = Math.max(0, g - 30);
-            data[i+2] = Math.max(0, b - 30);
-          } else {
-            data[i] = Math.min(255, r * 1.15 + 10);
-            data[i+1] = Math.min(255, g * 1.15 + 10);
-            data[i+2] = Math.min(255, b * 1.15 + 10);
-          }
-        }
-
-        ctx.putImageData(imageData, 0, 0);
-
-        // Add subtle Qwen AI watermark stamp in corner
-        ctx.font = 'bold 24px sans-serif';
-        ctx.fillStyle = '#00E5FF';
-        ctx.fillText('QWEN AI EDITED', 24, canvas.height - 24);
-
-        resolve(canvas.toDataURL('image/png'));
-      };
-
-      img.onerror = () => {
-        resolve(imageSrc);
-      };
-
-      img.src = imageSrc;
-    });
-  };
-
   const handleStartProcess = async () => {
     const activeImage = outputUrl || previewUrl || refPreviewUrl || heroClean;
     if (!previewUrl) {
@@ -203,30 +149,7 @@ const StudioLab = () => {
       setStatus('UPLOADING');
       setStatusMessage('UPLOADING FILE TO CLOUDFLARE R2 STORAGE (0 KB EGRESS)...');
 
-      if (selectedModel === 'qwen_edit') {
-        const editedDataUrl = await processQwenImageEdit(activeImage, qwenPrompt);
-        
-        // Dispatch live HTTP POST request to Cloudflare Worker Edge API
-        fetch(`${WORKER_ENDPOINT}/api/process`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            imageR2Key: file ? file.name : 'sample-upload.png',
-            imageBase64: previewUrl,
-            refImageBase64: refPreviewUrl,
-            modelType: selectedModel,
-            prompt: qwenPrompt,
-            turnstileToken: activeToken
-          })
-        }).catch(() => ({}));
-
-        setStatus('SUCCESS');
-        setStatusMessage('PROCESS COMPLETE: FREE QWEN AI EDIT READY.');
-        setOutputUrl(editedDataUrl);
-        return;
-      }
-
-      // Dispatch live HTTP POST request to Cloudflare Worker Edge API
+      // Dispatch live HTTP POST request directly to Cloudflare Worker Edge API
       const processResp = await fetch(`${WORKER_ENDPOINT}/api/process`, {
         method: 'POST',
         headers: {
@@ -234,7 +157,7 @@ const StudioLab = () => {
         },
         body: JSON.stringify({
           imageR2Key: file ? file.name : 'sample-upload.png',
-          imageBase64: previewUrl,
+          imageBase64: activeImage,
           refImageBase64: refPreviewUrl,
           modelType: selectedModel,
           prompt: qwenPrompt,
@@ -245,14 +168,15 @@ const StudioLab = () => {
       const processData = await processResp.json().catch(() => ({}));
 
       if (!processResp.ok || !processData.jobId) {
-        console.warn("Live API response note, executing studio matrix pipeline:", processData.error || processResp.statusText);
-        runSimulatedPipeline();
+        console.warn("Live API response note:", processData.error || processResp.statusText);
+        setStatus('ERROR');
+        setStatusMessage(`API Error: ${processData.error || 'Failed to communicate with Cloudflare Worker'}`);
         return;
       }
 
       if (processData.outputUrl) {
         setStatus('SUCCESS');
-        setStatusMessage('PROCESS COMPLETE: 8K ULTRA RENDER READY.');
+        setStatusMessage(selectedModel === 'qwen_edit' ? 'PROCESS COMPLETE: CLOUDFLARE WORKERS AI EDIT READY.' : 'PROCESS COMPLETE: 8K ULTRA RENDER READY.');
         setOutputUrl(processData.outputUrl);
         return;
       }
