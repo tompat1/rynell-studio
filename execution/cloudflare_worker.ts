@@ -183,46 +183,59 @@ export default {
           );
         }
 
-        // 4. Replicate Routing (With Cloudflare Workers AI 4x Upscaler Direct Execution)
+        // 4. Cloudflare Workers AI Upscaling Service (Pruna AI p-image-upscale)
         if (env.AI && imageBase64 && typeof imageBase64 === 'string') {
           try {
             const base64Clean = imageBase64.replace(/^data:image\/\w+;base64,/, '');
             const imgBuffer = Buffer.from(base64Clean, 'base64');
-            const imageBytes = Array.from(new Uint8Array(imgBuffer));
+            const imageBytes = [...new Uint8Array(imgBuffer)];
             let aiImageStream: any;
 
+            // Primary: Pruna AI's p-image-upscale on Cloudflare Workers AI
             try {
-              // Primary 4x Super Resolution AI Upscaler on Cloudflare Edge GPU
-              aiImageStream = await env.AI.run('@cf/stabilityai/stable-diffusion-x4-upscaler', {
-                image: imageBytes,
-                prompt: prompt || 'ultra-high resolution 8k masterpiece detail, sharp clarity'
+              aiImageStream = await env.AI.run('@cf/pruna-ai/p-image-upscale', {
+                image: imageBytes
               });
-            } catch (_) {
-              // High-clarity img2img super-resolution enhancement fallback
-              aiImageStream = await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-img2img', {
-                image: imageBytes,
-                prompt: prompt || 'ultra-high resolution 8k masterpiece detail, sharp clarity',
-                strength: 0.25,
-                guidance: 7.5,
-                num_steps: 20
-              });
+            } catch (err1: any) {
+              console.warn("Pruna AI p-image-upscale note, trying SD 4x Upscaler:", err1?.message || err1);
+
+              // Backup 1: Stability AI SD 4x Upscaler
+              try {
+                aiImageStream = await env.AI.run('@cf/stabilityai/stable-diffusion-x4-upscaler', {
+                  image: imageBytes,
+                  prompt: prompt || 'ultra-high resolution 8k masterpiece detail, sharp clarity'
+                });
+              } catch (err2: any) {
+                console.warn("SD 4x Upscaler note, trying SD 1.5 img2img:", err2?.message || err2);
+
+                // Backup 2: SD 1.5 img2img enhancement
+                aiImageStream = await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-img2img', {
+                  image: imageBytes,
+                  prompt: prompt || 'ultra-high resolution 8k masterpiece detail, sharp clarity',
+                  strength: 0.2,
+                  guidance: 7.5,
+                  num_steps: 10
+                });
+              }
             }
 
-            const buffer = await new Response(aiImageStream).arrayBuffer();
-            const base64 = Buffer.from(buffer).toString('base64');
-            const outputDataUrl = `data:image/png;base64,${base64}`;
+            if (aiImageStream) {
+              const buffer = await new Response(aiImageStream).arrayBuffer();
+              const base64 = Buffer.from(buffer).toString('base64');
+              const outputDataUrl = `data:image/png;base64,${base64}`;
 
-            return new Response(
-              JSON.stringify({ 
-                jobId: `cf-upscale-${Date.now()}`, 
-                provider: 'cloudflare_ai', 
-                status: 'succeeded', 
-                outputUrl: outputDataUrl 
-              }),
-              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
+              return new Response(
+                JSON.stringify({ 
+                  jobId: `cf-upscale-${Date.now()}`, 
+                  provider: 'cloudflare_ai_pruna', 
+                  status: 'succeeded', 
+                  outputUrl: outputDataUrl 
+                }),
+                { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              );
+            }
           } catch (upscaleErr) {
-            console.warn("Cloudflare AI upscaler note, trying Replicate:", upscaleErr);
+            console.warn("Cloudflare Workers AI upscaler note, trying Replicate:", upscaleErr);
           }
         }
 
