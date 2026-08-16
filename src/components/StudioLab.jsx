@@ -1329,16 +1329,27 @@ const StudioLab = () => {
 
         .modal-close-btn {
           position: absolute;
-          top: 1rem;
-          right: 1rem;
+          top: 1.2rem;
+          right: 1.2rem;
           background: var(--primary-orange);
           color: #FFF;
-          font-size: 1.5rem;
+          font-family: var(--font-heading);
+          font-size: 1.4rem;
+          font-weight: bold;
           border: 2px solid #000;
           width: 40px;
           height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           cursor: pointer;
-          z-index: 10;
+          z-index: 50;
+          box-shadow: 2px 2px 0 #000;
+          transition: transform 0.15s ease;
+        }
+
+        .modal-close-btn:hover {
+          transform: scale(1.08);
         }
 
         @media (max-width: 992px) {

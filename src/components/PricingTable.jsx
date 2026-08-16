@@ -142,11 +142,20 @@ const PricingTable = ({ onClose }) => {
           letter-spacing: 2px;
         }
 
+        .card-top {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          width: 100%;
+        }
+
         .plan-badge {
+          display: inline-block;
           font-family: var(--font-heading);
           font-size: 0.85rem;
           color: var(--text-secondary);
           letter-spacing: 1px;
+          margin-bottom: 0.2rem;
         }
 
         .plan-badge.deluxe {
@@ -157,25 +166,28 @@ const PricingTable = ({ onClose }) => {
           font-family: var(--font-heading);
           font-size: 2.2rem;
           color: var(--text-primary);
-          margin: 0.3rem 0;
+          margin: 0.2rem 0 0.5rem 0;
           letter-spacing: 1px;
+          line-height: 1;
         }
 
         .plan-desc {
           font-family: var(--font-body);
           font-size: 0.95rem;
           color: var(--text-secondary);
-          margin-bottom: 1.5rem;
-          min-height: 45px;
+          margin-bottom: 1rem;
+          min-height: 40px;
+          line-height: 1.4;
         }
 
         .plan-price {
           display: flex;
           align-items: baseline;
           gap: 0.5rem;
-          margin-bottom: 2rem;
+          margin-bottom: 1.5rem;
           border-bottom: 2px dashed var(--border-color);
-          padding-bottom: 1.5rem;
+          padding-bottom: 1rem;
+          width: 100%;
         }
 
         .price-amount {
