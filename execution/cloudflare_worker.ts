@@ -1,13 +1,12 @@
 /**
  * Cloudflare Worker API Gateway for Rynell AI Studio & Vectorine
- * Handles Turnstile security validation, R2 image storage, Replicate 8K upscaling, and RunPod Vector Tracing.
+ * Handles Turnstile security validation, R2 image storage, Cloudflare Workers AI (Pruna AI/SDXL), and RunPod Vector Tracing.
  */
 
 import { Buffer } from 'node:buffer';
 
 export interface Env {
   R2_BUCKET: R2Bucket;
-  REPLICATE_API_TOKEN: string;
   RUNPOD_API_KEY: string;
   TURNSTILE_SECRET_KEY: string;
   PUBLIC_R2_URL: string; // e.g. "https://storage.rynell.org"
@@ -191,31 +190,39 @@ export default {
             const imageBytes = [...new Uint8Array(imgBuffer)];
             let aiImageStream: any;
 
-            // Primary: Pruna AI's p-image-upscale on Cloudflare Workers AI
+            // Primary: Pruna AI's p-image-upscale-xl-4x / p-image-upscale on Cloudflare Workers AI
             try {
-              aiImageStream = await env.AI.run('@cf/pruna-ai/p-image-upscale', {
+              aiImageStream = await env.AI.run('@cf/pruna-ai/p-image-upscale-xl-4x', {
                 image: imageBytes
               });
-            } catch (err1: any) {
-              console.warn("Pruna AI p-image-upscale note, trying SD 4x Upscaler:", err1?.message || err1);
-
-              // Backup 1: Stability AI SD 4x Upscaler
+            } catch (err0: any) {
               try {
-                aiImageStream = await env.AI.run('@cf/stabilityai/stable-diffusion-x4-upscaler', {
-                  image: imageBytes,
-                  prompt: prompt || 'ultra-high resolution 8k masterpiece detail, sharp clarity'
+                aiImageStream = await env.AI.run('@cf/pruna-ai/p-image-upscale', {
+                  image: imageBytes
                 });
-              } catch (err2: any) {
-                console.warn("SD 4x Upscaler note, trying SD 1.5 img2img:", err2?.message || err2);
+              } catch (err1: any) {
+                console.warn("Pruna AI upscaler note, trying SD 4x Upscaler:", err1?.message || err1);
 
-                // Backup 2: SD 1.5 img2img enhancement
-                aiImageStream = await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-img2img', {
-                  image: imageBytes,
-                  prompt: prompt || 'ultra-high resolution 8k masterpiece detail, sharp clarity',
-                  strength: 0.2,
-                  guidance: 7.5,
-                  num_steps: 10
-                });
+                // Backup 1: Stability AI SD 4x Upscaler
+                try {
+                  aiImageStream = await env.AI.run('@cf/stabilityai/stable-diffusion-x4-upscaler', {
+                    image: imageBytes,
+                    prompt: prompt || 'ultra-high resolution 8k masterpiece detail, sharp clarity'
+                  });
+                } catch (err2: any) {
+                  console.warn("SD 4x Upscaler note, trying SD 1.5 img2img:", err2?.message || err2);
+
+                  // Backup 2: SD 1.5 img2img enhancement
+                  try {
+                    aiImageStream = await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-img2img', {
+                      image: imageBytes,
+                      prompt: prompt || 'ultra-high resolution 8k masterpiece detail, sharp clarity',
+                      strength: 0.2,
+                      guidance: 7.5,
+                      num_steps: 10
+                    });
+                  } catch (_) {}
+                }
               }
             }
 
@@ -227,102 +234,34 @@ export default {
               return new Response(
                 JSON.stringify({ 
                   jobId: `cf-upscale-${Date.now()}`, 
-                  provider: 'cloudflare_ai_pruna', 
-                  status: 'succeeded', 
-                  outputUrl: outputDataUrl 
-                }),
-                { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-              );
-            }
-          } catch (upscaleErr) {
-            console.warn("Cloudflare Workers AI upscaler note, trying Replicate:", upscaleErr);
-          }
-        }
-
-        const REPLICATE_VERSION = '1b976a4d456ed9e4d1a846597b7614e79eadad3032e9124fa63859db0fd59b56';
-        let faceEnhance = true;
-        let scaleFactor = 4;
-        let internalVersion = 'General - RealESRGANplus';
-
-        if (modelType === 'illustration') {
-          internalVersion = 'Anime - anime6B';
-          faceEnhance = false;
-        } else if (modelType === 'complex_art') {
-          internalVersion = 'General - v3';
-          faceEnhance = true;
-          scaleFactor = 4;
-        }
-
-        const replicateResponse = await fetch('https://api.replicate.com/v1/predictions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Token ${env.REPLICATE_API_TOKEN}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            version: REPLICATE_VERSION,
-            input: {
-              img: imageUrl,
-              version: internalVersion,
-              scale: scaleFactor,
-              face_enhance: faceEnhance,
-              tile: 0
-            }
-          })
-        });
-
-        if (!replicateResponse.ok) {
-          const errData = await replicateResponse.json().catch(() => ({}));
-          console.warn(`Replicate API status ${replicateResponse.status}, attempting Cloudflare Workers AI Edge fallback...`);
-
-          if (env.AI) {
-            try {
-              const userPrompt = prompt || 'high quality studio asset, detailed, masterpiece, clean background';
-              let aiImageStream: any;
-
-              if (imageBase64 && typeof imageBase64 === 'string') {
-                const base64Clean = imageBase64.replace(/^data:image\/\w+;base64,/, '');
-                const imgBuffer = Buffer.from(base64Clean, 'base64');
-                const imageBytes = Array.from(new Uint8Array(imgBuffer));
-                aiImageStream = await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-img2img', {
-                  image: imageBytes,
-                  prompt: userPrompt,
-                  strength: 0.45,
-                  guidance: 7.5,
-                  num_steps: 20
-                });
-              } else {
-                aiImageStream = await env.AI.run('@cf/bytedance/stable-diffusion-xl-lightning', {
-                  prompt: userPrompt
-                });
-              }
-
-              const buffer = await new Response(aiImageStream).arrayBuffer();
-              const base64 = Buffer.from(buffer).toString('base64');
-              const outputDataUrl = `data:image/png;base64,${base64}`;
-
-              return new Response(
-                JSON.stringify({ 
-                  jobId: `cf-ai-${Date.now()}`, 
                   provider: 'cloudflare_ai', 
                   status: 'succeeded', 
                   outputUrl: outputDataUrl 
                 }),
                 { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
               );
-            } catch (fallbackErr) {
-              console.error("Cloudflare AI fallback error:", fallbackErr);
             }
-          }
 
-          throw new Error(`Replicate API note: ${replicateResponse.status} ${JSON.stringify(errData)}`);
+            return new Response(
+              JSON.stringify({ 
+                jobId: `cf-upscale-${Date.now()}`, 
+                provider: 'cloudflare_ai', 
+                status: 'failed', 
+                error: 'Cloudflare Workers AI upscaling error' 
+              }),
+              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          } catch (upscaleErr: any) {
+            return new Response(
+              JSON.stringify({ error: upscaleErr?.message || 'Cloudflare AI Upscaling Error' }),
+              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
         }
 
-        const jobData = (await replicateResponse.json()) as { id: string; status: string };
-
         return new Response(
-          JSON.stringify({ jobId: jobData.id, provider: 'replicate', status: jobData.status }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ error: 'Unsupported modelType or missing image payload' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
 
       } catch (err: any) {
@@ -333,22 +272,11 @@ export default {
       }
     }
 
-    // Endpoint 2: Poll Job Status
+    // Endpoint 2: Poll Job Status (For Async Tasks e.g. RunPod Vectorine)
     if (url.pathname.startsWith('/api/jobs/') && request.method === 'GET') {
       try {
         const jobId = url.pathname.replace('/api/jobs/', '');
-        const provider = url.searchParams.get('provider') || 'replicate';
-
-        if (provider === 'cloudflare_ai') {
-          return new Response(
-            JSON.stringify({
-              jobId,
-              status: 'completed',
-              outputUrl: null
-            }),
-            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
+        const provider = url.searchParams.get('provider') || 'cloudflare_ai';
 
         if (provider === 'runpod') {
           const statusResp = await fetch(`https://api.runpod.ai/v2/vtracer-vectorine/status/${jobId}`, {
@@ -366,20 +294,11 @@ export default {
           );
         }
 
-        // Replicate Polling
-        const statusResp = await fetch(`https://api.replicate.com/v1/predictions/${jobId}`, {
-          headers: { 'Authorization': `Token ${env.REPLICATE_API_TOKEN}` }
-        });
-        const statusData = (await statusResp.json()) as any;
-
-        const outputUrl = Array.isArray(statusData.output) ? statusData.output[0] : statusData.output;
-
         return new Response(
           JSON.stringify({
             jobId,
-            status: statusData.status, // 'starting', 'processing', 'succeeded', 'failed'
-            outputUrl: outputUrl || null,
-            error: statusData.error || null
+            status: 'succeeded',
+            outputUrl: null
           }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );

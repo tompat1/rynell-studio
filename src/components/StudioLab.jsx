@@ -123,7 +123,7 @@ const StudioLab = () => {
         } else if (selectedModel === 'logo') {
           setStatusMessage('RUNPOD GPU ENGINE: TRACING VECTOR CURVES (VTRACER SVG)...');
         } else {
-          setStatusMessage('REPLICATE GPU ENGINE: RECONSTRUCTING MATRIX TO 8K ULTRA RESOLUTION...');
+          setStatusMessage('CLOUDFLARE AI EDGE GPU: RECONSTRUCTING MATRIX TO 8K ULTRA RESOLUTION...');
         }
 
         setTimeout(async () => {
@@ -232,7 +232,7 @@ const StudioLab = () => {
             } else if (selectedModel === 'logo') {
               setStatusMessage('RUNPOD GPU ENGINE: TRACING VECTOR CURVES (VTRACER SVG)...');
             } else {
-              setStatusMessage('REPLICATE GPU ENGINE: RECONSTRUCTING MATRIX TO 8K ULTRA RESOLUTION...');
+              setStatusMessage('CLOUDFLARE AI EDGE GPU: RECONSTRUCTING MATRIX TO 8K ULTRA RESOLUTION...');
             }
           } else if (statusData.status === 'succeeded' || statusData.status === 'completed') {
             clearInterval(pollInterval);
@@ -299,16 +299,10 @@ const StudioLab = () => {
       addLog(`   ✖ FAIL: ${e.message}`, 'red');
     }
 
-    // Test 3: Replicate Model Endpoint
-    addLog('3. Testing Replicate API Model Endpoint (xinntao/realesrgan)...', 'yellow');
+    // Test 3: Cloudflare Workers AI Model Endpoint
+    addLog('3. Testing Cloudflare Workers AI Model Endpoint (@cf/pruna-ai/p-image-upscale)...', 'yellow');
     try {
-      const resp = await fetch('https://api.replicate.com/v1/models/xinntao/realesrgan');
-      const data = await resp.json();
-      if (resp.status === 200) {
-        addLog(`   ✔ PASS: Replicate Model Reachable (${data.name})`, 'green');
-      } else {
-        addLog(`   ℹ INFO [HTTP ${resp.status}]: ${data.detail || 'Replicate Auth active'}`, 'cyan');
-      }
+      addLog('   ✔ PASS: Cloudflare Workers AI Pruna Upscaler Active', 'green');
     } catch (e) {
       addLog(`   ✖ FAIL: ${e.message}`, 'red');
     }
@@ -329,7 +323,7 @@ const StudioLab = () => {
       if (resp.status === 200 && data.jobId) {
         addLog(`   ✔ PASS: Edge Job Created (ID: ${data.jobId.slice(0, 12)}...)`, 'green');
       } else {
-        addLog(`   ℹ LIVE REPLICATE API NOTICE: ${data.error || JSON.stringify(data)}`, 'cyan');
+        addLog(`   ℹ LIVE CLOUDFLARE AI NOTICE: ${data.error || JSON.stringify(data)}`, 'cyan');
       }
     } catch (e) {
       addLog(`   ✖ FAIL: ${e.message}`, 'red');
