@@ -137,10 +137,41 @@ const StudioLab = () => {
     }, 1200);
   };
 
+  const compressImageForAI = (dataUrl, maxDim = 1024) => {
+    return new Promise((resolve) => {
+      if (!dataUrl) {
+        resolve(dataUrl);
+        return;
+      }
+      const img = new Image();
+      img.onload = () => {
+        let w = img.naturalWidth || img.width;
+        let h = img.naturalHeight || img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) {
+            h = Math.round((h * maxDim) / w);
+            w = maxDim;
+          } else {
+            w = Math.round((w * maxDim) / h);
+            h = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
+    });
+  };
+
   const handleStartProcess = async () => {
-    const activeImage = outputUrl || previewUrl || refPreviewUrl || heroClean;
+    const rawImage = outputUrl || previewUrl || refPreviewUrl || heroClean;
     if (!previewUrl) {
-      setPreviewUrl(activeImage);
+      setPreviewUrl(rawImage);
     }
 
     const activeToken = turnstileToken || 'pass-token';
@@ -148,6 +179,9 @@ const StudioLab = () => {
     try {
       setStatus('UPLOADING');
       setStatusMessage('UPLOADING FILE TO CLOUDFLARE R2 STORAGE (0 KB EGRESS)...');
+
+      // Optimize image payload size for Cloudflare Edge GPU memory limits
+      const activeImage = await compressImageForAI(rawImage, 1024);
 
       // Dispatch live HTTP POST request directly to Cloudflare Worker Edge API
       const processResp = await fetch(`${WORKER_ENDPOINT}/api/process`, {

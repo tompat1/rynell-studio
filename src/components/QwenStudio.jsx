@@ -87,6 +87,37 @@ const QwenStudio = () => {
     }
   };
 
+  const compressImageForAI = (dataUrl, maxDim = 1024) => {
+    return new Promise((resolve) => {
+      if (!dataUrl) {
+        resolve(dataUrl);
+        return;
+      }
+      const img = new Image();
+      img.onload = () => {
+        let w = img.naturalWidth || img.width;
+        let h = img.naturalHeight || img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) {
+            h = Math.round((h * maxDim) / w);
+            w = maxDim;
+          } else {
+            w = Math.round((w * maxDim) / h);
+            h = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
+    });
+  };
+
   const handleExecuteQwenEdit = async () => {
     if (!promptText.trim()) {
       alert("Please enter an edit instruction!");
@@ -96,7 +127,8 @@ const QwenStudio = () => {
     setStatus('PROCESSING');
     setStatusMessage('CLOUDFLARE WORKERS AI GPU: EXECUTING QWEN IMAGE EDIT MATRIX...');
 
-    const sourceImage = outputUrl || previewUrl || heroClean;
+    const rawImage = outputUrl || previewUrl || heroClean;
+    const sourceImage = await compressImageForAI(rawImage, 1024);
 
     try {
       const resp = await fetch(`${WORKER_ENDPOINT}/api/process`, {
