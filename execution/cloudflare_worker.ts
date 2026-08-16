@@ -88,32 +88,31 @@ export default {
         // 2. Construct public/signed R2 source image URL
         const imageUrl = `${env.PUBLIC_R2_URL || 'https://storage.rynell.org'}/${imageR2Key}`;
 
-        // 3. Strict Image-to-Image AI Routing for Qwen AI Edit (Using Uploaded Image Bytes Only)
+        // 3. Strict Image-to-Image AI Routing for Qwen AI Edit (Using Droplet image_b64 Pattern)
         if (modelType === 'qwen_edit') {
           if (env.AI) {
             const userPrompt = prompt || 'high quality studio asset, detailed, masterpiece, clean background';
 
             if (imageBase64 && typeof imageBase64 === 'string') {
               const base64Clean = imageBase64.replace(/^data:image\/\w+;base64,/, '');
-              const imgBuffer = Buffer.from(base64Clean, 'base64');
-              const imageBytes = Array.from(new Uint8Array(imgBuffer));
               let aiImageStream: any;
               let lastErr: any = null;
 
-              // Strict Image-to-Image transformation on user's uploaded image bytes with auto-retry
+              // Strict Image-to-Image transformation using image_b64 payload (Droplet architecture pattern)
               for (let attempt = 1; attempt <= 3; attempt++) {
                 try {
                   aiImageStream = await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-img2img', {
-                    image: imageBytes,
                     prompt: userPrompt,
-                    strength: 0.55,
-                    guidance: 7.5,
-                    num_steps: 12
+                    image_b64: base64Clean,
+                    num_steps: 20,
+                    strength: 0.65,
+                    guidance: 8.0,
+                    seed: Math.floor(Math.random() * 1000000000)
                   });
                   if (aiImageStream) break;
                 } catch (err: any) {
                   lastErr = err;
-                  console.warn(`Cloudflare AI attempt ${attempt} capacity note:`, err?.message || err);
+                  console.warn(`Cloudflare AI attempt ${attempt} note:`, err?.message || err);
                   if (attempt < 3) {
                     await new Promise((r) => setTimeout(r, 1000));
                   }
