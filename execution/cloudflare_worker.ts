@@ -98,24 +98,32 @@ export default {
               let aiImageStream: any;
               let lastErr: any = null;
 
-              // Strict Image-to-Image transformation using image_b64 payload (Droplet architecture pattern)
-              for (let attempt = 1; attempt <= 3; attempt++) {
+              // Primary GPU Cluster: @cf/runwayml/stable-diffusion-v1-5-img2img
+              try {
+                aiImageStream = await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-img2img', {
+                  prompt: userPrompt,
+                  image_b64: base64Clean,
+                  num_steps: 20,
+                  strength: 0.65,
+                  guidance: 8.0,
+                  seed: Math.floor(Math.random() * 1000000000)
+                });
+              } catch (err1: any) {
+                lastErr = err1;
+                console.warn("Primary SD 1.5 img2img note, trying SDXL Base 1.0 cluster:", err1?.message || err1);
+
+                // Failover GPU Cluster: @cf/stabilityai/stable-diffusion-xl-base-1.0
                 try {
-                  aiImageStream = await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-img2img', {
+                  aiImageStream = await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0', {
                     prompt: userPrompt,
                     image_b64: base64Clean,
                     num_steps: 20,
                     strength: 0.65,
-                    guidance: 8.0,
                     seed: Math.floor(Math.random() * 1000000000)
                   });
-                  if (aiImageStream) break;
-                } catch (err: any) {
-                  lastErr = err;
-                  console.warn(`Cloudflare AI attempt ${attempt} note:`, err?.message || err);
-                  if (attempt < 3) {
-                    await new Promise((r) => setTimeout(r, 1000));
-                  }
+                } catch (err2: any) {
+                  lastErr = err2;
+                  console.warn("SDXL Base 1.0 img2img note:", err2?.message || err2);
                 }
               }
 
