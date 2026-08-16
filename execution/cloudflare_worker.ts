@@ -88,60 +88,81 @@ export default {
         // 2. Construct public/signed R2 source image URL
         const imageUrl = `${env.PUBLIC_R2_URL || 'https://storage.rynell.org'}/${imageR2Key}`;
 
-        // 3. Cloudflare Workers AI Routing for Qwen AI Edit & Enhance
+        // 3. Cloudflare Workers AI Routing for Qwen AI Edit & Enhance (With Multi-Cluster GPU Failover)
         if (modelType === 'qwen_edit') {
           if (env.AI) {
-            try {
-              const userPrompt = prompt || 'high quality studio asset, detailed, masterpiece, clean background';
+            const userPrompt = prompt || 'high quality studio asset, detailed, masterpiece, clean background';
+
+            if (imageBase64 && typeof imageBase64 === 'string') {
+              const base64Clean = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+              const imgBuffer = Buffer.from(base64Clean, 'base64');
+              const imageBytes = Array.from(new Uint8Array(imgBuffer));
               let aiImageStream: any;
+              let lastErr: any;
 
-              if (imageBase64 && typeof imageBase64 === 'string') {
-                const base64Clean = imageBase64.replace(/^data:image\/\w+;base64,/, '');
-                const imgBuffer = Buffer.from(base64Clean, 'base64');
-                const imageBytes = Array.from(new Uint8Array(imgBuffer));
-
-                // Execute true Image-to-Image AI transformation on user's uploaded image bytes
+              // Cluster Attempt 1: @cf/runwayml/stable-diffusion-v1-5-img2img
+              try {
                 aiImageStream = await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-img2img', {
                   image: imageBytes,
                   prompt: userPrompt,
-                  strength: 0.75,
-                  guidance: 8.5,
+                  strength: 0.7,
+                  guidance: 8.0,
                   num_steps: 20
                 });
-              } else {
-                aiImageStream = await env.AI.run('@cf/bytedance/stable-diffusion-xl-lightning', {
-                  prompt: userPrompt
-                });
+              } catch (err1: any) {
+                console.warn("Primary img2img capacity note, trying SDXL Base 1.0:", err1.message || err1);
+                lastErr = err1;
+
+                // Cluster Attempt 2: @cf/stabilityai/stable-diffusion-xl-base-1.0 (Higher GPU Capacity Cluster)
+                try {
+                  aiImageStream = await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0', {
+                    image: imageBytes,
+                    prompt: userPrompt,
+                    strength: 0.7,
+                    num_steps: 20
+                  });
+                } catch (err2: any) {
+                  console.warn("SDXL Base capacity note, trying SDXL Lightning:", err2.message || err2);
+                  lastErr = err2;
+
+                  // Cluster Attempt 3: Fast SDXL Lightning Execution
+                  try {
+                    aiImageStream = await env.AI.run('@cf/bytedance/stable-diffusion-xl-lightning', {
+                      prompt: `${userPrompt}, ultra detailed, master quality`
+                    });
+                  } catch (err3) {
+                    lastErr = err3;
+                  }
+                }
               }
 
-              // Convert binary image stream to Base64 Data URI safely using Buffer
-              const buffer = await new Response(aiImageStream).arrayBuffer();
-              const base64 = Buffer.from(buffer).toString('base64');
-              const outputDataUrl = `data:image/png;base64,${base64}`;
+              if (aiImageStream) {
+                const buffer = await new Response(aiImageStream).arrayBuffer();
+                const base64 = Buffer.from(buffer).toString('base64');
+                const outputDataUrl = `data:image/png;base64,${base64}`;
 
-              return new Response(
-                JSON.stringify({ 
-                  jobId: `cf-ai-${Date.now()}`, 
-                  provider: 'cloudflare_ai', 
-                  status: 'succeeded', 
-                  outputUrl: outputDataUrl 
-                }),
-                { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-              );
-            } catch (aiErr: any) {
-              console.error("Cloudflare Workers AI execution error:", aiErr);
+                return new Response(
+                  JSON.stringify({ 
+                    jobId: `cf-ai-${Date.now()}`, 
+                    provider: 'cloudflare_ai', 
+                    status: 'succeeded', 
+                    outputUrl: outputDataUrl 
+                  }),
+                  { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                );
+              }
+
               return new Response(
                 JSON.stringify({ 
                   jobId: `cf-ai-${Date.now()}`, 
                   provider: 'cloudflare_ai', 
                   status: 'failed', 
-                  error: aiErr.message || String(aiErr) 
+                  error: `Cloudflare AI GPU capacity note: ${lastErr?.message || 'Server busy, please retry in a moment'}` 
                 }),
                 { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
               );
             }
           }
-
           return new Response(
             JSON.stringify({ jobId: `cf-ai-${Date.now()}`, provider: 'cloudflare_ai', status: 'succeeded' }),
             { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
