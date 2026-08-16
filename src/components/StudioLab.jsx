@@ -610,6 +610,7 @@ const StudioLab = () => {
           <div className="pricing-modal-overlay" onClick={() => setIsPricingOpen(false)}>
             <div className="pricing-modal-content" onClick={(e) => e.stopPropagation()}>
               <button className="modal-close-btn" onClick={() => setIsPricingOpen(false)}>✕</button>
+              <PricingTable onClose={() => setIsPricingOpen(false)} />
             </div>
           </div>
         )}
