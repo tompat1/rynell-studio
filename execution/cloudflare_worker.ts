@@ -88,42 +88,43 @@ export default {
         // 2. Construct public/signed R2 source image URL
         const imageUrl = `${env.PUBLIC_R2_URL || 'https://storage.rynell.org'}/${imageR2Key}`;
 
-        // 3. Strict Image-to-Image AI Routing for Qwen AI Edit (Using Droplet image_b64 Pattern)
+        // 3. Strict Image-to-Image AI Routing for Qwen AI Edit (Using Cloudflare Image Tensor)
         if (modelType === 'qwen_edit') {
           if (env.AI) {
             const userPrompt = prompt || 'high quality studio asset, detailed, masterpiece, clean background';
 
             if (imageBase64 && typeof imageBase64 === 'string') {
               const base64Clean = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+              const imgBuffer = Buffer.from(base64Clean, 'base64');
+              const imageBytes = [...new Uint8Array(imgBuffer)];
               let aiImageStream: any;
               let lastErr: any = null;
 
               // Primary GPU Cluster: @cf/runwayml/stable-diffusion-v1-5-img2img
               try {
                 aiImageStream = await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-img2img', {
+                  image: imageBytes,
                   prompt: userPrompt,
-                  image_b64: base64Clean,
-                  num_steps: 20,
-                  strength: 0.65,
-                  guidance: 8.0,
-                  seed: Math.floor(Math.random() * 1000000000)
+                  num_steps: 10,
+                  strength: 0.6,
+                  guidance: 7.5
                 });
               } catch (err1: any) {
                 lastErr = err1;
-                console.warn("Primary SD 1.5 img2img note, trying SDXL Base 1.0 cluster:", err1?.message || err1);
+                console.warn("Primary SD 1.5 img2img note, trying 8-step retry:", err1?.message || err1);
 
-                // Failover GPU Cluster: @cf/stabilityai/stable-diffusion-xl-base-1.0
+                // 8-step retry for instant edge completion
                 try {
-                  aiImageStream = await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0', {
+                  aiImageStream = await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-img2img', {
+                    image: imageBytes,
                     prompt: userPrompt,
-                    image_b64: base64Clean,
-                    num_steps: 20,
-                    strength: 0.65,
-                    seed: Math.floor(Math.random() * 1000000000)
+                    num_steps: 8,
+                    strength: 0.5,
+                    guidance: 7.0
                   });
                 } catch (err2: any) {
                   lastErr = err2;
-                  console.warn("SDXL Base 1.0 img2img note:", err2?.message || err2);
+                  console.warn("SD 1.5 retry note:", err2?.message || err2);
                 }
               }
 
