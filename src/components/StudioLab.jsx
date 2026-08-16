@@ -180,8 +180,8 @@ const StudioLab = () => {
       setStatus('UPLOADING');
       setStatusMessage('UPLOADING FILE TO CLOUDFLARE R2 STORAGE (0 KB EGRESS)...');
 
-      // Optimize image payload size for Cloudflare Edge GPU memory limits
-      const activeImage = await compressImageForAI(rawImage, 1024);
+      // Optimize image payload size to 512px for SD 1.5 native edge resolution
+      const activeImage = await compressImageForAI(rawImage, 512);
 
       // Dispatch live HTTP POST request directly to Cloudflare Worker Edge API
       const processResp = await fetch(`${WORKER_ENDPOINT}/api/process`, {

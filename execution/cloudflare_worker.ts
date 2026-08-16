@@ -141,7 +141,7 @@ export default {
                   jobId: `cf-ai-${Date.now()}`, 
                   provider: 'cloudflare_ai', 
                   status: 'failed', 
-                  error: 'Image-to-Image execution failed. Please retry in a moment.' 
+                  error: `Cloudflare AI Edge Note: ${lastErr?.message || String(lastErr)}` 
                 }),
                 { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
               );
