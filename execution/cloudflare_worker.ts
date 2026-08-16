@@ -88,7 +88,7 @@ export default {
         // 2. Construct public/signed R2 source image URL
         const imageUrl = `${env.PUBLIC_R2_URL || 'https://storage.rynell.org'}/${imageR2Key}`;
 
-        // 3. Cloudflare Workers AI Routing for Qwen AI Edit & Enhance (With Multi-Cluster GPU Failover)
+        // 3. Strict Image-to-Image AI Routing for Qwen AI Edit (Using Uploaded Image Bytes Only)
         if (modelType === 'qwen_edit') {
           if (env.AI) {
             const userPrompt = prompt || 'high quality studio asset, detailed, masterpiece, clean background';
@@ -98,40 +98,23 @@ export default {
               const imgBuffer = Buffer.from(base64Clean, 'base64');
               const imageBytes = Array.from(new Uint8Array(imgBuffer));
               let aiImageStream: any;
-              let lastErr: any;
 
-              // Cluster Attempt 1: @cf/runwayml/stable-diffusion-v1-5-img2img
-              try {
-                aiImageStream = await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-img2img', {
-                  image: imageBytes,
-                  prompt: userPrompt,
-                  strength: 0.7,
-                  guidance: 8.0,
-                  num_steps: 20
-                });
-              } catch (err1: any) {
-                console.warn("Primary img2img capacity note, trying SDXL Base 1.0:", err1.message || err1);
-                lastErr = err1;
-
-                // Cluster Attempt 2: @cf/stabilityai/stable-diffusion-xl-base-1.0 (Higher GPU Capacity Cluster)
+              // Strict Image-to-Image transformation on user's uploaded image bytes with auto-retry
+              for (let attempt = 1; attempt <= 3; attempt++) {
                 try {
-                  aiImageStream = await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0', {
+                  aiImageStream = await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-img2img', {
                     image: imageBytes,
                     prompt: userPrompt,
-                    strength: 0.7,
-                    num_steps: 20
+                    strength: 0.55,
+                    guidance: 7.5,
+                    num_steps: 12
                   });
-                } catch (err2: any) {
-                  console.warn("SDXL Base capacity note, trying SDXL Lightning:", err2.message || err2);
-                  lastErr = err2;
-
-                  // Cluster Attempt 3: Fast SDXL Lightning Execution
-                  try {
-                    aiImageStream = await env.AI.run('@cf/bytedance/stable-diffusion-xl-lightning', {
-                      prompt: `${userPrompt}, ultra detailed, master quality`
-                    });
-                  } catch (err3) {
-                    lastErr = err3;
+                  if (aiImageStream) break;
+                } catch (err: any) {
+                  lastErr = err;
+                  console.warn(`Cloudflare AI attempt ${attempt} capacity note:`, err?.message || err);
+                  if (attempt < 3) {
+                    await new Promise((r) => setTimeout(r, 1000));
                   }
                 }
               }
@@ -157,16 +140,12 @@ export default {
                   jobId: `cf-ai-${Date.now()}`, 
                   provider: 'cloudflare_ai', 
                   status: 'failed', 
-                  error: `Cloudflare AI GPU capacity note: ${lastErr?.message || 'Server busy, please retry in a moment'}` 
+                  error: 'Image-to-Image execution failed. Please retry in a moment.' 
                 }),
                 { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
               );
             }
           }
-          return new Response(
-            JSON.stringify({ jobId: `cf-ai-${Date.now()}`, provider: 'cloudflare_ai', status: 'succeeded' }),
-            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
         }
 
         // 4. Vectorine Routing (RunPod Serverless GPU for Logo & Vector Tracing)
