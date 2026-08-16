@@ -188,7 +188,8 @@ export default {
             const base64Clean = imageBase64.replace(/^data:image\/\w+;base64,/, '');
             const imgBuffer = Buffer.from(base64Clean, 'base64');
             const imageBytes = [...new Uint8Array(imgBuffer)];
-            let aiImageStream: any;
+            let lastErr: any = null;
+            let aiImageStream: any = null;
 
             // Primary: Pruna AI's p-image-upscale-xl-4x / p-image-upscale on Cloudflare Workers AI
             try {
@@ -196,11 +197,13 @@ export default {
                 image: imageBytes
               });
             } catch (err0: any) {
+              lastErr = err0;
               try {
                 aiImageStream = await env.AI.run('@cf/pruna-ai/p-image-upscale', {
                   image: imageBytes
                 });
               } catch (err1: any) {
+                lastErr = err1;
                 console.warn("Pruna AI upscaler note, trying SD 4x Upscaler:", err1?.message || err1);
 
                 // Backup 1: Stability AI SD 4x Upscaler
@@ -210,6 +213,7 @@ export default {
                     prompt: prompt || 'ultra-high resolution 8k masterpiece detail, sharp clarity'
                   });
                 } catch (err2: any) {
+                  lastErr = err2;
                   console.warn("SD 4x Upscaler note, trying SD 1.5 img2img:", err2?.message || err2);
 
                   // Backup 2: SD 1.5 img2img enhancement
@@ -221,7 +225,9 @@ export default {
                       guidance: 7.5,
                       num_steps: 10
                     });
-                  } catch (_) {}
+                  } catch (err3: any) {
+                    lastErr = err3;
+                  }
                 }
               }
             }
@@ -247,13 +253,13 @@ export default {
                 jobId: `cf-upscale-${Date.now()}`, 
                 provider: 'cloudflare_ai', 
                 status: 'failed', 
-                error: 'Cloudflare Workers AI upscaling error' 
+                error: `Cloudflare AI Upscale Note: ${lastErr?.message || String(lastErr)}` 
               }),
               { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             );
           } catch (upscaleErr: any) {
             return new Response(
-              JSON.stringify({ error: upscaleErr?.message || 'Cloudflare AI Upscaling Error' }),
+              JSON.stringify({ error: `Cloudflare AI Upscale Error: ${upscaleErr?.message || String(upscaleErr)}` }),
               { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             );
           }
