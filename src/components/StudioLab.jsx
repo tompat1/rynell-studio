@@ -5,7 +5,7 @@ import PricingTable from './PricingTable';
 import heroClean from '../assets/hero_page_rynell_studio_clean.webp';
 
 const StudioLab = () => {
-  const [selectedModel, setSelectedModel] = useState('photo');
+  const [selectedModel, setSelectedModel] = useState('qwen_edit');
   const [userTier, setUserTier] = useState({ isPremium: false });
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [file, setFile] = useState(null);
