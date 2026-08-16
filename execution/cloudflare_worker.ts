@@ -104,9 +104,9 @@ export default {
                 aiImageStream = await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-img2img', {
                   image: imageBytes,
                   prompt: userPrompt,
-                  strength: 0.45,
-                  guidance: 7.5,
-                  num_steps: 20
+                  strength: 0.75,
+                  guidance: 8.5,
+                  num_steps: 25
                 });
               } else {
                 aiImageStream = await env.AI.run('@cf/bytedance/stable-diffusion-xl-lightning', {
