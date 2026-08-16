@@ -563,8 +563,21 @@ const StudioLab = () => {
               </div>
             </div>
 
+            {/* Processing Spinner Box while waiting */}
+            {['UPLOADING', 'QUEUED', 'PROCESSING'].includes(status) && (
+              <div className="processing-spinner-box">
+                <div className="spinner-ring"></div>
+                <div className="spinner-info">
+                  <span className="spinner-status-title">
+                    {status === 'UPLOADING' ? '⚡ UPLOADING TO GPU MATRIX...' : status === 'QUEUED' ? '⏳ GPU ALLOCATED - IN QUEUE' : '⚙️ CLOUDFLARE EDGE GPU EXECUTING...'}
+                  </span>
+                  <span className="spinner-status-desc">{statusMessage}</span>
+                </div>
+              </div>
+            )}
+
             {/* Processing Action Buttons & Continuous Edit Flow */}
-            {['IDLE', 'SUCCESS'].includes(status) && (
+            {['IDLE', 'SUCCESS', 'ERROR'].includes(status) && (
               <div className="action-buttons-stack">
                 <button 
                   className="action-btn process-btn" 
@@ -595,6 +608,13 @@ const StudioLab = () => {
           {/* Right Display Area - Before/After Split Viewer */}
           <div className="lab-display-panel">
             <h3 className="panel-title">PIXEL-LEVEL MATRIX COMPARISON</h3>
+
+            {['UPLOADING', 'QUEUED', 'PROCESSING'].includes(status) && (
+              <div className="display-loading-overlay">
+                <div className="spinner-ring large"></div>
+                <span className="overlay-pulse-text">{statusMessage || 'CLOUDFLARE EDGE GPU PROCESSING...'}</span>
+              </div>
+            )}
 
             {outputUrl ? (
               <BeforeAfterSlider 
@@ -1339,6 +1359,85 @@ const StudioLab = () => {
         .cta-upgrade-btn:hover {
           transform: translateY(-2px);
           box-shadow: 6px 6px 0 #000;
+        }
+
+        .processing-spinner-box {
+          display: flex;
+          align-items: center;
+          gap: 1.2rem;
+          background: #080C14;
+          border: 3px solid var(--primary-orange);
+          padding: 1.2rem 1.5rem;
+          box-shadow: 6px 6px 0 #000;
+          margin-top: 1rem;
+        }
+
+        .spinner-ring {
+          width: 36px;
+          height: 36px;
+          border: 4px solid rgba(255, 106, 0, 0.2);
+          border-top-color: var(--primary-orange);
+          border-right-color: #00E5FF;
+          border-radius: 50%;
+          animation: spin-ring 0.75s linear infinite;
+          flex-shrink: 0;
+        }
+
+        .spinner-ring.large {
+          width: 64px;
+          height: 64px;
+          border-width: 6px;
+        }
+
+        @keyframes spin-ring {
+          to { transform: rotate(360deg); }
+        }
+
+        .spinner-info {
+          display: flex;
+          flex-direction: column;
+          gap: 0.3rem;
+        }
+
+        .spinner-status-title {
+          font-family: var(--font-heading);
+          font-size: 1.1rem;
+          color: var(--primary-orange);
+          letter-spacing: 1px;
+        }
+
+        .spinner-status-desc {
+          font-family: var(--font-body);
+          font-size: 0.88rem;
+          color: #A0A0B0;
+        }
+
+        .display-loading-overlay {
+          position: absolute;
+          inset: 0;
+          background: rgba(6, 6, 8, 0.85);
+          backdrop-filter: blur(6px);
+          z-index: 20;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 1.5rem;
+        }
+
+        .overlay-pulse-text {
+          font-family: var(--font-heading);
+          font-size: 1.2rem;
+          color: #00E5FF;
+          letter-spacing: 2px;
+          text-align: center;
+          max-width: 80%;
+          animation: text-pulse 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes text-pulse {
+          from { opacity: 0.7; transform: scale(0.98); }
+          to { opacity: 1; transform: scale(1); }
         }
 
         .pricing-modal-overlay {

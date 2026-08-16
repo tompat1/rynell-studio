@@ -106,7 +106,7 @@ export default {
                   prompt: userPrompt,
                   strength: 0.75,
                   guidance: 8.5,
-                  num_steps: 25
+                  num_steps: 20
                 });
               } else {
                 aiImageStream = await env.AI.run('@cf/bytedance/stable-diffusion-xl-lightning', {
