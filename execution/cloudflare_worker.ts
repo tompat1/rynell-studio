@@ -98,6 +98,7 @@ export default {
               const imgBuffer = Buffer.from(base64Clean, 'base64');
               const imageBytes = Array.from(new Uint8Array(imgBuffer));
               let aiImageStream: any;
+              let lastErr: any = null;
 
               // Strict Image-to-Image transformation on user's uploaded image bytes with auto-retry
               for (let attempt = 1; attempt <= 3; attempt++) {
