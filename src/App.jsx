@@ -17,6 +17,7 @@ import Loader from './components/Loader'
 import ContactDrawer from './components/ContactDrawer'
 import StudioLab from './components/StudioLab'
 import QwenStudio from './components/QwenStudio'
+import JsonTransformer from './components/JsonTransformer'
 import { AudioProvider } from './contexts/AudioContext'
 
 function App() {
@@ -117,6 +118,7 @@ function App() {
       />
       <Hero />
       <StudioLab />
+      <JsonTransformer />
       <QwenStudio />
       <Collections />
       <Shop addToCart={addToCart} isArchiveOpen={isShopArchiveOpen} setIsArchiveOpen={setIsShopArchiveOpen} />
