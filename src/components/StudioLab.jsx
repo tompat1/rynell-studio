@@ -849,7 +849,13 @@ const StudioLab = () => {
                   background: '#0D0D14',
                   border: '2px dashed #333'
                 }}>
-                  <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🖼️</div>
+                  <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--primary-orange)" strokeWidth="1.5">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                      <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                  </div>
                   <h4 style={{ fontFamily: 'var(--font-heading)', color: '#FFF', fontSize: '1.5rem', marginBottom: '0.5rem' }}>
                     NO SAVED RENDERS YET
                   </h4>
@@ -1112,7 +1118,13 @@ const StudioLab = () => {
                         </div>
                       ) : (
                         <div className="empty-ref-prompt">
-                          <span className="ref-icon-symbol">🖼️</span>
+                          <div className="dropzone-icon ref-cyan-icon" style={{ marginBottom: '4px' }}>
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00E5FF" strokeWidth="2">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                              <polyline points="17 8 12 3 7 8"/>
+                              <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                          </div>
                           <span className="ref-title-text">2. REFERENCE PICTURE (OPTIONAL)</span>
                           <span className="ref-sub-text">For style transfer, face IP consistency & textures</span>
                         </div>
@@ -2032,10 +2044,17 @@ const StudioLab = () => {
         }
 
         .ref-upload-box {
-          border: 2px dashed #00E5FF;
-          background: #000;
+          border: 3px dashed var(--border-color);
+          background: var(--bg-card);
           padding: 1rem;
           text-align: center;
+          transition: all 0.3s ease;
+          cursor: pointer;
+        }
+
+        .ref-upload-box:hover {
+          border-color: #00E5FF;
+          background: rgba(0, 229, 255, 0.04);
         }
 
         .ref-upload-label { cursor: pointer; display: block; }
