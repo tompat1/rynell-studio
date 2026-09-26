@@ -2129,7 +2129,8 @@ const StudioLab = () => {
         .placeholder-workbench {
           position: relative;
           width: 100%;
-          height: 500px;
+          height: 680px;
+          max-height: 82vh;
           border: 4px solid var(--border-color);
           background: var(--bg-card);
           display: flex;
@@ -2165,14 +2166,16 @@ const StudioLab = () => {
         .single-preview-wrapper {
           position: relative;
           width: 100%;
-          height: 500px;
+          height: 680px;
+          max-height: 82vh;
           border: 4px solid var(--border-color);
+          background-color: #050505;
         }
 
         .single-preview-img {
           width: 100%;
           height: 100%;
-          object-fit: cover;
+          object-fit: contain;
         }
 
         .preview-overlay-tag {

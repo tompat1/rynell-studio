@@ -86,11 +86,12 @@ const BeforeAfterSlider = ({ beforeImage, afterImage, beforeLabel = "ORIGINAL", 
         .slider-container {
           position: relative;
           width: 100%;
-          height: 500px;
+          height: 680px;
+          max-height: 82vh;
           overflow: hidden;
           border: 4px solid var(--text-primary);
           box-shadow: 8px 8px 0 var(--primary-orange);
-          background-color: #000;
+          background-color: #050505;
           cursor: ew-resize;
           touch-action: none;
         }
@@ -106,7 +107,7 @@ const BeforeAfterSlider = ({ beforeImage, afterImage, beforeLabel = "ORIGINAL", 
         .img-layer img {
           width: 100%;
           height: 100%;
-          object-fit: cover;
+          object-fit: contain;
           display: block;
           user-select: none;
           pointer-events: none;
