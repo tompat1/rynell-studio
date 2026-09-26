@@ -7,8 +7,38 @@ import heroClean from '../assets/hero_page_rynell_studio_clean.webp';
 const StudioLab = () => {
   const [selectedModel, setSelectedModel] = useState('qwen_edit');
   const activeModelConfig = MODELS.find(m => m.id === selectedModel) || FREE_MODELS[0];
+  const [upscaleEngine, setUpscaleEngine] = useState('pruna'); // 'pruna' | 'esrgan'
   const [userTier, setUserTier] = useState({ isPremium: false });
   const [isPricingOpen, setIsPricingOpen] = useState(false);
+  const [usage, setUsage] = useState(() => {
+    try {
+      const raw = localStorage.getItem('rynell_studio_quota_v1');
+      if (raw) return JSON.parse(raw);
+    } catch (_) {}
+    return {
+      imageStudioRendersLeft: 5,
+      upscalerTrialsLeft: 1,
+      vectorineTrialsLeft: 1
+    };
+  });
+
+  const deductQuota = (modelKey) => {
+    if (userTier.isPremium) return;
+    setUsage((prev) => {
+      const next = { ...prev };
+      if (modelKey === 'qwen_edit') {
+        next.imageStudioRendersLeft = Math.max(0, (next.imageStudioRendersLeft ?? 5) - 1);
+      } else if (modelKey === 'upscale') {
+        next.upscalerTrialsLeft = Math.max(0, (next.upscalerTrialsLeft ?? 1) - 1);
+      } else if (modelKey === 'logo') {
+        next.vectorineTrialsLeft = Math.max(0, (next.vectorineTrialsLeft ?? 1) - 1);
+      }
+      try {
+        localStorage.setItem('rynell_studio_quota_v1', JSON.stringify(next));
+      } catch (_) {}
+      return next;
+    });
+  };
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [status, setStatus] = useState('IDLE'); // IDLE, UPLOADING, QUEUED, PROCESSING, SUCCESS, ERROR
@@ -164,17 +194,18 @@ const StudioLab = () => {
 
       setTimeout(async () => {
         setStatus('PROCESSING');
-        if (selectedModel === 'qwen_edit') {
-          setStatusMessage('CLOUDFLARE WORKERS AI GPU: EXECUTING QWEN IMAGE EDIT MATRIX...');
-        } else if (selectedModel === 'logo') {
+        if (selectedModel === 'logo') {
           setStatusMessage('RUNPOD GPU ENGINE: TRACING VECTOR CURVES (VTRACER SVG)...');
+        } else if (selectedModel === 'upscale') {
+          setStatusMessage(`CLOUDFLARE AI WORKER: RUNNING ${upscaleEngine === 'pruna' ? 'PRUNA AI SUPER-RESOLUTION' : 'REAL-ESRGAN RESTORATION'}...`);
         } else {
-          setStatusMessage('CLOUDFLARE AI EDGE GPU: RECONSTRUCTING MATRIX TO 8K ULTRA RESOLUTION...');
+          setStatusMessage('CLOUDFLARE WORKERS AI GPU: GENERATING VISUAL ASSET...');
         }
 
         setTimeout(async () => {
           setStatus('SUCCESS');
-          setStatusMessage(selectedModel === 'qwen_edit' ? 'PROCESS COMPLETE: FREE QWEN AI EDIT READY.' : 'PROCESS COMPLETE: 8K ULTRA RENDER READY.');
+          deductQuota(selectedModel);
+          setStatusMessage(selectedModel === 'logo' ? 'PROCESS COMPLETE: SVG VECTOR READY.' : 'PROCESS COMPLETE: AI STUDIO ASSET READY.');
           if (selectedModel === 'qwen_edit') {
             const sourceImg = previewUrl || heroClean;
             const editedUrl = await generateQwenEditedImage(sourceImg, qwenPrompt, refPreviewUrl, null);
@@ -221,6 +252,22 @@ const StudioLab = () => {
   };
 
   const handleStartProcess = async () => {
+    // Free Quota & Try-Before-Buy checks
+    if (!userTier.isPremium) {
+      if (selectedModel === 'qwen_edit' && (usage.imageStudioRendersLeft ?? 5) <= 0) {
+        setIsPricingOpen(true);
+        return;
+      }
+      if (selectedModel === 'upscale' && (usage.upscalerTrialsLeft ?? 1) <= 0) {
+        setIsPricingOpen(true);
+        return;
+      }
+      if (selectedModel === 'logo' && (usage.vectorineTrialsLeft ?? 1) <= 0) {
+        setIsPricingOpen(true);
+        return;
+      }
+    }
+
     const rawImage = outputUrl || previewUrl || refPreviewUrl || heroClean;
     if (!previewUrl) {
       setPreviewUrl(rawImage);
@@ -244,6 +291,7 @@ const StudioLab = () => {
           imageBase64: activeImage,
           refImageBase64: refPreviewUrl,
           modelType: selectedModel,
+          upscaleEngine: selectedModel === 'upscale' ? upscaleEngine : undefined,
           prompt: qwenPrompt
         })
       });
@@ -258,6 +306,7 @@ const StudioLab = () => {
 
       if (processData.outputUrl) {
         setStatus('SUCCESS');
+        deductQuota(selectedModel);
         setStatusMessage(`PROCESS COMPLETE: ${activeModelConfig.title} READY.`);
         setOutputUrl(processData.outputUrl);
         return;
@@ -283,6 +332,7 @@ const StudioLab = () => {
           } else if (statusData.status === 'succeeded' || statusData.status === 'completed') {
             clearInterval(pollInterval);
             setStatus('SUCCESS');
+            deductQuota(selectedModel);
             setStatusMessage(`PROCESS COMPLETE: ${activeModelConfig.title} READY.`);
             
             if (statusData.outputUrl) {
@@ -394,7 +444,7 @@ const StudioLab = () => {
             RYNELL <span className="text-orange">AI STUDIO</span> & <span className="text-blue">VECTORINE</span>
           </h2>
           <p className="lab-subtitle">
-            Serverless 8K Super-Resolution matrix enhancement and GPU Vector Tracing. Zero compression loss.
+            Cloudflare Workers AI edge generation and RunPod GPU Vector Tracing.
           </p>
 
           <button 
@@ -414,6 +464,7 @@ const StudioLab = () => {
           onModelChange={setSelectedModel}
           isPremiumUser={userTier.isPremium}
           onOpenUpgrade={() => setIsPricingOpen(true)}
+          usage={usage}
         />
 
         {/* Workbench Wrapper with explicit anchor ID */}
@@ -517,6 +568,44 @@ const StudioLab = () => {
                   <span className="qwen-free-tag">{activeModelConfig.badge}</span>
                 </div>
 
+                {/* 4K Upscale Dual-Engine Selector for Comparison */}
+                {selectedModel === 'upscale' && (
+                  <div className="upscale-engine-picker">
+                    <label className="prompt-field-title">CHOOSE 4K SUPER-RESOLUTION ENGINE FOR COMPARISON:</label>
+                    <div className="upscale-engine-grid">
+                      <button
+                        type="button"
+                        className={`engine-card-pill ${upscaleEngine === 'pruna' ? 'active' : ''}`}
+                        onClick={() => setUpscaleEngine('pruna')}
+                      >
+                        <div className="engine-card-head">
+                          <span className="engine-card-icon">⚡</span>
+                          <strong className="engine-card-name">PRUNA AI (P-IMAGE-UPSCALE)</strong>
+                          {upscaleEngine === 'pruna' && <span className="engine-active-badge">SELECTED</span>}
+                        </div>
+                        <p className="engine-card-desc">
+                          High-frequency micro-texture synthesis. Best for AI artwork, digital illustrations & stylized portraits.
+                        </p>
+                      </button>
+
+                      <button
+                        type="button"
+                        className={`engine-card-pill ${upscaleEngine === 'esrgan' ? 'active' : ''}`}
+                        onClick={() => setUpscaleEngine('esrgan')}
+                      >
+                        <div className="engine-card-head">
+                          <span className="engine-card-icon">🎯</span>
+                          <strong className="engine-card-name">REAL-ESRGAN</strong>
+                          {upscaleEngine === 'esrgan' && <span className="engine-active-badge">SELECTED</span>}
+                        </div>
+                        <p className="engine-card-desc">
+                          Faithful structural restoration & clean de-noising. Best for sharp text, line art & authentic camera photos.
+                        </p>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* AI Prompt Textarea */}
                 <div className="qwen-prompt-field-wrapper">
                   <label className="prompt-field-title">NATURAL LANGUAGE INSTRUCTION / PROMPT:</label>
@@ -571,9 +660,17 @@ const StudioLab = () => {
                     className="action-btn process-btn" 
                     onClick={handleStartProcess}
                   >
-                    {selectedModel === 'logo' 
-                      ? '⚡ TRACE SVG VECTOR (RUNPOD GPU)' 
-                      : (status === 'SUCCESS' ? '⚡ APPLY ANOTHER AI EDIT' : `⚡ EXECUTE ${activeModelConfig.title}`)}
+                    {!userTier.isPremium && selectedModel === 'qwen_edit' && (usage.imageStudioRendersLeft ?? 5) <= 0
+                      ? '🔒 5 FREE RENDERS EXHAUSTED — UPGRADE TO DELUXE'
+                      : !userTier.isPremium && selectedModel === 'upscale' && (usage.upscalerTrialsLeft ?? 1) <= 0
+                      ? '🔒 4K UPSCALE TRIAL USED — UPGRADE TO DELUXE'
+                      : !userTier.isPremium && selectedModel === 'logo' && (usage.vectorineTrialsLeft ?? 1) <= 0
+                      ? '🔒 VECTORINE TRIAL USED — UPGRADE TO DELUXE'
+                      : selectedModel === 'logo' 
+                      ? (!userTier.isPremium && (usage.vectorineTrialsLeft ?? 1) > 0 ? '⚡ TRACE SVG VECTOR (1 FREE TRIAL)' : '⚡ TRACE SVG VECTOR (RUNPOD GPU)')
+                      : selectedModel === 'upscale'
+                      ? (!userTier.isPremium && (usage.upscalerTrialsLeft ?? 1) > 0 ? '⚡ RUN 4K UPSCALE (1 FREE TRIAL)' : '⚡ EXECUTE 4K UPSCALE')
+                      : (!userTier.isPremium ? `⚡ EXECUTE AI RENDER (${usage.imageStudioRendersLeft ?? 5}/5 FREE LEFT)` : `⚡ EXECUTE AI STUDIO`)}
                   </button>
 
                   {status === 'SUCCESS' && (
@@ -610,28 +707,8 @@ const StudioLab = () => {
                 <BeforeAfterSlider 
                   beforeImage={previewUrl || refPreviewUrl || heroClean}
                   afterImage={outputUrl}
-                  beforeLabel={
-                    selectedModel === 'qwen_edit' 
-                      ? (previewUrl ? 'ORIGINAL SOURCE' : 'REFERENCE PICTURE') 
-                      : selectedModel === 'photo'
-                      ? 'ORIGINAL PHOTO'
-                      : selectedModel === 'illustration'
-                      ? 'ORIGINAL ARTWORK'
-                      : selectedModel === 'logo'
-                      ? 'RASTER PIXELS'
-                      : 'ORIGINAL INPUT'
-                  }
-                  afterLabel={
-                    selectedModel === 'qwen_edit' 
-                      ? 'QWEN AI EDITED' 
-                      : selectedModel === 'photo'
-                      ? '8K RESTORED PORTRAIT'
-                      : selectedModel === 'illustration'
-                      ? '8K RESTORED ARTWORK'
-                      : selectedModel === 'logo' 
-                      ? 'VECTORINE SVG' 
-                      : '8K MATRIX ULTRA'
-                  }
+                  beforeLabel={selectedModel === 'logo' ? 'RASTER SOURCE' : (previewUrl ? 'ORIGINAL SOURCE' : 'INPUT')}
+                  afterLabel={selectedModel === 'logo' ? 'VECTOR SVG' : (selectedModel === 'upscale' ? (upscaleEngine === 'pruna' ? '4K PRUNA AI' : '4K REAL-ESRGAN') : 'AI OUTPUT')}
                 />
               ) : previewUrl ? (
                 <div className="single-preview-wrapper">
@@ -649,15 +726,11 @@ const StudioLab = () => {
                     </svg>
                     <h4>{activeModelConfig.title} WORKBENCH READY</h4>
                     <p>
-                      {selectedModel === 'qwen_edit' 
-                        ? 'Upload a source image and optional reference picture to edit with Qwen AI edge GPU.' 
-                        : selectedModel === 'photo'
-                        ? 'Upload a portrait or photo to restore facial pores, micro-textures, and eyes in 8K.'
-                        : selectedModel === 'illustration'
-                        ? 'Upload digital artwork or anime to clean compression artifacts and restore sharp lines in 8K.'
-                        : selectedModel === 'logo'
-                        ? 'Upload a logo or graphic to convert raster pixel blocks into infinite SVG vector curves.'
-                        : 'Upload an image to unlock side-by-side 8K & Vector slider analysis.'}
+                      {selectedModel === 'logo' 
+                        ? 'Upload a logo or graphic to convert raster pixel blocks into scalable SVG vector curves.'
+                        : selectedModel === 'upscale'
+                        ? 'Upload an image to super-resolve and enhance details up to 4K using Cloudflare Workers AI.'
+                        : 'Upload an image or enter a prompt to generate and edit visual assets via Cloudflare Workers AI.'}
                     </p>
                   </div>
                 </div>
@@ -731,6 +804,83 @@ const StudioLab = () => {
         .workbench-wrapper {
           width: 100%;
           scroll-margin-top: 85px;
+        }
+
+        .upscale-engine-picker {
+          margin-bottom: 1.25rem;
+          padding-bottom: 1.25rem;
+          border-bottom: 1px solid #1f1f2e;
+        }
+
+        .upscale-engine-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.75rem;
+          margin-top: 0.5rem;
+        }
+
+        .engine-card-pill {
+          background: #0d0d14;
+          border: 2px solid #222230;
+          padding: 0.85rem 1rem;
+          text-align: left;
+          cursor: pointer;
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .engine-card-pill:hover {
+          border-color: var(--primary-orange);
+          background: #14141e;
+        }
+
+        .engine-card-pill.active {
+          border-color: var(--primary-orange);
+          background: #171510;
+          box-shadow: 3px 3px 0 var(--primary-orange);
+        }
+
+        .engine-card-head {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .engine-card-icon {
+          font-size: 1.1rem;
+        }
+
+        .engine-card-name {
+          font-family: var(--font-heading);
+          font-size: 0.85rem;
+          color: #fff;
+          letter-spacing: 0.5px;
+          flex: 1;
+        }
+
+        .engine-active-badge {
+          font-family: monospace;
+          font-size: 0.65rem;
+          color: var(--primary-orange);
+          background: rgba(255, 106, 0, 0.15);
+          border: 1px solid rgba(255, 106, 0, 0.4);
+          padding: 0.1rem 0.4rem;
+          letter-spacing: 0.5px;
+        }
+
+        .engine-card-desc {
+          margin: 0;
+          font-size: 0.78rem;
+          color: #888;
+          line-height: 1.35;
+        }
+
+        @media (max-width: 600px) {
+          .upscale-engine-grid {
+            grid-template-columns: 1fr;
+          }
         }
 
         .active-tool-banner {

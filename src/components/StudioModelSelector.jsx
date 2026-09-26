@@ -3,99 +3,97 @@ import React from 'react';
 export const STUDIO_MODES = [
   {
     id: 'qwen_edit',
-    icon: '🎩',
-    title: 'SMART EDIT & ACCESSORIES',
-    subtitle: 'INSTRUCTPIX2PIX • NATURAL LANGUAGE EDITING',
-    desc: 'Add hats, sunglasses, clothing, or edit features naturally while preserving facial likeness and background.',
-    badge: '100% FREE',
-    isDeluxe: false,
-    placeholder: "Describe edit (e.g., 'add a top-hat', 'add sunglasses', 'change shirt to electric orange')...",
+    icon: '✨',
+    title: 'AI IMAGE STUDIO',
+    subtitle: 'CLOUDFLARE WORKERS AI (FLUX / SDXL)',
+    desc: 'Generate, restyle, and edit images using Cloudflare edge diffusion models (5 free renders).',
+    isPaid: false,
+    placeholder: "Describe prompt or edit instructions (e.g., 'fashion portrait with rim lighting', 'brutalist poster', 'add sunglasses')...",
     recipes: [
-      'Add a stylish black top-hat',
-      'Add designer brutalist sunglasses',
-      'Change shirt to orange streetwear',
-      'Add studio dramatic rim lighting'
+      'Studio portrait with dramatic rim lighting',
+      'Brutalist graphic typography poster',
+      'Cyberpunk neon night color grading',
+      'Clean minimalist studio background'
     ]
   },
   {
-    id: 'photo',
-    icon: '📸',
-    title: 'PORTRAIT & FACE ENHANCE',
-    subtitle: 'REALISTIC TEXTURE RECONSTRUCTION',
-    desc: 'Restores facial pores, micro-textures, eyes, and studio lighting with zero compression loss.',
-    badge: '100% FREE',
-    isDeluxe: false,
-    placeholder: "Describe enhancement (e.g., 'ultra-high detail portrait, 8k studio lighting, clear sharp eyes')...",
+    id: 'upscale',
+    icon: '⚡',
+    title: '4K UPSCALER',
+    subtitle: 'CLOUDFLARE PRUNA AI & ESRGAN',
+    desc: 'Super-resolution AI upscaling to crisp 4K. Try before you buy with 1 free trial.',
+    isPaid: true,
+    placeholder: "Upscale mode (enhances resolution up to 4K)...",
     recipes: [
-      'Restore facial micro-textures and sharp eyes',
-      'Cinematic 8K studio portrait lighting',
-      'Clean skin glare and studio shadow grading',
-      'High-contrast monochrome studio portrait'
-    ]
-  },
-  {
-    id: 'illustration',
-    icon: '🎨',
-    title: 'ART & STYLE TRANSFER',
-    subtitle: 'AESTHETIC STYLING & COLOR GRADING',
-    desc: 'Transform into brutalist posters, neon cyberpunk night, pop-art, or match reference image palette.',
-    badge: '100% FREE',
-    isDeluxe: false,
-    placeholder: "Describe artistic style (e.g., 'brutalist pop-art poster, cyberpunk neon, bold ink')...",
-    recipes: [
-      'Transform into brutalist typography poster',
-      'Cyberpunk neon night aesthetics',
-      'Clean anime line-art and ink contours',
-      'Match artistic style and palette of reference'
-    ]
-  },
-  {
-    id: 'cleanup',
-    icon: '🧹',
-    title: 'ELEMENT REMOVAL & CLEANUP',
-    subtitle: 'BACKGROUND & BLEMISH RECONSTRUCTION',
-    desc: 'Erase unwanted background objects, watermarks, blemishes, and photobombers seamlessly.',
-    badge: '100% FREE',
-    isDeluxe: false,
-    placeholder: "Describe elements to remove (e.g., 'remove photobomber in background, erase watermark')...",
-    recipes: [
-      'Remove photobomber and distracting objects',
-      'Erase watermarks and overlay text',
-      'Clean background to minimalist studio wall',
-      'Remove harsh glare and reflections'
+      '4K photorealistic edge upscale',
+      'High-clarity texture reconstruction',
+      'Studio artwork detail recovery'
     ]
   },
   {
     id: 'logo',
     icon: '📐',
-    title: 'VECTORINE (RASTER TO SVG)',
-    subtitle: 'RUNPOD VTRACER GPU VECTOR ENGINE',
-    desc: 'Converts raster logos and graphic elements into infinite-resolution SVG vector curves.',
-    badge: 'DELUXE 💎',
-    isDeluxe: true,
-    placeholder: "Optional vector tracing parameters (e.g., 'monochrome high contrast', 'color stacked')...",
+    title: 'VECTORINE',
+    subtitle: 'RUNPOD GPU VECTOR ENGINE',
+    desc: 'Converts raster logos and graphic elements into clean, scalable SVG vector paths. Try before you buy.',
+    isPaid: true,
+    placeholder: "Vector tracing parameters (e.g., 'color stacked', 'monochrome high contrast')...",
     recipes: [
-      'Trace monochrome high-contrast vector',
-      'Stacked color vector curves',
-      'Geometric brutalist vector logo'
+      'Trace stacked color vector paths',
+      'High-contrast monochrome vector',
+      'Geometric vector contours'
     ]
   }
 ];
 
-export const FREE_MODELS = STUDIO_MODES.filter(m => !m.isDeluxe);
-export const DELUXE_MODELS = STUDIO_MODES.filter(m => m.isDeluxe);
+export const FREE_MODELS = STUDIO_MODES.filter(m => !m.isPaid);
+export const DELUXE_MODELS = STUDIO_MODES.filter(m => m.isPaid);
 export const MODELS = STUDIO_MODES;
 
-const StudioModelSelector = ({ selectedModel, onModelChange, isPremiumUser, onOpenUpgrade }) => {
+const StudioModelSelector = ({ 
+  selectedModel, 
+  onModelChange, 
+  isPremiumUser, 
+  onOpenUpgrade,
+  usage = { imageStudioRendersLeft: 5, upscalerTrialsLeft: 1, vectorineTrialsLeft: 1 }
+}) => {
+  const getModeStatus = (modeId) => {
+    if (isPremiumUser) return { isLocked: false, tag: 'PRO UNLIMITED', type: 'pro' };
+
+    if (modeId === 'qwen_edit') {
+      const left = usage.imageStudioRendersLeft ?? 5;
+      return left > 0 
+        ? { isLocked: false, tag: `${left}/5 FREE RENDERS`, type: 'free' }
+        : { isLocked: true, tag: '0/5 • UPGRADE 🔒', type: 'locked' };
+    }
+
+    if (modeId === 'upscale') {
+      const trials = usage.upscalerTrialsLeft ?? 1;
+      return trials > 0
+        ? { isLocked: false, tag: 'TRY FREE (1 TRIAL)', type: 'trial' }
+        : { isLocked: true, tag: 'TRIAL USED • LOCK 🔒', type: 'locked' };
+    }
+
+    if (modeId === 'logo') {
+      const trials = usage.vectorineTrialsLeft ?? 1;
+      return trials > 0
+        ? { isLocked: false, tag: 'TRY FREE (1 TRIAL)', type: 'trial' }
+        : { isLocked: true, tag: 'TRIAL USED • LOCK 🔒', type: 'locked' };
+    }
+
+    return { isLocked: false, tag: 'FREE', type: 'free' };
+  };
+
   const handleSelectMode = (mode) => {
-    if (mode.isDeluxe && !isPremiumUser) {
-      if (onOpenUpgrade) onOpenUpgrade();
+    const status = getModeStatus(mode.id);
+    if (status.isLocked) {
+      if (onOpenUpgrade) {
+        onOpenUpgrade();
+      }
       return;
     }
     onModelChange(mode.id);
   };
-
-  const activeMode = STUDIO_MODES.find(m => m.id === selectedModel) || STUDIO_MODES[0];
 
   return (
     <div className="unified-studio-selector">
@@ -104,16 +102,24 @@ const StudioModelSelector = ({ selectedModel, onModelChange, isPremiumUser, onOp
           <span className="live-engine-indicator">
             <span className="pulse-dot" /> LIVE ENGINE
           </span>
-          <span className="engine-name-label">UNIFIED AI STUDIO // 5 WORKBENCH MODES</span>
+          <span className="engine-name-label">UNIFIED AI STUDIO // 3 WORKBENCH MODES</span>
         </div>
-        <span className="engine-subtag">EDGE AI • ZERO EGRESS • DIRECT CLOUDFLARE GATEWAY</span>
+        <div className="quota-strip-summary">
+          {!isPremiumUser ? (
+            <span className="quota-text">
+              ✨ <strong>{usage.imageStudioRendersLeft ?? 5}/5</strong> Free Studio Renders • ⚡ <strong>{usage.upscalerTrialsLeft ?? 1}</strong> 4K Upscale Trial • 📐 <strong>{usage.vectorineTrialsLeft ?? 1}</strong> Vector Trial
+            </span>
+          ) : (
+            <span className="quota-text pro">💎 DELUXE PRO ACCESS • UNLIMITED USAGE</span>
+          )}
+        </div>
       </div>
 
       {/* Mode Capsule Tab Bar */}
       <div className="mode-capsule-bar" role="tablist">
         {STUDIO_MODES.map((mode) => {
           const isSelected = selectedModel === mode.id;
-          const isLocked = mode.isDeluxe && !isPremiumUser;
+          const status = getModeStatus(mode.id);
 
           return (
             <button
@@ -121,31 +127,20 @@ const StudioModelSelector = ({ selectedModel, onModelChange, isPremiumUser, onOp
               type="button"
               role="tab"
               aria-selected={isSelected}
-              className={`mode-capsule-btn ${isSelected ? 'active' : ''} ${isLocked ? 'locked' : ''}`}
+              className={`mode-capsule-btn ${isSelected ? 'active' : ''} ${status.isLocked ? 'locked' : ''}`}
               onClick={() => handleSelectMode(mode)}
             >
               <span className="mode-icon-glyph">{mode.icon}</span>
               <div className="mode-info-block">
-                <span className="mode-tab-title">{mode.title}</span>
-                <span className={`mode-tab-badge ${mode.isDeluxe ? 'deluxe' : 'free'}`}>
-                  {isLocked ? 'LOCK 🔒' : mode.badge}
-                </span>
+                <div className="mode-title-row">
+                  <span className="mode-tab-title">{mode.title}</span>
+                  <span className={`mode-status-tag ${status.type}`}>{status.tag}</span>
+                </div>
+                <span className="mode-tab-engine">{mode.subtitle}</span>
               </div>
             </button>
           );
         })}
-      </div>
-
-      {/* Dynamic Mode Capability Descriptor Bar */}
-      <div className="active-mode-description-bar">
-        <div className="desc-icon-circle">{activeMode.icon}</div>
-        <div className="desc-text-wrapper">
-          <div className="desc-headline">
-            <strong className="desc-title">{activeMode.title}</strong>
-            <span className="desc-engine-tag">{activeMode.subtitle}</span>
-          </div>
-          <p className="desc-summary">{activeMode.desc}</p>
-        </div>
       </div>
 
       <style>{`
@@ -213,24 +208,33 @@ const StudioModelSelector = ({ selectedModel, onModelChange, isPremiumUser, onOp
           font-weight: 700;
         }
 
-        .engine-subtag {
+        .quota-strip-summary {
           font-family: monospace;
           font-size: 0.75rem;
-          color: #666;
-          letter-spacing: 1px;
+          color: #888;
+          letter-spacing: 0.5px;
+        }
+
+        .quota-strip-summary strong {
+          color: var(--primary-orange);
+        }
+
+        .quota-text.pro {
+          color: #00E5FF;
+          font-weight: 700;
         }
 
         .mode-capsule-bar {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 0.75rem;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 1rem;
         }
 
         .mode-capsule-btn {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
-          padding: 0.85rem 1rem;
+          gap: 1rem;
+          padding: 1.1rem 1.25rem;
           background: #111118;
           border: 2px solid #222230;
           color: #aaa;
@@ -255,108 +259,91 @@ const StudioModelSelector = ({ selectedModel, onModelChange, isPremiumUser, onOp
         }
 
         .mode-capsule-btn.locked {
-          opacity: 0.7;
-          border-color: #332a40;
+          opacity: 0.75;
+          border-color: #2b233a;
+        }
+
+        .mode-capsule-btn.locked:hover {
+          border-color: #ff3366;
+          background: #19121a;
         }
 
         .mode-icon-glyph {
-          font-size: 1.4rem;
+          font-size: 1.6rem;
           flex-shrink: 0;
         }
 
         .mode-info-block {
           display: flex;
           flex-direction: column;
-          gap: 0.2rem;
+          gap: 0.25rem;
           overflow: hidden;
+          width: 100%;
+        }
+
+        .mode-title-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.5rem;
         }
 
         .mode-tab-title {
           font-family: var(--font-heading);
-          font-size: 0.82rem;
+          font-size: 0.92rem;
           font-weight: 800;
           letter-spacing: 0.5px;
+          color: #fff;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
 
-        .mode-tab-badge {
+        .mode-status-tag {
           font-family: monospace;
           font-size: 0.65rem;
           font-weight: 700;
+          padding: 0.15rem 0.45rem;
           letter-spacing: 0.5px;
-          align-self: flex-start;
-          padding: 0.1rem 0.4rem;
-        }
-
-        .mode-tab-badge.free {
-          background: rgba(0, 255, 102, 0.12);
-          color: #00FF66;
-          border: 1px solid rgba(0, 255, 102, 0.3);
-        }
-
-        .mode-tab-badge.deluxe {
-          background: rgba(0, 229, 255, 0.12);
-          color: #00E5FF;
-          border: 1px solid rgba(0, 229, 255, 0.3);
-        }
-
-        .active-mode-description-bar {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          padding: 0.85rem 1.2rem;
-          background: #0d0d14;
-          border-left: 4px solid var(--primary-orange);
-          border-top: 1px solid #1a1a24;
-          border-right: 1px solid #1a1a24;
-          border-bottom: 1px solid #1a1a24;
-        }
-
-        .desc-icon-circle {
-          font-size: 1.6rem;
           flex-shrink: 0;
         }
 
-        .desc-text-wrapper {
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
+        .mode-status-tag.free {
+          color: #00FF66;
+          background: rgba(0, 255, 102, 0.1);
+          border: 1px solid rgba(0, 255, 102, 0.3);
         }
 
-        .desc-headline {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          flex-wrap: wrap;
-        }
-
-        .desc-title {
-          font-family: var(--font-heading);
-          font-size: 0.95rem;
-          color: #fff;
-          letter-spacing: 1px;
-        }
-
-        .desc-engine-tag {
-          font-family: monospace;
-          font-size: 0.72rem;
+        .mode-status-tag.trial {
           color: var(--primary-orange);
-          background: rgba(255, 106, 0, 0.1);
-          padding: 0.15rem 0.5rem;
-          border: 1px solid rgba(255, 106, 0, 0.3);
+          background: rgba(255, 106, 0, 0.12);
+          border: 1px solid rgba(255, 106, 0, 0.35);
+        }
+
+        .mode-status-tag.locked {
+          color: #ff4d6d;
+          background: rgba(255, 77, 109, 0.12);
+          border: 1px solid rgba(255, 77, 109, 0.35);
+        }
+
+        .mode-status-tag.pro {
+          color: #00E5FF;
+          background: rgba(0, 229, 255, 0.12);
+          border: 1px solid rgba(0, 229, 255, 0.3);
+        }
+
+        .mode-tab-engine {
+          font-family: monospace;
+          font-size: 0.68rem;
+          color: #777;
           letter-spacing: 0.5px;
         }
 
-        .desc-summary {
-          margin: 0;
-          font-size: 0.82rem;
-          color: #888;
-          line-height: 1.4;
+        .mode-capsule-btn.active .mode-tab-engine {
+          color: var(--primary-orange);
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
           .mode-capsule-bar {
             grid-template-columns: 1fr;
           }

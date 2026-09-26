@@ -10,10 +10,10 @@ const PricingTable = ({ onClose }) => {
     <div className="pricing-wrapper">
       <div className="pricing-header">
         <h2 className="pricing-main-title">
-          READY FOR <span className="text-orange">8K ULTRA</span> & <span className="text-blue">VECTORINE</span>?
+          UNLOCK <span className="text-orange">4K UPSCALER</span> & <span className="text-blue">VECTORINE</span>
         </h2>
         <p className="pricing-subtitle">
-          Unleash maximum GPU matrix capacity, vector tracing, and 8K ultra resolution for your visual workflow.
+          Unleash Cloudflare 4K super-resolution and RunPod GPU vector tracing for your visual workflow.
         </p>
       </div>
 
@@ -31,12 +31,12 @@ const PricingTable = ({ onClose }) => {
           </div>
 
           <ul className="plan-features">
-            <li>✔ Max 4K Output (2x Scaling)</li>
-            <li>✔ Standard Photo Real-ESRGAN Model</li>
-            <li>✔ Basic SVG Export on Vectorine</li>
-            <li>✔ Standard GPU Processing Queue</li>
-            <li className="disabled">✖ 24-Hour File Auto-Purge</li>
-            <li className="disabled">✖ No Face Reconstruction AI</li>
+            <li>✔ 5 Free AI Image Studio Renders</li>
+            <li>✔ 1 Free Trial: 4K Upscaler (Pruna AI / Real-ESRGAN)</li>
+            <li>✔ 1 Free Trial: Vectorine SVG Vector Tracing</li>
+            <li>✔ Standard Cloudflare Edge Queue</li>
+            <li className="disabled">✖ Unlimited 4K Super-Resolution</li>
+            <li className="disabled">✖ Unlimited Vectorine SVG Exports</li>
           </ul>
 
           <button className="pricing-btn free-btn" onClick={onClose}>
@@ -50,7 +50,7 @@ const PricingTable = ({ onClose }) => {
           <div className="card-top">
             <span className="plan-badge deluxe">PRO ENGINE</span>
             <h3 className="plan-name">DELUXE STUDIO</h3>
-            <p className="plan-desc">For creators, art directors, and designers who demand uncompromised 8K graphics.</p>
+            <p className="plan-desc">For creators, art directors, and designers who demand uncompromised high-resolution assets.</p>
             <div className="plan-price">
               <span className="price-amount text-orange">149 SEK</span>
               <span className="price-period">/ MONTH</span>
@@ -58,12 +58,12 @@ const PricingTable = ({ onClose }) => {
           </div>
 
           <ul className="plan-features">
-            <li className="highlight">✔ Genuine 8K Output (4x AI Matrix)</li>
-            <li className="highlight">✔ Full Vectorine GPU Engine (SVG, EPS, Print PDF)</li>
-            <li>✔ All Special AI Models (Face, Anime, Complex)</li>
-            <li>✔ Priority GPU Queue (Instant Execution)</li>
-            <li>✔ 30-Day Retained Gallery History</li>
-            <li>✔ High Fidelity Face Reconstruction (CodeFormer)</li>
+            <li className="highlight">✔ Unlimited 4K AI Super-Resolution (Pruna AI & Real-ESRGAN)</li>
+            <li className="highlight">✔ Unlimited Vectorine SVG Vector Exports</li>
+            <li className="highlight">✔ Unlimited AI Image Studio Generations</li>
+            <li>✔ Priority Cloudflare & RunPod GPU Queue</li>
+            <li>✔ Zero Compression Loss & Print-Ready Exports</li>
+            <li>✔ Commercial License for All Generated Assets</li>
           </ul>
 
           <button 

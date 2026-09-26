@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 
-const BeforeAfterSlider = ({ beforeImage, afterImage, beforeLabel = "ORIGINAL (1080P)", afterLabel = "AI ENHANCED (8K ULTRA)" }) => {
+const BeforeAfterSlider = ({ beforeImage, afterImage, beforeLabel = "ORIGINAL", afterLabel = "RESULT" }) => {
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef(null);
@@ -44,19 +44,19 @@ const BeforeAfterSlider = ({ beforeImage, afterImage, beforeLabel = "ORIGINAL (1
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
       >
-        {/* Underneath: After (Enhanced 8K) Image */}
+        {/* Underneath: After Image */}
         <div className="img-layer after-layer">
-          <img src={afterImage} alt="Enhanced 8K" draggable="false" />
-          <span className="slider-badge after-badge">{afterLabel}</span>
+          <img src={afterImage} alt="After Result" draggable="false" />
+          {afterLabel && <span className="slider-badge after-badge">{afterLabel}</span>}
         </div>
 
-        {/* Overlay: Before (Original) Image clipped to sliderPosition */}
+        {/* Overlay: Before Image clipped to sliderPosition */}
         <div 
           className="img-layer before-layer"
           style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
         >
-          <img src={beforeImage} alt="Original Low Res" draggable="false" />
-          <span className="slider-badge before-badge">{beforeLabel}</span>
+          <img src={beforeImage} alt="Before Source" draggable="false" />
+          {beforeLabel && <span className="slider-badge before-badge">{beforeLabel}</span>}
         </div>
 
         {/* Draggable Divider Handle */}
@@ -116,11 +116,11 @@ const BeforeAfterSlider = ({ beforeImage, afterImage, beforeLabel = "ORIGINAL (1
           position: absolute;
           top: 1rem;
           font-family: var(--font-heading);
-          font-size: 1.1rem;
+          font-size: 0.85rem;
           letter-spacing: 1px;
-          padding: 0.4rem 1rem;
-          border: 2px solid #000;
-          box-shadow: 3px 3px 0 #000;
+          padding: 0.3rem 0.8rem;
+          border: 1px solid #000;
+          box-shadow: 2px 2px 0 #000;
           z-index: 10;
           pointer-events: none;
         }
