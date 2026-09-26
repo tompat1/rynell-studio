@@ -1,3 +1,6 @@
+/// <reference types="@cloudflare/workers-types" />
+/// <reference types="node" />
+
 /**
  * Cloudflare Worker API Gateway for Rynell AI Studio & Vectorine
  * Handles Turnstile security validation, R2 image storage, Cloudflare Workers AI (Pruna AI/SDXL), and RunPod Vector Tracing.
@@ -11,7 +14,6 @@ export interface Env {
   TURNSTILE_SECRET_KEY: string;
   PUBLIC_R2_URL: string; // e.g. "https://storage.rynell.org"
   AI: any; // Cloudflare Workers AI Binding
-  REPLICATE_API_TOKEN?: string;
 }
 
 const ALLOWED_ORIGINS = [
@@ -72,77 +74,17 @@ export default {
         // 2. Construct public/signed R2 source image URL
         const imageUrl = `${env.PUBLIC_R2_URL || 'https://storage.rynell.org'}/${imageR2Key}`;
 
-        // 3. Image Generation & Edit Routing
-        if (modelType === 'qwen_edit' || modelType === 'art') {
-          let userPrompt = prompt || 'high quality studio asset, detailed, masterpiece, clean background, 8k resolution';
-          const originalInstruction = prompt ? prompt.trim() : 'add a top-hat';
-
-          // Tier 0: Replicate InstructPix2Pix (True natural-language image editing preserving likeness and background)
-          if (imageBase64 && typeof imageBase64 === 'string' && env.REPLICATE_API_TOKEN) {
-            try {
-              let editPrompt = originalInstruction;
-              if (refImageBase64 && typeof refImageBase64 === 'string') {
-                editPrompt += ', matching reference image aesthetic and style';
-              }
-
-              // Normalize base64 data URI if needed
-              const formattedImage = imageBase64.startsWith('data:') 
-                ? imageBase64 
-                : `data:image/jpeg;base64,${imageBase64}`;
-
-              const repResp = await fetch('https://api.replicate.com/v1/predictions', {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${env.REPLICATE_API_TOKEN}`,
-                  'Content-Type': 'application/json',
-                  'Prefer': 'wait'
-                },
-                body: JSON.stringify({
-                  version: '30c1d0b916a6f8efce20493f5d61ee27491ab2a60437c13c588468b9810f23f3',
-                  input: {
-                    image: formattedImage,
-                    prompt: editPrompt,
-                    num_inference_steps: 30,
-                    image_guidance_scale: 1.5,
-                    guidance_scale: 7.5
-                  }
-                })
-              });
-
-              const repData = (await repResp.json()) as any;
-              
-              if (repData) {
-                if (repData.status === 'succeeded' && repData.output) {
-                  const finalUrl = Array.isArray(repData.output) ? repData.output[0] : repData.output;
-                  return new Response(
-                    JSON.stringify({ 
-                      jobId: repData.id || `rep-${Date.now()}`, 
-                      provider: 'replicate', 
-                      status: 'succeeded', 
-                      outputUrl: finalUrl 
-                    }),
-                    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-                  );
-                } else if (repData.id && (repData.status === 'starting' || repData.status === 'processing')) {
-                  return new Response(
-                    JSON.stringify({ 
-                      jobId: repData.id, 
-                      provider: 'replicate', 
-                      status: repData.status 
-                    }),
-                    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-                  );
-                } else if (repData.error) {
-                  console.warn("Replicate API notice, falling back to edge models:", repData.error);
-                }
-              }
-            } catch (errRep: any) {
-              console.warn("Replicate InstructPix2Pix note:", errRep?.message || errRep);
-            }
-          }
+        // 3. Image Generation & Edit Routing (Unified AI Studio)
+        if (modelType && ['qwen_edit', 'art', 'cleanup', 'photo', 'illustration'].includes(modelType)) {
+          let userPrompt = prompt || (
+            modelType === 'photo' ? 'ultra-detailed portrait photo, sharp focus, natural skin micro-texture, 8k masterpiece' :
+            modelType === 'illustration' ? 'brutalist graphic illustration, bold artwork, vivid aesthetic, clean composition' :
+            modelType === 'cleanup' ? 'clean seamless background, remove distractions and watermarks, perfect lighting' :
+            'high quality studio asset, detailed, masterpiece, clean background, 8k resolution'
+          );
 
           if (env.AI) {
-            // Contextual prompt synthesis for portrait image generation
+            // Contextual prompt synthesis for portrait image generation & natural edits
             if (userPrompt.toLowerCase().startsWith('add ') || userPrompt.toLowerCase().includes('wear')) {
               const item = userPrompt.replace(/^add (a|an)?\s*/i, '').trim();
               userPrompt = `Realistic portrait photo of the person naturally wearing a stylish ${item} on their head, perfect fit, coherent realistic lighting and shadows, 8k masterpiece portrait`;
@@ -417,25 +359,6 @@ export default {
           );
         }
 
-        if (provider === 'replicate') {
-          if (env.REPLICATE_API_TOKEN) {
-            const statusResp = await fetch(`https://api.replicate.com/v1/predictions/${jobId}`, {
-              headers: { 'Authorization': `Bearer ${env.REPLICATE_API_TOKEN}` }
-            });
-            const statusData = (await statusResp.json()) as any;
-            const finalUrl = Array.isArray(statusData.output) ? statusData.output[0] : statusData.output;
-            
-            return new Response(
-              JSON.stringify({
-                jobId,
-                status: statusData.status, // 'starting', 'processing', 'succeeded', 'failed', 'canceled'
-                outputUrl: finalUrl || null,
-                error: statusData.error || null
-              }),
-              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
-          }
-        }
 
         return new Response(
           JSON.stringify({

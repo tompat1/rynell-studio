@@ -258,7 +258,7 @@ const StudioLab = () => {
 
       if (processData.outputUrl) {
         setStatus('SUCCESS');
-        setStatusMessage(selectedModel === 'qwen_edit' ? 'PROCESS COMPLETE: CLOUDFLARE WORKERS AI EDIT READY.' : 'PROCESS COMPLETE: 8K ULTRA RENDER READY.');
+        setStatusMessage(`PROCESS COMPLETE: ${activeModelConfig.title} READY.`);
         setOutputUrl(processData.outputUrl);
         return;
       }
@@ -275,17 +275,15 @@ const StudioLab = () => {
 
           if (statusData.status === 'processing' || statusData.status === 'in_progress') {
             setStatus('PROCESSING');
-            if (selectedModel === 'qwen_edit') {
-              setStatusMessage('CLOUDFLARE WORKERS AI GPU: EXECUTING QWEN IMAGE EDIT MATRIX...');
-            } else if (selectedModel === 'logo') {
+            if (selectedModel === 'logo') {
               setStatusMessage('RUNPOD GPU ENGINE: TRACING VECTOR CURVES (VTRACER SVG)...');
             } else {
-              setStatusMessage('CLOUDFLARE AI EDGE GPU: RECONSTRUCTING MATRIX TO 8K ULTRA RESOLUTION...');
+              setStatusMessage(`CLOUDFLARE AI EDGE GPU: EXECUTING ${activeModelConfig.title}...`);
             }
           } else if (statusData.status === 'succeeded' || statusData.status === 'completed') {
             clearInterval(pollInterval);
             setStatus('SUCCESS');
-            setStatusMessage(selectedModel === 'qwen_edit' ? 'PROCESS COMPLETE: FREE QWEN AI EDIT READY.' : 'PROCESS COMPLETE: 8K ULTRA RENDER READY.');
+            setStatusMessage(`PROCESS COMPLETE: ${activeModelConfig.title} READY.`);
             
             if (statusData.outputUrl) {
               setOutputUrl(statusData.outputUrl);
@@ -418,60 +416,8 @@ const StudioLab = () => {
           onOpenUpgrade={() => setIsPricingOpen(true)}
         />
 
-        {/* Workbench Wrapper with explicit anchor ID and Active Tool Banner */}
+        {/* Workbench Wrapper with explicit anchor ID */}
         <div id="studio-workbench" className="workbench-wrapper">
-
-          {/* Dynamic Active Tool Status Banner */}
-          <div className="active-tool-banner">
-            <div className="tool-banner-main">
-              <div className="tool-status-badge">
-                <span className="banner-pulse-dot" />
-                ACTIVE ENGINE WORKBENCH
-              </div>
-              <h3 className="tool-banner-title">
-                {activeModelConfig.title}
-              </h3>
-              <p className="tool-banner-desc">
-                {activeModelConfig.desc}
-              </p>
-            </div>
-
-            <div className="tool-banner-meta">
-              <span className="meta-engine-tag">{activeModelConfig.subtitle}</span>
-              <div className="tool-banner-btns">
-                <button
-                  type="button"
-                  className="banner-nav-btn change-engine"
-                  onClick={() => {
-                    const selector = document.querySelector('.model-selector-container');
-                    if (selector) {
-                      const yOffset = -80;
-                      const y = selector.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                      window.scrollTo({ top: y, behavior: 'smooth' });
-                    }
-                  }}
-                >
-                  ↑ SWITCH ENGINE
-                </button>
-                {selectedModel === 'qwen_edit' && (
-                  <button
-                    type="button"
-                    className="banner-nav-btn jump-qwen"
-                    onClick={() => {
-                      const qwen = document.getElementById('qwen-studio');
-                      if (qwen) {
-                        const yOffset = -80;
-                        const y = qwen.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                        window.scrollTo({ top: y, behavior: 'smooth' });
-                      }
-                    }}
-                  >
-                    OPEN 5-PRESET QWEN STUDIO ↓
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
 
           {/* Workbench Grid */}
           <div className="lab-workbench-grid">
@@ -479,95 +425,12 @@ const StudioLab = () => {
             {/* Left Controls & File Upload Area */}
             <div className="lab-control-panel">
 
-              {/* Dropzone Container - Dual Side-by-Side Grid for Qwen Edit Mode */}
-              {selectedModel === 'qwen_edit' ? (
-                <div className="qwen-dual-upload-grid">
-                  
-                  {/* Box 1: Primary Source Image to Edit */}
-                  <div 
-                    className={`dropzone-container qwen-half-dropzone ${previewUrl ? 'has-file' : ''}`}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={handleFileDrop}
-                  >
-                    <input 
-                      type="file" 
-                      id="studio-file-input" 
-                      accept="image/png, image/jpeg, image/webp" 
-                      onChange={handleFileDrop}
-                      style={{ display: 'none' }}
-                    />
-
-                    {!previewUrl ? (
-                      <label htmlFor="studio-file-input" className="dropzone-label">
-                        <div className="dropzone-icon">
-                          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--primary-orange)" strokeWidth="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="17 8 12 3 7 8"/>
-                            <line x1="12" y1="3" x2="12" y2="15"/>
-                          </svg>
-                        </div>
-                        <h4 className="dropzone-title">1. MAIN SOURCE IMAGE</h4>
-                        <span className="dropzone-info">DROP IMAGE OR CLICK TO UPLOAD</span>
-                      </label>
-                    ) : (
-                      <div className="file-preview-card">
-                        <img src={previewUrl} alt="Upload Preview" className="preview-thumb" />
-                        <div className="preview-info">
-                          <span className="file-name">{file ? file.name : "SOURCE_IMAGE.PNG"}</span>
-                          <span className="file-size">{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "ORIGINAL RES"}</span>
-                          <button className="change-file-btn" onClick={handleReset}>REPLACE FILE</button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Box 2: Reference Picture Upload Box */}
-                  <div className="ref-upload-box qwen-half-dropzone">
-                    <label className="ref-upload-label">
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={(e) => {
-                          const f = e.target.files[0];
-                          if (f) {
-                            setRefFile(f);
-                            const reader = new FileReader();
-                            reader.onload = (evt) => {
-                              setRefPreviewUrl(evt.target.result);
-                            };
-                            reader.readAsDataURL(f);
-                          }
-                        }} 
-                        style={{ display: 'none' }} 
-                      />
-                      {refPreviewUrl ? (
-                        <div className="ref-preview-content">
-                          <img src={refPreviewUrl} alt="Reference" className="ref-thumb-img" />
-                          <div className="ref-meta-info">
-                            <span className="ref-name-text">2. REFERENCE: {refFile ? refFile.name : "STYLE_REF.PNG"}</span>
-                            <button 
-                              className="remove-ref-btn" 
-                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRefFile(null); setRefPreviewUrl(null); }}
-                            >
-                              REMOVE REFERENCE
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="empty-ref-prompt">
-                          <span className="ref-icon-symbol">🖼️</span>
-                          <span className="ref-title-text">2. REFERENCE PICTURE (OPTIONAL)</span>
-                          <span className="ref-sub-text">For style transfer, face IP consistency & textures</span>
-                        </div>
-                      )}
-                    </label>
-                  </div>
-
-                </div>
-              ) : (
-                /* Standard Single Dropzone Container for Photo 8K, Art 8K, Vectorine, Complex 8K */
+              {/* Dual Upload Grid: Main Source Image + Optional Reference Image */}
+              <div className="qwen-dual-upload-grid">
+                
+                {/* Box 1: Primary Source Image to Edit */}
                 <div 
-                  className={`dropzone-container ${previewUrl ? 'has-file' : ''}`}
+                  className={`dropzone-container qwen-half-dropzone ${previewUrl ? 'has-file' : ''}`}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={handleFileDrop}
                 >
@@ -582,34 +445,14 @@ const StudioLab = () => {
                   {!previewUrl ? (
                     <label htmlFor="studio-file-input" className="dropzone-label">
                       <div className="dropzone-icon">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary-orange)" strokeWidth="2">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--primary-orange)" strokeWidth="2">
                           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                           <polyline points="17 8 12 3 7 8"/>
                           <line x1="12" y1="3" x2="12" y2="15"/>
                         </svg>
                       </div>
-                      <h4 className="dropzone-title">
-                        {selectedModel === 'photo' 
-                          ? 'DROP PHOTO / PORTRAIT HERE OR CLICK TO UPLOAD' 
-                          : selectedModel === 'illustration' 
-                          ? 'DROP ART / ILLUSTRATION HERE OR CLICK TO UPLOAD'
-                          : selectedModel === 'logo'
-                          ? 'DROP LOGO / GRAPHIC TO VECTORIZE'
-                          : selectedModel === 'complex_art'
-                          ? 'DROP COMPLEX 8K ASSET / 3D RENDER'
-                          : 'DROP IMAGE HERE OR CLICK TO UPLOAD'}
-                      </h4>
-                      <span className="dropzone-info">
-                        {selectedModel === 'photo'
-                          ? 'REAL-ESRGAN + FACE RECONSTRUCTION • SUPPORTS PNG, JPG, WEBP (50MB MAX)'
-                          : selectedModel === 'illustration'
-                          ? 'ANIME-X4PLUS / DIGITAL PAINTING • SUPPORTS PNG, JPG, WEBP (50MB MAX)'
-                          : selectedModel === 'logo'
-                          ? 'RUNPOD VTRACER GPU VECTOR ENGINE • AUTO-CONVERTS TO SVG'
-                          : selectedModel === 'complex_art'
-                          ? 'HEAVY AI RE-SAMPLING ENGINE • 8K ULTRA RESOLUTION MATRIX'
-                          : 'SUPPORTS PNG, JPG, WEBP • MAX 50MB (8K MAX)'}
-                      </span>
+                      <h4 className="dropzone-title">1. MAIN SOURCE IMAGE</h4>
+                      <span className="dropzone-info">DROP IMAGE OR CLICK TO UPLOAD</span>
                     </label>
                   ) : (
                     <div className="file-preview-card">
@@ -622,41 +465,79 @@ const StudioLab = () => {
                     </div>
                   )}
                 </div>
-              )}
 
-              {/* Qwen AI Dedicated Prompting & Recipe Workspace */}
-              {selectedModel === 'qwen_edit' && (
-                <div className="qwen-workspace-card">
-                  <div className="qwen-workspace-header">
-                    <span className="qwen-badge-label">🤖 QWEN AI PROMPTING WORKSPACE</span>
-                    <span className="qwen-free-tag">100% FREE</span>
-                  </div>
-
-                  {/* AI Prompt Textarea */}
-                  <div className="qwen-prompt-field-wrapper">
-                    <label className="prompt-field-title">NATURAL LANGUAGE EDIT PROMPT:</label>
-                    <textarea
-                      className="qwen-prompt-textarea"
-                      rows="3"
-                      value={qwenPrompt}
-                      onChange={(e) => setQwenPrompt(e.target.value)}
-                      placeholder="Describe what you want Qwen AI to edit (e.g., 'Remove photobomber, rewrite store sign to RYNELL STUDIO, change jacket to electric orange')..."
+                {/* Box 2: Reference Picture Upload Box */}
+                <div className="ref-upload-box qwen-half-dropzone">
+                  <label className="ref-upload-label">
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={(e) => {
+                        const f = e.target.files[0];
+                        if (f) {
+                          setRefFile(f);
+                          const reader = new FileReader();
+                          reader.onload = (evt) => {
+                            setRefPreviewUrl(evt.target.result);
+                          };
+                          reader.readAsDataURL(f);
+                        }
+                      }} 
+                      style={{ display: 'none' }} 
                     />
-                  </div>
+                    {refPreviewUrl ? (
+                      <div className="ref-preview-content">
+                        <img src={refPreviewUrl} alt="Reference" className="ref-thumb-img" />
+                        <div className="ref-meta-info">
+                          <span className="ref-name-text">2. REFERENCE: {refFile ? refFile.name : "STYLE_REF.PNG"}</span>
+                          <button 
+                            className="remove-ref-btn" 
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRefFile(null); setRefPreviewUrl(null); }}
+                          >
+                            REMOVE REFERENCE
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="empty-ref-prompt">
+                        <span className="ref-icon-symbol">🖼️</span>
+                        <span className="ref-title-text">2. REFERENCE PICTURE (OPTIONAL)</span>
+                        <span className="ref-sub-text">For style transfer, face IP consistency & textures</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
 
-                  {/* Quick Recipe Pills */}
+              </div>
+
+              {/* AI Natural Language Prompt & Recipe Workspace */}
+              <div className="qwen-workspace-card">
+                <div className="qwen-workspace-header">
+                  <span className="qwen-badge-label">{activeModelConfig.icon} {activeModelConfig.title} WORKSPACE</span>
+                  <span className="qwen-free-tag">{activeModelConfig.badge}</span>
+                </div>
+
+                {/* AI Prompt Textarea */}
+                <div className="qwen-prompt-field-wrapper">
+                  <label className="prompt-field-title">NATURAL LANGUAGE INSTRUCTION / PROMPT:</label>
+                  <textarea
+                    className="qwen-prompt-textarea"
+                    rows="3"
+                    value={qwenPrompt}
+                    onChange={(e) => setQwenPrompt(e.target.value)}
+                    placeholder={activeModelConfig.placeholder || "Describe what you want the AI to edit or generate..."}
+                  />
+                </div>
+
+                {/* Quick Recipe Pills */}
+                {activeModelConfig.recipes && activeModelConfig.recipes.length > 0 && (
                   <div className="recipes-group-wrapper">
-                    <span className="recipes-group-title">QUICK PROMPT RECIPES:</span>
+                    <span className="recipes-group-title">QUICK RECIPES & PRESETS:</span>
                     <div className="recipe-pills-container">
-                      {[
-                        'Remove unwanted background objects and text',
-                        'Rewrite sign text to "RYNELL STUDIO" cleanly',
-                        'Change outfit color to electric tangerine',
-                        'Maintain character face, change hair to cyberpunk blue',
-                        'Convert portrait into brutalist art illustration'
-                      ].map((recipe, idx) => (
+                      {activeModelConfig.recipes.map((recipe, idx) => (
                         <button
                           key={idx}
+                          type="button"
                           className={`recipe-pill-item ${qwenPrompt === recipe ? 'active' : ''}`}
                           onClick={() => setQwenPrompt(recipe)}
                         >
@@ -665,8 +546,8 @@ const StudioLab = () => {
                       ))}
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
 
 
@@ -690,24 +571,18 @@ const StudioLab = () => {
                     className="action-btn process-btn" 
                     onClick={handleStartProcess}
                   >
-                    {selectedModel === 'qwen_edit' 
-                      ? (status === 'SUCCESS' ? '⚡ APPLY ANOTHER QWEN EDIT' : '⚡ EXECUTE FREE QWEN AI EDIT') 
-                      : selectedModel === 'photo'
-                      ? '⚡ GENERATE 8K PHOTO ENHANCEMENT'
-                      : selectedModel === 'illustration'
-                      ? '⚡ GENERATE 8K ART ENHANCEMENT'
-                      : selectedModel === 'logo' 
-                      ? '⚡ GENERATE VECTOR (SVG)' 
-                      : '⚡ GENERATE COMPLEX 8K MATRIX'}
+                    {selectedModel === 'logo' 
+                      ? '⚡ TRACE SVG VECTOR (RUNPOD GPU)' 
+                      : (status === 'SUCCESS' ? '⚡ APPLY ANOTHER AI EDIT' : `⚡ EXECUTE ${activeModelConfig.title}`)}
                   </button>
 
                   {status === 'SUCCESS' && (
                     <a 
                       href={outputUrl} 
-                      download={selectedModel === 'qwen_edit' ? 'QWEN_EDITED_ASSET.png' : selectedModel === 'logo' ? 'VECTORINE_GRAPHIC.svg' : 'RYNELL_STUDIO_8K_RENDER.png'} 
+                      download={selectedModel === 'logo' ? 'VECTORINE_GRAPHIC.svg' : 'RYNELL_STUDIO_AI_ASSET.png'} 
                       className="action-btn download-btn"
                     >
-                      📥 DOWNLOAD {selectedModel === 'qwen_edit' ? 'QWEN EDITED ASSET' : selectedModel === 'logo' ? 'SVG VECTOR' : '8K IMAGE'}
+                      📥 DOWNLOAD {selectedModel === 'logo' ? 'SVG VECTOR' : 'HIGH-RES ASSET'}
                     </a>
                   )}
 
