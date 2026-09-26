@@ -947,7 +947,7 @@ const StudioLab = () => {
         </div>
 
         {/* Deluxe Upgrade CTA Banner */}
-        {!userTier.isPremium && (
+        {!isPremiumUser && (
           <div className="deluxe-cta-banner">
             <div className="cta-content">
               <h3>NEED UNLIMITED 8K & PRINT-READY PDF VECTOR EXPORTS?</h3>
