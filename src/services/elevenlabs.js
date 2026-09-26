@@ -1,17 +1,23 @@
+const DEFAULT_ELEVENLABS_API_KEY = "sk_75e69f09eb88906af53ca9f655f109680ad7b15f5a935ae4";
+const DEFAULT_ELEVENLABS_VOICE_ID = "qshQTXEBagqXzoUs77cx";
+
 export const synthesizeSpeech = async (text, voiceId, apiKey) => {
-  if (!apiKey || !voiceId) {
+  const activeApiKey = apiKey || import.meta.env.VITE_ELEVENLABS_API_KEY || DEFAULT_ELEVENLABS_API_KEY;
+  const activeVoiceId = voiceId || import.meta.env.VITE_ELEVENLABS_VOICE_ID || DEFAULT_ELEVENLABS_VOICE_ID;
+
+  if (!activeApiKey || !activeVoiceId) {
     console.error("ElevenLabs API Key or Voice ID is missing in environment variables.");
     return null;
   }
 
   try {
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${activeVoiceId}`,
       {
         method: 'POST',
         headers: {
           'Accept': 'audio/mpeg',
-          'xi-api-key': apiKey,
+          'xi-api-key': activeApiKey,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

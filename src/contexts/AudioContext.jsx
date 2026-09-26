@@ -33,8 +33,8 @@ export const AudioProvider = ({ children }) => {
 
     if (!audioUrl) {
       setIsSynthesizing(true);
-      const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
-      const voiceId = import.meta.env.VITE_ELEVENLABS_VOICE_ID;
+      const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY || 'sk_75e69f09eb88906af53ca9f655f109680ad7b15f5a935ae4';
+      const voiceId = import.meta.env.VITE_ELEVENLABS_VOICE_ID || 'qshQTXEBagqXzoUs77cx';
       audioUrl = await synthesizeSpeech(text, voiceId, apiKey);
       setIsSynthesizing(false);
     }
