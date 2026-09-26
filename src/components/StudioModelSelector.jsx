@@ -80,6 +80,25 @@ export const DELUXE_MODELS = [
 export const MODELS = [...FREE_MODELS, ...DELUXE_MODELS];
 
 const StudioModelSelector = ({ selectedModel, onModelChange, isPremiumUser, onOpenUpgrade }) => {
+  const handleSelectModel = (model) => {
+    const isLocked = model.isDeluxe && !isPremiumUser;
+    if (isLocked) {
+      if (onOpenUpgrade) onOpenUpgrade();
+      return;
+    }
+    onModelChange(model.id);
+
+    // Smoothly navigate / scroll down to the respective tool workbench
+    setTimeout(() => {
+      const workbench = document.getElementById('studio-workbench');
+      if (workbench) {
+        const yOffset = -75;
+        const y = workbench.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    }, 40);
+  };
+
   const renderCard = (model) => {
     const isLocked = model.isDeluxe && !isPremiumUser;
     const isSelected = selectedModel === model.id;
@@ -87,14 +106,16 @@ const StudioModelSelector = ({ selectedModel, onModelChange, isPremiumUser, onOp
     return (
       <div
         key={model.id}
-        onClick={() => {
-          if (isLocked) {
-            if (onOpenUpgrade) onOpenUpgrade();
-          } else {
-            onModelChange(model.id);
+        onClick={() => handleSelectModel(model)}
+        className={`model-card ${isSelected ? 'selected' : ''} ${isLocked ? 'locked' : ''}`}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleSelectModel(model);
           }
         }}
-        className={`model-card ${isSelected ? 'selected' : ''} ${isLocked ? 'locked' : ''}`}
       >
         <div className="model-card-header">
           <div className="icon-badge-group">
@@ -110,10 +131,51 @@ const StudioModelSelector = ({ selectedModel, onModelChange, isPremiumUser, onOp
         <span className="model-subtitle">{model.subtitle}</span>
         <p className="model-desc">{model.desc}</p>
 
-        {isLocked && (
+        {isLocked ? (
           <div className="lock-overlay">
             <span className="lock-icon">🔒 DELUXE MODE</span>
             <span className="unlock-prompt">Click to unlock 8K Vectorine</span>
+          </div>
+        ) : (
+          <div className="model-card-actions">
+            <button 
+              type="button" 
+              className={`launch-tool-btn ${isSelected ? 'active' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSelectModel(model);
+              }}
+            >
+              {isSelected ? (
+                <>
+                  <span className="live-dot" /> ACTIVE TOOL • OPEN WORKBENCH ↓
+                </>
+              ) : (
+                <>
+                  <span className="launch-icon">⚡</span> SELECT & LAUNCH TOOL ↓
+                </>
+              )}
+            </button>
+
+            {model.id === 'qwen_edit' && (
+              <button
+                type="button"
+                className="secondary-studio-btn"
+                title="Jump to dedicated Qwen Studio with 5 preset use cases"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onModelChange(model.id);
+                  const qwen = document.getElementById('qwen-studio');
+                  if (qwen) {
+                    const yOffset = -75;
+                    const y = qwen.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                    window.scrollTo({ top: y, behavior: 'smooth' });
+                  }
+                }}
+              >
+                ✨ OR OPEN 5-PRESET QWEN STUDIO ↓
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -331,6 +393,81 @@ const StudioModelSelector = ({ selectedModel, onModelChange, isPremiumUser, onOp
           font-family: var(--font-body);
           font-size: 0.75rem;
           color: var(--text-primary);
+        }
+
+        .model-card-actions {
+          margin-top: auto;
+          padding-top: 0.8rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+        }
+
+        .launch-tool-btn {
+          width: 100%;
+          font-family: var(--font-heading);
+          font-size: 0.85rem;
+          letter-spacing: 1.5px;
+          padding: 0.55rem 0.8rem;
+          background: #111;
+          color: #FFF;
+          border: 2px solid #333;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          transition: all 0.2s ease;
+        }
+
+        .model-card:hover .launch-tool-btn {
+          border-color: var(--primary-orange);
+          background: #18181f;
+        }
+
+        .launch-tool-btn.active {
+          background: var(--primary-orange);
+          color: #000;
+          border-color: var(--primary-orange);
+          font-weight: bold;
+          box-shadow: 0 0 10px rgba(255, 106, 0, 0.4);
+        }
+
+        .live-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #00FF66;
+          box-shadow: 0 0 8px #00FF66;
+          animation: pulse-dot 1.4s infinite ease-in-out;
+        }
+
+        @keyframes pulse-dot {
+          0%, 100% { transform: scale(0.9); opacity: 0.8; }
+          50% { transform: scale(1.3); opacity: 1; }
+        }
+
+        .launch-icon {
+          color: var(--primary-orange);
+          font-size: 0.95rem;
+        }
+
+        .secondary-studio-btn {
+          background: transparent;
+          border: 1px dashed #00E5FF;
+          color: #00E5FF;
+          font-family: var(--font-heading);
+          font-size: 0.75rem;
+          letter-spacing: 1px;
+          padding: 0.35rem 0.5rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          text-align: center;
+        }
+
+        .secondary-studio-btn:hover {
+          background: rgba(0, 229, 255, 0.1);
+          border-style: solid;
         }
       `}</style>
     </div>

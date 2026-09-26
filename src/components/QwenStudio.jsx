@@ -164,6 +164,11 @@ const QwenStudio = () => {
       <div className="container">
         
         <div className="qwen-header">
+          <div className="qwen-nav-links-row">
+            <a href="#studio-lab" className="return-to-lab-link">
+              ↑ RETURN TO AI LABS ENGINES (PHOTO, ART & 8K VECTORINE)
+            </a>
+          </div>
           <div className="qwen-free-badge">100% FREE • CLOUDFLARE WORKERS AI EDGE GPU</div>
           <h2 className="qwen-title">
             QWEN <span className="text-cyan">AI IMAGE EDIT</span> STUDIO
@@ -301,6 +306,29 @@ const QwenStudio = () => {
         .qwen-header {
           text-align: center;
           margin-bottom: 4rem;
+        }
+
+        .qwen-nav-links-row {
+          margin-bottom: 1.5rem;
+        }
+
+        .return-to-lab-link {
+          display: inline-block;
+          font-family: var(--font-heading);
+          font-size: 0.85rem;
+          letter-spacing: 1.5px;
+          color: #AAA;
+          text-decoration: none;
+          padding: 0.4rem 0.8rem;
+          border: 1px solid #333;
+          background: #111;
+          transition: all 0.2s ease;
+        }
+
+        .return-to-lab-link:hover {
+          color: var(--primary-orange);
+          border-color: var(--primary-orange);
+          background: #191922;
         }
 
         .qwen-free-badge {
