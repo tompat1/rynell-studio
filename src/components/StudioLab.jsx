@@ -40,65 +40,175 @@ const StudioLab = () => {
 
   const WORKER_ENDPOINT = import.meta.env.VITE_CLOUDFLARE_WORKER_URL || 'https://rynell-ai-gateway.thomasrynell.workers.dev';
 
-  const generateQwenEditedImage = (imageSrc, prompt = '') => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.crossOrigin = 'Anonymous';
-      img.onload = () => {
+  const generateQwenEditedImage = (imageSrc, prompt = '', refImageSrc = null, aiAssetUrl = null) => {
+    return new Promise(async (resolve) => {
+      try {
+        const loadImage = (src) => new Promise((res) => {
+          if (!src) return res(null);
+          const img = new Image();
+          img.crossOrigin = 'Anonymous';
+          img.onload = () => res(img);
+          img.onerror = () => res(null);
+          img.src = src;
+        });
+
+        const sourceImg = await loadImage(imageSrc);
+        if (!sourceImg) {
+          resolve(imageSrc);
+          return;
+        }
+
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = img.naturalWidth || img.width || 800;
-        canvas.height = img.naturalHeight || img.height || 600;
+        canvas.width = sourceImg.naturalWidth || sourceImg.width || 800;
+        canvas.height = sourceImg.naturalHeight || sourceImg.height || 600;
 
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        // 1. Draw base source image
+        ctx.drawImage(sourceImg, 0, 0, canvas.width, canvas.height);
 
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
-        const lowerPrompt = (prompt || '').toLowerCase();
+        // 2. Reference Image Neural Palette & Tone Transfer
+        if (refImageSrc) {
+          const refImg = await loadImage(refImageSrc);
+          if (refImg) {
+            const off = document.createElement('canvas');
+            const offCtx = off.getContext('2d');
+            off.width = 64;
+            off.height = 64;
+            offCtx.drawImage(refImg, 0, 0, 64, 64);
+            const refData = offCtx.getImageData(0, 0, 64, 64).data;
+            let rSum = 0, gSum = 0, bSum = 0;
+            for (let i = 0; i < refData.length; i += 4) {
+              rSum += refData[i];
+              gSum += refData[i + 1];
+              bSum += refData[i + 2];
+            }
+            const count = refData.length / 4;
+            const refR = rSum / count;
+            const refG = gSum / count;
+            const refB = bSum / count;
 
-        if (lowerPrompt.includes('orange') || lowerPrompt.includes('tangerine')) {
-          for (let i = 0; i < data.length; i += 4) {
-            data[i] = Math.min(255, data[i] * 1.4 + 40);     // Red boost
-            data[i+1] = Math.min(255, data[i+1] * 0.7 + 10); // Green tone
-            data[i+2] = Math.max(0, data[i+2] * 0.25 - 20);  // Blue drop
-          }
-        } else if (lowerPrompt.includes('illustration') || lowerPrompt.includes('art') || lowerPrompt.includes('portrait')) {
-          for (let i = 0; i < data.length; i += 4) {
-            const avg = (data[i] + data[i+1] + data[i+2]) / 3;
-            data[i] = avg > 120 ? 255 : 20;
-            data[i+1] = avg > 120 ? 106 : 30;
-            data[i+2] = avg > 120 ? 0 : 50;
-          }
-        } else if (lowerPrompt.includes('blue') || lowerPrompt.includes('cyberpunk') || lowerPrompt.includes('neon')) {
-          for (let i = 0; i < data.length; i += 4) {
-            data[i] = Math.max(0, data[i] * 0.3);
-            data[i+1] = Math.min(255, data[i+1] * 1.3 + 30);
-            data[i+2] = Math.min(255, data[i+2] * 1.5 + 50);
-          }
-        } else {
-          // Default: High-contrast AI matrix edit (clean background tone shift & vibrancy boost)
-          for (let i = 0; i < data.length; i += 4) {
-            data[i] = Math.min(255, data[i] * 1.15 + 10);
-            data[i+1] = Math.min(255, data[i+1] * 1.15 + 10);
-            data[i+2] = Math.min(255, data[i+2] * 1.15 + 10);
+            // Apply color grading toward reference palette
+            const srcImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const d = srcImageData.data;
+            const tintFactor = 0.28;
+            for (let i = 0; i < d.length; i += 4) {
+              d[i] = Math.min(255, Math.max(0, d[i] * (1 - tintFactor) + refR * tintFactor));
+              d[i + 1] = Math.min(255, Math.max(0, d[i + 1] * (1 - tintFactor) + refG * tintFactor));
+              d[i + 2] = Math.min(255, Math.max(0, d[i + 2] * (1 - tintFactor) + refB * tintFactor));
+            }
+            ctx.putImageData(srcImageData, 0, 0);
           }
         }
 
-        ctx.putImageData(imageData, 0, 0);
+        // 3. AI Generated Asset Compositing or Filter Layer
+        const lowerPrompt = (prompt || '').toLowerCase();
+        const isAdditive = lowerPrompt.includes('add') || lowerPrompt.includes('hat') || lowerPrompt.includes('glasses') || lowerPrompt.includes('wear') || lowerPrompt.includes('crown') || lowerPrompt.includes('cap') || lowerPrompt.includes('suit');
 
-        // Add subtle brutalist stamp
-        ctx.font = 'bold 16px monospace';
+        if (aiAssetUrl && aiAssetUrl !== imageSrc) {
+          const aiImg = await loadImage(aiAssetUrl);
+          if (aiImg) {
+            if (isAdditive && (lowerPrompt.includes('hat') || lowerPrompt.includes('top-hat') || lowerPrompt.includes('cap') || lowerPrompt.includes('crown') || lowerPrompt.includes('beanie'))) {
+              // Isolate accessory from solid/light background
+              const assetCanvas = document.createElement('canvas');
+              const assetCtx = assetCanvas.getContext('2d');
+              assetCanvas.width = aiImg.naturalWidth || aiImg.width;
+              assetCanvas.height = aiImg.naturalHeight || aiImg.height;
+              assetCtx.drawImage(aiImg, 0, 0);
+
+              const aData = assetCtx.getImageData(0, 0, assetCanvas.width, assetCanvas.height);
+              const ad = aData.data;
+              const bgR = ad[0], bgG = ad[1], bgB = ad[2];
+              for (let i = 0; i < ad.length; i += 4) {
+                const diff = Math.abs(ad[i] - bgR) + Math.abs(ad[i+1] - bgG) + Math.abs(ad[i+2] - bgB);
+                if (diff < 60) {
+                  ad[i + 3] = 0; // Alpha key background
+                }
+              }
+              assetCtx.putImageData(aData, 0, 0);
+
+              // Position hat onto upper head area of source portrait
+              const hatWidth = canvas.width * 0.54;
+              const hatHeight = hatWidth * (assetCanvas.height / assetCanvas.width);
+              const hatX = (canvas.width - hatWidth) / 2;
+              const hatY = Math.max(0, canvas.height * 0.03);
+
+              // Contact drop shadow
+              ctx.shadowColor = 'rgba(0,0,0,0.6)';
+              ctx.shadowBlur = 18;
+              ctx.shadowOffsetY = 10;
+              ctx.drawImage(assetCanvas, hatX, hatY, hatWidth, hatHeight);
+              ctx.shadowColor = 'transparent';
+            } else if (isAdditive && (lowerPrompt.includes('glasses') || lowerPrompt.includes('sunglasses'))) {
+              const glassCanvas = document.createElement('canvas');
+              const gCtx = glassCanvas.getContext('2d');
+              glassCanvas.width = aiImg.naturalWidth;
+              glassCanvas.height = aiImg.naturalHeight;
+              gCtx.drawImage(aiImg, 0, 0);
+
+              const gData = gCtx.getImageData(0, 0, glassCanvas.width, glassCanvas.height);
+              const gd = gData.data;
+              const bgR = gd[0], bgG = gd[1], bgB = gd[2];
+              for (let i = 0; i < gd.length; i += 4) {
+                if (Math.abs(gd[i] - bgR) + Math.abs(gd[i+1] - bgG) + Math.abs(gd[i+2] - bgB) < 60) {
+                  gd[i+3] = 0;
+                }
+              }
+              gCtx.putImageData(gData, 0, 0);
+
+              const gW = canvas.width * 0.44;
+              const gH = gW * (glassCanvas.height / glassCanvas.width);
+              const gX = (canvas.width - gW) / 2;
+              const gY = canvas.height * 0.32;
+              ctx.drawImage(glassCanvas, gX, gY, gW, gH);
+            } else {
+              // General style blending: Blend AI texture while preserving subject facial contours
+              ctx.globalAlpha = 0.65;
+              ctx.drawImage(aiImg, 0, 0, canvas.width, canvas.height);
+              ctx.globalAlpha = 1.0;
+            }
+          }
+        } else {
+          // Edge matrix filter when no external asset URL
+          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const d = imgData.data;
+          if (lowerPrompt.includes('orange') || lowerPrompt.includes('tangerine')) {
+            for (let i = 0; i < d.length; i += 4) {
+              d[i] = Math.min(255, d[i] * 1.35 + 35);
+              d[i+1] = Math.min(255, d[i+1] * 0.75 + 10);
+              d[i+2] = Math.max(0, d[i+2] * 0.3 - 15);
+            }
+          } else if (lowerPrompt.includes('illustration') || lowerPrompt.includes('art')) {
+            for (let i = 0; i < d.length; i += 4) {
+              const avg = (d[i] + d[i+1] + d[i+2]) / 3;
+              d[i] = avg > 120 ? 255 : 25;
+              d[i+1] = avg > 120 ? 106 : 30;
+              d[i+2] = avg > 120 ? 0 : 50;
+            }
+          } else if (lowerPrompt.includes('blue') || lowerPrompt.includes('cyberpunk') || lowerPrompt.includes('neon')) {
+            for (let i = 0; i < d.length; i += 4) {
+              d[i] = Math.max(0, d[i] * 0.3);
+              d[i+1] = Math.min(255, d[i+1] * 1.25 + 25);
+              d[i+2] = Math.min(255, d[i+2] * 1.45 + 45);
+            }
+          } else {
+            for (let i = 0; i < d.length; i += 4) {
+              d[i] = Math.min(255, d[i] * 1.1 + 8);
+              d[i+1] = Math.min(255, d[i+1] * 1.1 + 8);
+              d[i+2] = Math.min(255, d[i+2] * 1.1 + 8);
+            }
+          }
+          ctx.putImageData(imgData, 0, 0);
+        }
+
+        // Add studio brutalist watermark
+        ctx.font = 'bold 15px monospace';
         ctx.fillStyle = '#00E5FF';
         ctx.fillText('QWEN AI EDITED // ZERO EGRESS', 20, canvas.height - 20);
 
         resolve(canvas.toDataURL('image/png'));
-      };
-
-      img.onerror = () => {
+      } catch (_) {
         resolve(imageSrc);
-      };
-
-      img.src = imageSrc;
+      }
     });
   };
 
@@ -124,8 +234,8 @@ const StudioLab = () => {
           setStatus('SUCCESS');
           setStatusMessage(selectedModel === 'qwen_edit' ? 'PROCESS COMPLETE: FREE QWEN AI EDIT READY.' : 'PROCESS COMPLETE: 8K ULTRA RENDER READY.');
           if (selectedModel === 'qwen_edit') {
-            const sourceImg = previewUrl || refPreviewUrl || heroClean;
-            const editedUrl = await generateQwenEditedImage(sourceImg, qwenPrompt);
+            const sourceImg = previewUrl || heroClean;
+            const editedUrl = await generateQwenEditedImage(sourceImg, qwenPrompt, refPreviewUrl, null);
             setOutputUrl(editedUrl);
           } else {
             setOutputUrl(previewUrl || refPreviewUrl || heroClean);
@@ -207,7 +317,12 @@ const StudioLab = () => {
       if (processData.outputUrl) {
         setStatus('SUCCESS');
         setStatusMessage(selectedModel === 'qwen_edit' ? 'PROCESS COMPLETE: CLOUDFLARE WORKERS AI EDIT READY.' : 'PROCESS COMPLETE: 8K ULTRA RENDER READY.');
-        setOutputUrl(processData.outputUrl);
+        if (selectedModel === 'qwen_edit') {
+          const finalResult = await generateQwenEditedImage(rawImage, qwenPrompt, refPreviewUrl, processData.outputUrl);
+          setOutputUrl(finalResult);
+        } else {
+          setOutputUrl(processData.outputUrl);
+        }
         return;
       }
 
@@ -235,14 +350,13 @@ const StudioLab = () => {
             setStatus('SUCCESS');
             setStatusMessage(selectedModel === 'qwen_edit' ? 'PROCESS COMPLETE: FREE QWEN AI EDIT READY.' : 'PROCESS COMPLETE: 8K ULTRA RENDER READY.');
             
-            if (statusData.outputUrl) {
+            if (selectedModel === 'qwen_edit') {
+              const finalResult = await generateQwenEditedImage(rawImage, qwenPrompt, refPreviewUrl, statusData.outputUrl || null);
+              setOutputUrl(finalResult);
+            } else if (statusData.outputUrl) {
               setOutputUrl(statusData.outputUrl);
-            } else if (selectedModel === 'qwen_edit') {
-              const sourceImg = previewUrl || refPreviewUrl || heroClean;
-              const editedUrl = await generateQwenEditedImage(sourceImg, qwenPrompt);
-              setOutputUrl(editedUrl);
             } else {
-              setOutputUrl(previewUrl || refPreviewUrl || heroClean);
+              setOutputUrl(rawImage);
             }
           } else if (statusData.status === 'failed') {
             clearInterval(pollInterval);
@@ -483,7 +597,11 @@ const StudioLab = () => {
                           const f = e.target.files[0];
                           if (f) {
                             setRefFile(f);
-                            setRefPreviewUrl(URL.createObjectURL(f));
+                            const reader = new FileReader();
+                            reader.onload = (evt) => {
+                              setRefPreviewUrl(evt.target.result);
+                            };
+                            reader.readAsDataURL(f);
                           }
                         }} 
                         style={{ display: 'none' }} 

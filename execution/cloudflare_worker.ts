@@ -72,51 +72,108 @@ export default {
         // 2. Construct public/signed R2 source image URL
         const imageUrl = `${env.PUBLIC_R2_URL || 'https://storage.rynell.org'}/${imageR2Key}`;
 
-        // 3. Image Generation & Edit Routing (FLUX.1 Schnell & SDXL Lightning)
+        // 3. Image Generation & Edit Routing (FLUX.2 Klein 4B, FLUX.1 Schnell & SDXL Lightning)
         if (modelType === 'qwen_edit' || modelType === 'art') {
           if (env.AI) {
-            const userPrompt = prompt || 'high quality studio asset, detailed, masterpiece, clean background, 8k resolution';
+            let userPrompt = prompt || 'high quality studio asset, detailed, masterpiece, clean background, 8k resolution';
+            
+            // Contextual prompt synthesis for accessories and reference styling
+            if (userPrompt.toLowerCase().startsWith('add ') || userPrompt.toLowerCase().includes('wear')) {
+              const item = userPrompt.replace(/^add (a|an)?\s*/i, '');
+              userPrompt = `isolated ${item}, clean neutral background, detailed studio asset, photorealistic, sharp focus, 8k masterpiece`;
+            }
+            if (refImageBase64 && typeof refImageBase64 === 'string') {
+              userPrompt += `, matching artistic style, color palette, and textures of the reference image`;
+            }
+
             let aiImageStream: any = null;
             let lastErr: any = null;
 
-            // Tier 1: FLUX.1 [schnell] (12B Parameter SOTA generative model)
-            try {
-              aiImageStream = await env.AI.run('@cf/black-forest-labs/flux-1-schnell', {
-                prompt: userPrompt,
-                num_steps: 4
-              });
-            } catch (errFlux: any) {
-              lastErr = errFlux;
-              console.warn("FLUX.1 note, trying SDXL-Lightning:", errFlux?.message || errFlux);
-
-              // Tier 2: SDXL Lightning (Sub-second diffusion engine)
+            // Tier 0: FLUX.2 [klein] 4B (Image-to-Image / Reference-guided editing with input_image_0 & input_image_1)
+            if (imageBase64 && typeof imageBase64 === 'string') {
               try {
-                aiImageStream = await env.AI.run('@cf/bytedance/stable-diffusion-xl-lightning', {
+                const formData = new FormData();
+                formData.append('prompt', userPrompt);
+                formData.append('width', '1024');
+                formData.append('height', '1024');
+
+                const sourceBytes = getImageBytes(imageBase64);
+                formData.append('input_image_0', new Blob([new Uint8Array(sourceBytes)], { type: 'image/png' }));
+
+                if (refImageBase64 && typeof refImageBase64 === 'string' && refImageBase64.includes('base64,')) {
+                  const refBytes = getImageBytes(refImageBase64);
+                  formData.append('input_image_1', new Blob([new Uint8Array(refBytes)], { type: 'image/png' }));
+                }
+
+                const formResp = new Response(formData);
+                const kleinResult: any = await env.AI.run('@cf/black-forest-labs/flux-2-klein-4b', {
+                  multipart: {
+                    body: formResp.body,
+                    contentType: formResp.headers.get('content-type')
+                  }
+                });
+
+                if (kleinResult) {
+                  if (kleinResult.image) {
+                    return new Response(
+                      JSON.stringify({ 
+                        jobId: `cf-flux2-${Date.now()}`, 
+                        provider: 'cloudflare_ai', 
+                        status: 'succeeded', 
+                        outputUrl: `data:image/png;base64,${kleinResult.image}` 
+                      }),
+                      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                    );
+                  } else if (kleinResult instanceof ReadableStream || typeof kleinResult.arrayBuffer === 'function') {
+                    aiImageStream = kleinResult;
+                  }
+                }
+              } catch (errKlein: any) {
+                lastErr = errKlein;
+                console.warn("FLUX.2 klein edit note, trying FLUX.1 schnell:", errKlein?.message || errKlein);
+              }
+            }
+
+            // Tier 1: FLUX.1 [schnell] (12B Parameter SOTA generative model)
+            if (!aiImageStream) {
+              try {
+                aiImageStream = await env.AI.run('@cf/black-forest-labs/flux-1-schnell', {
                   prompt: userPrompt,
                   num_steps: 4
                 });
-              } catch (errSdxl: any) {
-                lastErr = errSdxl;
-                console.warn("SDXL-Lightning note, trying Dreamshaper 8 LCM:", errSdxl?.message || errSdxl);
+              } catch (errFlux: any) {
+                lastErr = errFlux;
+                console.warn("FLUX.1 note, trying SDXL-Lightning:", errFlux?.message || errFlux);
 
-                // Tier 3: Dreamshaper 8 LCM (Ultra-fast photorealism)
+                // Tier 2: SDXL Lightning (Sub-second diffusion engine)
                 try {
-                  aiImageStream = await env.AI.run('@cf/lykon/dreamshaper-8-lcm', {
+                  aiImageStream = await env.AI.run('@cf/bytedance/stable-diffusion-xl-lightning', {
                     prompt: userPrompt,
-                    num_steps: 6
+                    num_steps: 4
                   });
-                } catch (errLcm: any) {
-                  lastErr = errLcm;
-                  console.warn("Dreamshaper note, trying SDXL Base 1.0:", errLcm?.message || errLcm);
+                } catch (errSdxl: any) {
+                  lastErr = errSdxl;
+                  console.warn("SDXL-Lightning note, trying Dreamshaper 8 LCM:", errSdxl?.message || errSdxl);
 
-                  // Tier 4: SDXL Base 1.0
+                  // Tier 3: Dreamshaper 8 LCM (Ultra-fast photorealism)
                   try {
-                    aiImageStream = await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0', {
+                    aiImageStream = await env.AI.run('@cf/lykon/dreamshaper-8-lcm', {
                       prompt: userPrompt,
-                      num_steps: 20
+                      num_steps: 6
                     });
-                  } catch (errBase: any) {
-                    lastErr = errBase;
+                  } catch (errLcm: any) {
+                    lastErr = errLcm;
+                    console.warn("Dreamshaper note, trying SDXL Base 1.0:", errLcm?.message || errLcm);
+
+                    // Tier 4: SDXL Base 1.0
+                    try {
+                      aiImageStream = await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0', {
+                        prompt: userPrompt,
+                        num_steps: 20
+                      });
+                    } catch (errBase: any) {
+                      lastErr = errBase;
+                    }
                   }
                 }
               }
