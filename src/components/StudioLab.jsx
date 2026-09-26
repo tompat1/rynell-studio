@@ -419,8 +419,7 @@ const StudioLab = () => {
           ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, 0, 0, targetW, targetH);
 
-          const imgData = ctx.getImageData(0, 0, targetW, targetH);
-          const data = imgData.data;
+          const { data } = ctx.getImageData(0, 0, targetW, targetH);
           const w = targetW;
           const h = targetH;
 
@@ -908,7 +907,7 @@ const StudioLab = () => {
                 Full administrative privileges enabled. <strong>Unlimited renders & zero rate limits</strong> across all 3 workbenches.
               </span>
             </div>
-          ) : !isRegistered ? (
+          ) : isRegistered ? null : (
             <div className="guest-reward-strip" onClick={openRegister}>
               <span className="guest-badge">MEMBER BONUS</span>
               <span className="guest-text">
@@ -916,7 +915,7 @@ const StudioLab = () => {
               </span>
               <button type="button" className="guest-btn">REGISTER FREE →</button>
             </div>
-          ) : null}
+          )}
         </div>
 
         {/* Model Engine Selector - Full Width Above Workbench Grid */}
@@ -1400,7 +1399,18 @@ const StudioLab = () => {
                     style={{ display: 'none' }}
                   />
 
-                  {!previewUrl ? (
+                  {previewUrl ? (
+                    <div className="file-preview-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <img src={previewUrl} alt="Upload Preview" className="preview-thumb" style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #00E5FF' }} />
+                      <div className="preview-info" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <span className="file-name" style={{ color: '#FFF', fontWeight: 700, fontSize: '13px' }}>{file ? file.name : "SOURCE_IMAGE.PNG"}</span>
+                        <span className="file-size" style={{ color: '#888', fontSize: '11px', fontFamily: 'monospace' }}>{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "ORIGINAL RESOLUTION"}</span>
+                        <button className="change-file-btn" onClick={handleReset} style={{ background: 'none', border: 'none', color: '#00E5FF', fontSize: '11px', fontWeight: 700, textAlign: 'left', padding: 0, cursor: 'pointer', marginTop: '4px' }}>
+                          REPLACE SOURCE FILE
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
                     <label htmlFor="vectorine-file-input" className="dropzone-label" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', textAlign: 'center' }}>
                       <div className="dropzone-icon" style={{ marginBottom: '8px' }}>
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#00E5FF" strokeWidth="2">
@@ -1416,17 +1426,6 @@ const StudioLab = () => {
                         CLICK TO SELECT FILE (PNG, JPG, WEBP)
                       </span>
                     </label>
-                  ) : (
-                    <div className="file-preview-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <img src={previewUrl} alt="Upload Preview" className="preview-thumb" style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #00E5FF' }} />
-                      <div className="preview-info" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span className="file-name" style={{ color: '#FFF', fontWeight: 700, fontSize: '13px' }}>{file ? file.name : "SOURCE_IMAGE.PNG"}</span>
-                        <span className="file-size" style={{ color: '#888', fontSize: '11px', fontFamily: 'monospace' }}>{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "ORIGINAL RESOLUTION"}</span>
-                        <button className="change-file-btn" onClick={handleReset} style={{ background: 'none', border: 'none', color: '#00E5FF', fontSize: '11px', fontWeight: 700, textAlign: 'left', padding: 0, cursor: 'pointer', marginTop: '4px' }}>
-                          REPLACE SOURCE FILE
-                        </button>
-                      </div>
-                    </div>
                   )}
                 </div>
 
@@ -1863,7 +1862,16 @@ const StudioLab = () => {
                     style={{ display: 'none' }}
                   />
 
-                  {!previewUrl ? (
+                  {previewUrl ? (
+                    <div className="file-preview-card">
+                      <img src={previewUrl} alt="Upload Preview" className="preview-thumb" />
+                      <div className="preview-info">
+                        <span className="file-name">{file ? file.name : "SOURCE_IMAGE.PNG"}</span>
+                        <span className="file-size">{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "ORIGINAL RES"}</span>
+                        <button className="change-file-btn" onClick={handleReset}>REPLACE FILE</button>
+                      </div>
+                    </div>
+                  ) : (
                     <label htmlFor="studio-file-input" className="dropzone-label">
                       <div className="dropzone-icon">
                         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--primary-orange)" strokeWidth="2">
@@ -1877,15 +1885,6 @@ const StudioLab = () => {
                       </h4>
                       <span className="dropzone-info">DROP IMAGE OR CLICK TO UPLOAD</span>
                     </label>
-                  ) : (
-                    <div className="file-preview-card">
-                      <img src={previewUrl} alt="Upload Preview" className="preview-thumb" />
-                      <div className="preview-info">
-                        <span className="file-name">{file ? file.name : "SOURCE_IMAGE.PNG"}</span>
-                        <span className="file-size">{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "ORIGINAL RES"}</span>
-                        <button className="change-file-btn" onClick={handleReset}>REPLACE FILE</button>
-                      </div>
-                    </div>
                   )}
                 </div>
 
@@ -2201,9 +2200,9 @@ const StudioLab = () => {
                     onClick={handleStartProcess}
                   >
                     {!isPremiumUser && selectedModel === 'qwen_edit' && (usage.imageStudioRendersLeft ?? 5) <= 0
-                      ? (!isRegistered 
-                          ? '🎁 5 FREE RENDERS USED — REGISTER FREE FOR +10 MORE' 
-                          : '🔒 ALL FREE RENDERS USED — UPGRADE TO DELUXE')
+                      ? (isRegistered 
+                          ? '🔒 ALL FREE RENDERS USED — UPGRADE TO DELUXE' 
+                          : '🎁 5 FREE RENDERS USED — REGISTER FREE FOR +10 MORE')
                       : !isPremiumUser && selectedModel === 'upscale' && (usage.upscalerTrialsLeft ?? 1) <= 0
                       ? '🔒 4K UPSCALE TRIAL USED — UPGRADE TO DELUXE'
                       : !isPremiumUser && selectedModel === 'logo' && (usage.vectorineTrialsLeft ?? 1) <= 0
@@ -2212,7 +2211,7 @@ const StudioLab = () => {
                       ? (isAdmin ? '⚡ TRACE SVG VECTOR (👑 ADMIN UNLIMITED)' : (!isPremiumUser && (usage.vectorineTrialsLeft ?? 1) > 0 ? '⚡ TRACE SVG VECTOR (1 FREE TRIAL)' : '⚡ TRACE SVG VECTOR (RUNPOD GPU)'))
                       : selectedModel === 'upscale'
                       ? (isAdmin ? '⚡ RUN 4K UPSCALE (👑 ADMIN UNLIMITED)' : (!isPremiumUser && (usage.upscalerTrialsLeft ?? 1) > 0 ? '⚡ RUN 4K UPSCALE (1 FREE TRIAL)' : '⚡ EXECUTE 4K UPSCALE'))
-                      : (isAdmin ? '⚡ EXECUTE AI STUDIO (👑 ADMIN UNLIMITED)' : (!isPremiumUser ? `⚡ EXECUTE AI RENDER (${usage.imageStudioRendersLeft ?? 5}/5 FREE LEFT)` : `⚡ EXECUTE AI STUDIO`))}
+                      : (isAdmin ? '⚡ EXECUTE AI STUDIO (👑 ADMIN UNLIMITED)' : (isPremiumUser ? `⚡ EXECUTE AI STUDIO` : `⚡ EXECUTE AI RENDER (${usage.imageStudioRendersLeft ?? 5}/5 FREE LEFT)`))}
                   </button>
 
                   {status === 'SUCCESS' && (
