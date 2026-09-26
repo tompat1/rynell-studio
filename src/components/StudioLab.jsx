@@ -2220,6 +2220,7 @@ const StudioLab = () => {
                       download={selectedModel === 'logo' ? 'VECTORINE_GRAPHIC.svg' : 'RYNELL_STUDIO_AI_ASSET.png'} 
                       className="action-btn download-btn"
                     >
+                      {selectedModel === 'logo' ? '📥 DOWNLOAD SVG VECTOR GRAPHIC' : '📥 DOWNLOAD GENERATED ASSET'}
                     </a>
                   )}
 
@@ -2234,7 +2235,8 @@ const StudioLab = () => {
                         fontSize: '12px',
                         fontWeight: 700,
                         cursor: 'pointer',
-                        padding: '10px 14px'
+                        padding: '12px 14px',
+                        borderRadius: '4px'
                       }}
                       onClick={() => {
                         try {
@@ -2254,27 +2256,52 @@ const StudioLab = () => {
                     <button 
                       className="action-btn text-priority-rerun-btn"
                       style={{
-                        background: 'rgba(0, 229, 255, 0.12)',
-                        border: '1px solid var(--primary-orange)',
-                        color: '#FFF',
+                        background: 'rgba(0, 229, 255, 0.1)',
+                        border: '1px solid #00E5FF',
+                        color: '#00E5FF',
                         marginTop: '6px',
                         fontSize: '12px',
-                        fontWeight: 700,
+                        fontWeight: 800,
+                        letterSpacing: '0.03em',
                         cursor: 'pointer',
-                        padding: '10px 14px'
+                        padding: '12px 14px',
+                        borderRadius: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px'
                       }}
                       onClick={() => {
                         setPrioritizeText(true);
                         handleStartProcess();
                       }}
                     >
-                      🔤 TEXT LOOK FUNKY? RE-RUN WITH CRISP TEXT PRIORITY (FLUX.1 / PHOENIX)
+                      ✨ TEXT LOOK FUNKY? RE-RUN WITH CRISP TEXT PRIORITY (FLUX.1 / PHOENIX)
                     </button>
                   )}
 
                   {status === 'SUCCESS' && (
-                    <button className="action-btn reset-btn" onClick={handleReset}>
-                      PROCESS ANOTHER FILE
+                    <button 
+                      className="action-btn reset-btn" 
+                      onClick={handleReset}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        border: '1px solid #333',
+                        color: '#AAA',
+                        marginTop: '6px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        letterSpacing: '0.03em',
+                        cursor: 'pointer',
+                        padding: '12px 14px',
+                        borderRadius: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px'
+                      }}
+                    >
+                      🔄 PROCESS ANOTHER FILE
                     </button>
                   )}
                 </div>
@@ -3473,8 +3500,29 @@ const StudioLab = () => {
 
         .download-btn {
           background-color: #00FF66;
-          color: #000;
-          font-weight: bold;
+          color: #000000;
+          font-family: var(--font-heading);
+          font-size: 0.95rem;
+          font-weight: 900;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          text-decoration: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          padding: 0.9rem 1.2rem;
+          border: 2px solid #00FF66;
+          box-shadow: 4px 4px 0 #000;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          margin-top: 6px;
+          border-radius: 4px;
+        }
+
+        .download-btn:hover {
+          background-color: #33FF88;
+          transform: translateY(-2px);
+          box-shadow: 6px 6px 0 #000;
         }
 
         .reset-btn {
