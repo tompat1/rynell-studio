@@ -5,11 +5,39 @@ import PricingTable from './PricingTable';
 import heroClean from '../assets/hero_page_rynell_studio_clean.webp';
 import { useAuth } from '../contexts/AuthContext';
 
+export const UPSCALE_PRESETS = [
+  {
+    id: 'photo',
+    icon: '📸',
+    name: 'PHOTOGRAPHY & PORTRAIT',
+    desc: 'Enhances skin textures, specular lighting, and natural camera detail.'
+  },
+  {
+    id: 'art',
+    icon: '🎨',
+    name: 'AI ART & ILLUSTRATION',
+    desc: 'Maximizes micro-textures, color depth, and fine digital brushstrokes.'
+  },
+  {
+    id: 'vector',
+    icon: '📐',
+    name: 'TYPOGRAPHY & LINE ART',
+    desc: 'Sharpens high-contrast boundaries, eliminates artifacts, and cleans text.'
+  },
+  {
+    id: 'merch',
+    icon: '🛍️',
+    name: 'PRODUCT & MERCH MOCKUP',
+    desc: 'Refines fabric weaves, material reflections, and crisp print edges.'
+  }
+];
+
 const StudioLab = () => {
   const { user, isRegistered, isAdmin, isPremiumUser, openRegister } = useAuth();
   const [selectedModel, setSelectedModel] = useState('qwen_edit');
   const activeModelConfig = MODELS.find(m => m.id === selectedModel) || FREE_MODELS[0];
   const [upscaleEngine, setUpscaleEngine] = useState('pruna'); // 'pruna' | 'esrgan'
+  const [upscalePreset, setUpscalePreset] = useState('photo'); // 'photo' | 'art' | 'vector' | 'merch'
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [usage, setUsage] = useState(() => {
     try {
@@ -197,7 +225,7 @@ const StudioLab = () => {
     });
   };
 
-  const generateUpscaled4KImage = async (imageSrc, engine = 'pruna', scale = 4) => {
+  const generateUpscaled4KImage = async (imageSrc, engine = 'pruna', scale = 4, preset = 'photo') => {
     return new Promise((resolve) => {
       if (!imageSrc) return resolve(imageSrc);
 
@@ -232,9 +260,17 @@ const StudioLab = () => {
 
           const copy = new Uint8ClampedArray(data);
 
+          // Preset parameters:
+          // 'photo': Natural skin & specular texture (strength 0.36)
+          // 'art': Vivid digital brushstroke & micro-texture boost (strength 0.52)
+          // 'vector': Sharp line & typography edge cleanup (strength 0.65, lumThreshold 10)
+          // 'merch': Fabric & print texture refinement (strength 0.44)
+          const strength = preset === 'art' ? 0.52 : (preset === 'vector' ? 0.65 : (preset === 'merch' ? 0.44 : 0.36));
+          const edgeStrength = preset === 'art' ? 0.45 : (preset === 'vector' ? 0.60 : (preset === 'merch' ? 0.38 : 0.32));
+          const lumThreshold = preset === 'vector' ? 10 : 14;
+
           if (engine === 'pruna') {
             // Pruna AI Mode: 4K High-Frequency Micro-Texture & Detail Synthesis
-            const strength = 0.42;
             for (let y = 1; y < h - 1; y++) {
               const rowIdx = y * w;
               const topIdx = (y - 1) * w;
@@ -262,7 +298,6 @@ const StudioLab = () => {
             }
           } else {
             // Real-ESRGAN Mode: Faithful Edge Restoration & Clean De-noising
-            const edgeStrength = 0.38;
             for (let y = 1; y < h - 1; y++) {
               const rowIdx = y * w;
               const topIdx = (y - 1) * w;
@@ -284,7 +319,7 @@ const StudioLab = () => {
                 const lumDiff = Math.abs(lumCurrent - lumTop) + Math.abs(lumCurrent - lumBot) +
                                 Math.abs(lumCurrent - lumLeft) + Math.abs(lumCurrent - lumRight);
 
-                if (lumDiff > 14) {
+                if (lumDiff > lumThreshold) {
                   for (let c = 0; c < 3; c++) {
                     const current = copy[i + c];
                     const edge = 4 * current - copy[top + c] - copy[bot + c] - copy[left + c] - copy[right + c];
@@ -301,7 +336,7 @@ const StudioLab = () => {
           ctx.font = 'bold 16px monospace';
           ctx.fillStyle = 'rgba(255, 106, 0, 0.85)';
           ctx.fillText(
-            `${engine === 'pruna' ? '4K PRUNA AI' : '4K REAL-ESRGAN'} // ${targetW}x${targetH}`,
+            `${engine === 'pruna' ? '4K PRUNA AI' : '4K REAL-ESRGAN'} // ${preset.toUpperCase()} // ${targetW}x${targetH}`,
             24,
             targetH - 24
           );
@@ -432,12 +467,14 @@ const StudioLab = () => {
           })
         }).catch(() => {});
 
+        const activePresetObj = UPSCALE_PRESETS.find(p => p.id === upscalePreset) || UPSCALE_PRESETS[0];
+
         setTimeout(() => {
           setStatus('PROCESSING');
-          setStatusMessage(`APPLYING ${upscaleEngine === 'pruna' ? 'PRUNA AI MICRO-TEXTURE SYNTHESIS' : 'REAL-ESRGAN EDGE RESTORATION'} (4K RESOLUTION)...`);
+          setStatusMessage(`APPLYING ${upscaleEngine === 'pruna' ? 'PRUNA AI' : 'REAL-ESRGAN'} (${activePresetObj.name} — 4K RESOLUTION)...`);
 
           setTimeout(async () => {
-            const upscaled = await generateUpscaled4KImage(rawImage, upscaleEngine, 4);
+            const upscaled = await generateUpscaled4KImage(rawImage, upscaleEngine, 4, upscalePreset);
             setStatus('SUCCESS');
             deductQuota(selectedModel);
             setStatusMessage(`PROCESS COMPLETE: 4K ${upscaleEngine === 'pruna' ? 'PRUNA AI' : 'REAL-ESRGAN'} READY.`);
@@ -681,7 +718,7 @@ const StudioLab = () => {
             <div className="lab-control-panel">
 
               {/* Dual Upload Grid: Main Source Image + Optional Reference Image */}
-              <div className="qwen-dual-upload-grid">
+              <div className={`qwen-dual-upload-grid ${selectedModel !== 'qwen_edit' ? 'single-upload-mode' : ''}`}>
                 
                 {/* Box 1: Primary Source Image to Edit */}
                 <div 
@@ -706,7 +743,9 @@ const StudioLab = () => {
                           <line x1="12" y1="3" x2="12" y2="15"/>
                         </svg>
                       </div>
-                      <h4 className="dropzone-title">1. MAIN SOURCE IMAGE</h4>
+                      <h4 className="dropzone-title">
+                        {selectedModel === 'upscale' ? 'SOURCE IMAGE TO 4K UPSCALE' : selectedModel === 'logo' ? 'RASTER IMAGE TO VECTORIZE' : '1. MAIN SOURCE IMAGE'}
+                      </h4>
                       <span className="dropzone-info">DROP IMAGE OR CLICK TO UPLOAD</span>
                     </label>
                   ) : (
@@ -721,47 +760,49 @@ const StudioLab = () => {
                   )}
                 </div>
 
-                {/* Box 2: Reference Picture Upload Box */}
-                <div className="ref-upload-box qwen-half-dropzone">
-                  <label className="ref-upload-label">
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      onChange={(e) => {
-                        const f = e.target.files[0];
-                        if (f) {
-                          setRefFile(f);
-                          const reader = new FileReader();
-                          reader.onload = (evt) => {
-                            setRefPreviewUrl(evt.target.result);
-                          };
-                          reader.readAsDataURL(f);
-                        }
-                      }} 
-                      style={{ display: 'none' }} 
-                    />
-                    {refPreviewUrl ? (
-                      <div className="ref-preview-content">
-                        <img src={refPreviewUrl} alt="Reference" className="ref-thumb-img" />
-                        <div className="ref-meta-info">
-                          <span className="ref-name-text">2. REFERENCE: {refFile ? refFile.name : "STYLE_REF.PNG"}</span>
-                          <button 
-                            className="remove-ref-btn" 
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRefFile(null); setRefPreviewUrl(null); }}
-                          >
-                            REMOVE REFERENCE
-                          </button>
+                {/* Box 2: Reference Picture Upload Box (Only for AI Image Studio Mode) */}
+                {selectedModel === 'qwen_edit' && (
+                  <div className="ref-upload-box qwen-half-dropzone">
+                    <label className="ref-upload-label">
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={(e) => {
+                          const f = e.target.files[0];
+                          if (f) {
+                            setRefFile(f);
+                            const reader = new FileReader();
+                            reader.onload = (evt) => {
+                              setRefPreviewUrl(evt.target.result);
+                            };
+                            reader.readAsDataURL(f);
+                          }
+                        }} 
+                        style={{ display: 'none' }} 
+                      />
+                      {refPreviewUrl ? (
+                        <div className="ref-preview-content">
+                          <img src={refPreviewUrl} alt="Reference" className="ref-thumb-img" />
+                          <div className="ref-meta-info">
+                            <span className="ref-name-text">2. REFERENCE: {refFile ? refFile.name : "STYLE_REF.PNG"}</span>
+                            <button 
+                              className="remove-ref-btn" 
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRefFile(null); setRefPreviewUrl(null); }}
+                            >
+                              REMOVE REFERENCE
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="empty-ref-prompt">
-                        <span className="ref-icon-symbol">🖼️</span>
-                        <span className="ref-title-text">2. REFERENCE PICTURE (OPTIONAL)</span>
-                        <span className="ref-sub-text">For style transfer, face IP consistency & textures</span>
-                      </div>
-                    )}
-                  </label>
-                </div>
+                      ) : (
+                        <div className="empty-ref-prompt">
+                          <span className="ref-icon-symbol">🖼️</span>
+                          <span className="ref-title-text">2. REFERENCE PICTURE (OPTIONAL)</span>
+                          <span className="ref-sub-text">For style transfer, face IP consistency & textures</span>
+                        </div>
+                      )}
+                    </label>
+                  </div>
+                )}
 
               </div>
 
@@ -810,36 +851,60 @@ const StudioLab = () => {
                   </div>
                 )}
 
-                {/* AI Prompt Textarea */}
-                <div className="qwen-prompt-field-wrapper">
-                  <label className="prompt-field-title">NATURAL LANGUAGE INSTRUCTION / PROMPT:</label>
-                  <textarea
-                    className="qwen-prompt-textarea"
-                    rows="3"
-                    value={qwenPrompt}
-                    onChange={(e) => setQwenPrompt(e.target.value)}
-                    placeholder={activeModelConfig.placeholder || "Describe what you want the AI to edit or generate..."}
-                  />
-                </div>
+                {/* Mode Controls & Options */}
+                {selectedModel === 'qwen_edit' ? (
+                  <>
+                    <div className="qwen-prompt-field-wrapper">
+                      <label className="prompt-field-title">NATURAL LANGUAGE INSTRUCTION / PROMPT:</label>
+                      <textarea
+                        className="qwen-prompt-textarea"
+                        rows="3"
+                        value={qwenPrompt}
+                        onChange={(e) => setQwenPrompt(e.target.value)}
+                        placeholder={activeModelConfig.placeholder || "Describe what you want the AI to edit or generate..."}
+                      />
+                    </div>
 
-                {/* Quick Recipe Pills */}
-                {activeModelConfig.recipes && activeModelConfig.recipes.length > 0 && (
-                  <div className="recipes-group-wrapper">
-                    <span className="recipes-group-title">QUICK RECIPES & PRESETS:</span>
-                    <div className="recipe-pills-container">
-                      {activeModelConfig.recipes.map((recipe, idx) => (
+                    {activeModelConfig.recipes && activeModelConfig.recipes.length > 0 && (
+                      <div className="recipes-group-wrapper">
+                        <span className="recipes-group-title">QUICK RECIPES & PRESETS:</span>
+                        <div className="recipe-pills-container">
+                          {activeModelConfig.recipes.map((recipe, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              className={`recipe-pill-item ${qwenPrompt === recipe ? 'active' : ''}`}
+                              onClick={() => setQwenPrompt(recipe)}
+                            >
+                              + {recipe}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : selectedModel === 'upscale' ? (
+                  <div className="upscale-presets-wrapper">
+                    <label className="prompt-field-title">CHOOSE 4K ENHANCEMENT PRESET / TARGET:</label>
+                    <div className="upscale-presets-grid">
+                      {UPSCALE_PRESETS.map((preset) => (
                         <button
-                          key={idx}
+                          key={preset.id}
                           type="button"
-                          className={`recipe-pill-item ${qwenPrompt === recipe ? 'active' : ''}`}
-                          onClick={() => setQwenPrompt(recipe)}
+                          className={`upscale-preset-card ${upscalePreset === preset.id ? 'active' : ''}`}
+                          onClick={() => setUpscalePreset(preset.id)}
                         >
-                          + {recipe}
+                          <div className="preset-card-head">
+                            <span className="preset-card-icon">{preset.icon}</span>
+                            <strong className="preset-card-title">{preset.name}</strong>
+                            {upscalePreset === preset.id && <span className="preset-active-dot">● ACTIVE</span>}
+                          </div>
+                          <p className="preset-card-desc">{preset.desc}</p>
                         </button>
                       ))}
                     </div>
                   </div>
-                )}
+                ) : null}
               </div>
 
 
@@ -1016,6 +1081,77 @@ const StudioLab = () => {
           margin-bottom: 1.25rem;
           padding-bottom: 1.25rem;
           border-bottom: 1px solid #1f1f2e;
+        }
+
+        .qwen-dual-upload-grid.single-upload-mode {
+          grid-template-columns: 1fr;
+        }
+
+        .upscale-presets-wrapper {
+          margin-top: 0.5rem;
+        }
+
+        .upscale-presets-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.75rem;
+          margin-top: 0.5rem;
+        }
+
+        .upscale-preset-card {
+          background: #09090f;
+          border: 2px solid #1f1f2e;
+          padding: 0.85rem 1rem;
+          text-align: left;
+          cursor: pointer;
+          display: flex;
+          flex-direction: column;
+          gap: 0.35rem;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .upscale-preset-card:hover {
+          border-color: var(--primary-orange);
+          background: #12121a;
+          transform: translateY(-1px);
+        }
+
+        .upscale-preset-card.active {
+          border-color: var(--primary-orange);
+          background: #161410;
+          box-shadow: 3px 3px 0 var(--primary-orange);
+        }
+
+        .preset-card-head {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .preset-card-icon {
+          font-size: 1.1rem;
+        }
+
+        .preset-card-title {
+          font-family: var(--font-heading);
+          font-size: 0.82rem;
+          color: #fff;
+          letter-spacing: 0.5px;
+          flex: 1;
+        }
+
+        .preset-active-dot {
+          font-family: monospace;
+          font-size: 0.65rem;
+          color: var(--primary-orange);
+          font-weight: 700;
+        }
+
+        .preset-card-desc {
+          margin: 0;
+          font-size: 0.76rem;
+          color: #888;
+          line-height: 1.35;
         }
 
         .upscale-engine-grid {
