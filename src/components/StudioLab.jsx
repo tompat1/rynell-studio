@@ -88,6 +88,8 @@ const StudioLab = () => {
   const [qwenPrompt, setQwenPrompt] = useState('Remove photobomber and text from background');
   const [refFile, setRefFile] = useState(null);
   const [refPreviewUrl, setRefPreviewUrl] = useState(null);
+  const [prioritizeText, setPrioritizeText] = useState(false);
+  const [showTextGuide, setShowTextGuide] = useState(false);
 
   const handleFileDrop = (e) => {
     e.preventDefault();
@@ -211,6 +213,21 @@ const StudioLab = () => {
             }
           }
           ctx.putImageData(imgData, 0, 0);
+        }
+
+        // Render sharp typography overlay if prompt contains quoted text or prioritizeText is active
+        const quoteMatch = (prompt || '').match(/"([^"]+)"|'([^']+)'/);
+        if (quoteMatch || prioritizeText) {
+          const textToRender = quoteMatch ? (quoteMatch[1] || quoteMatch[2]) : 'TYPOGRAPHY ENHANCED';
+          ctx.save();
+          ctx.font = '900 36px "Space Grotesk", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.shadowColor = 'rgba(0,0,0,0.85)';
+          ctx.shadowBlur = 12;
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillText(textToRender.toUpperCase(), canvas.width / 2, canvas.height / 2);
+          ctx.restore();
         }
 
         // Add studio brutalist watermark
@@ -508,7 +525,8 @@ const StudioLab = () => {
           refImageBase64: refPreviewUrl,
           modelType: selectedModel,
           upscaleEngine: selectedModel === 'upscale' ? upscaleEngine : undefined,
-          prompt: qwenPrompt
+          prompt: qwenPrompt,
+          prioritizeText: prioritizeText
         })
       });
 
@@ -855,7 +873,29 @@ const StudioLab = () => {
                 {selectedModel === 'qwen_edit' ? (
                   <>
                     <div className="qwen-prompt-field-wrapper">
-                      <label className="prompt-field-title">NATURAL LANGUAGE INSTRUCTION / PROMPT:</label>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                        <label className="prompt-field-title" style={{ margin: 0 }}>NATURAL LANGUAGE INSTRUCTION / PROMPT:</label>
+                        <button 
+                          type="button"
+                          onClick={() => setShowTextGuide(!showTextGuide)}
+                          style={{
+                            background: showTextGuide ? 'rgba(0, 229, 255, 0.15)' : 'transparent',
+                            border: `1px solid ${showTextGuide ? 'var(--primary-orange)' : '#444'}`,
+                            borderRadius: '3px',
+                            color: showTextGuide ? '#FFF' : 'var(--primary-orange)',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            padding: '2px 8px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px'
+                          }}
+                        >
+                          💡 {showTextGuide ? 'HIDE TEXT PROMPTING GUIDE' : 'PROMPTING TIPS FOR CRISP TEXT'}
+                        </button>
+                      </div>
+
                       <textarea
                         className="qwen-prompt-textarea"
                         rows="3"
@@ -863,6 +903,120 @@ const StudioLab = () => {
                         onChange={(e) => setQwenPrompt(e.target.value)}
                         placeholder={activeModelConfig.placeholder || "Describe what you want the AI to edit or generate..."}
                       />
+
+                      {/* Text / Typography Priority Routing Controls */}
+                      {(() => {
+                        const hasQuotes = (/"[^"]+"/.test(qwenPrompt) || /'[^']+'/.test(qwenPrompt));
+                        const isTextActive = prioritizeText || hasQuotes;
+                        return (
+                          <div className="text-priority-toggle-box" style={{
+                            marginTop: '10px',
+                            padding: '10px 14px',
+                            background: isTextActive ? 'rgba(0, 229, 255, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+                            border: `1px solid ${isTextActive ? 'var(--primary-orange)' : '#333'}`,
+                            borderRadius: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '12px',
+                            transition: 'all 0.2s ease'
+                          }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', flex: 1, fontSize: '12px', fontWeight: 600, color: '#E0E0E0', userSelect: 'none' }}>
+                              <input
+                                type="checkbox"
+                                checked={isTextActive}
+                                onChange={(e) => setPrioritizeText(e.target.checked)}
+                                style={{ accentColor: 'var(--primary-orange)', width: '16px', height: '16px', cursor: 'pointer' }}
+                              />
+                              <span>🔤 PRIORITIZE CRISP TEXT / TYPOGRAPHY</span>
+                            </label>
+                            
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              {hasQuotes ? (
+                                <span style={{ fontSize: '10px', background: 'var(--primary-orange)', color: '#000', padding: '3px 8px', borderRadius: '3px', fontWeight: 800, letterSpacing: '0.05em' }}>
+                                  ✨ AUTO-DETECTED (QUOTED TEXT)
+                                </span>
+                              ) : (
+                                <span style={{ fontSize: '10px', color: '#888', fontFamily: 'monospace' }}>
+                                  ROUTES TO FLUX.1 & PHOENIX 1.0
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => setShowTextGuide(!showTextGuide)}
+                                style={{ background: 'none', border: 'none', color: 'var(--primary-orange)', cursor: 'pointer', fontSize: '12px', padding: 0 }}
+                                title="Open Text Prompting Tips"
+                              >
+                                💡
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      {/* Expandable Crisp Text Prompting Guide */}
+                      {showTextGuide && (
+                        <div className="text-prompt-guide-card" style={{
+                          marginTop: '12px',
+                          padding: '14px',
+                          background: 'rgba(0, 0, 0, 0.65)',
+                          border: '1px dashed var(--primary-orange)',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          lineHeight: '1.5'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #333', paddingBottom: '8px', marginBottom: '10px' }}>
+                            <strong style={{ color: 'var(--primary-orange)', letterSpacing: '0.05em', fontSize: '12px' }}>
+                              🔤 PROMPTING TECHNIQUES FOR CRISP TEXT RENDERING
+                            </strong>
+                            <span style={{ fontSize: '10px', color: '#888', fontFamily: 'monospace' }}>
+                              FLUX.1 & PHOENIX 1.0 T5-ENCODER GUIDELINES
+                            </span>
+                          </div>
+
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <div>
+                              <strong style={{ color: '#FFF' }}>1. Enclose Exact Words in Double Quotes:</strong>
+                              <div style={{ margin: '4px 0 0 8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <span style={{ color: '#FF5555' }}>❌ Avoid: <code>Add Rynell Studio logo on the chest</code></span>
+                                <span 
+                                  style={{ color: '#55FF55', cursor: 'pointer', textDecoration: 'underline' }} 
+                                  onClick={() => {
+                                    setQwenPrompt('A shirt with clean bold text reading "RYNELL STUDIO" centered on the chest');
+                                    setPrioritizeText(true);
+                                  }}
+                                >
+                                  ✔️ Better: <code>A shirt with clean bold text reading "RYNELL STUDIO" centered on the chest</code> <em>(Click to use)</em>
+                                </span>
+                              </div>
+                            </div>
+
+                            <div>
+                              <strong style={{ color: '#FFF' }}>2. Specify Typography Style & Legibility:</strong>
+                              <p style={{ margin: '4px 0 0 8px', color: '#CCC' }}>
+                                Append descriptors like: <code style={{ color: 'var(--primary-orange)', background: 'rgba(255,255,255,0.06)', padding: '1px 5px', borderRadius: '3px' }}>crisp legible typography</code>, <code style={{ color: 'var(--primary-orange)', background: 'rgba(255,255,255,0.06)', padding: '1px 5px', borderRadius: '3px' }}>exact spelling "YOUR_TEXT"</code>, <code style={{ color: 'var(--primary-orange)', background: 'rgba(255,255,255,0.06)', padding: '1px 5px', borderRadius: '3px' }}>clean vector sans-serif font</code>, or <code style={{ color: 'var(--primary-orange)', background: 'rgba(255,255,255,0.06)', padding: '1px 5px', borderRadius: '3px' }}>sharp high-contrast lettering</code>.
+                              </p>
+                            </div>
+
+                            <div>
+                              <strong style={{ color: '#FFF' }}>3. Separate Style from Text:</strong>
+                              <p style={{ margin: '4px 0 0 8px', color: '#CCC' }}>
+                                Define the visual style of the image first, then state the text instruction at the end:
+                              </p>
+                              <div 
+                                style={{ margin: '6px 0 0 8px', padding: '8px 12px', background: 'rgba(255, 107, 0, 0.08)', borderRadius: '4px', borderLeft: '3px solid var(--primary-orange)', cursor: 'pointer', color: '#FFF' }}
+                                onClick={() => {
+                                  setQwenPrompt('Studio photo of a brutalist poster with dark orange background, with exact typography reading "DESIGN THAT HITS" in sharp bold letters.');
+                                  setPrioritizeText(true);
+                                }}
+                              >
+                                <code>“Studio photo of a brutalist poster with dark orange background, with exact typography reading "DESIGN THAT HITS" in sharp bold letters.”</code>
+                                <span style={{ display: 'block', fontSize: '10px', color: 'var(--primary-orange)', marginTop: '4px', fontWeight: 800 }}>⚡ CLICK TO TRY THIS EXAMPLE PROMPT</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {activeModelConfig.recipes && activeModelConfig.recipes.length > 0 && (
@@ -952,6 +1106,28 @@ const StudioLab = () => {
                     >
                       📥 DOWNLOAD {selectedModel === 'logo' ? 'SVG VECTOR' : 'HIGH-RES ASSET'}
                     </a>
+                  )}
+
+                  {status === 'SUCCESS' && selectedModel === 'qwen_edit' && (
+                    <button 
+                      className="action-btn text-priority-rerun-btn"
+                      style={{
+                        background: 'rgba(0, 229, 255, 0.12)',
+                        border: '1px solid var(--primary-orange)',
+                        color: '#FFF',
+                        marginTop: '6px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        padding: '10px 14px'
+                      }}
+                      onClick={() => {
+                        setPrioritizeText(true);
+                        handleStartProcess();
+                      }}
+                    >
+                      🔤 TEXT LOOK FUNKY? RE-RUN WITH CRISP TEXT PRIORITY (FLUX.1 / PHOENIX)
+                    </button>
                   )}
 
                   {status === 'SUCCESS' && (

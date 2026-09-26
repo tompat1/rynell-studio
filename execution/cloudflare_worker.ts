@@ -65,10 +65,11 @@ export default {
           modelType?: string;
           upscaleEngine?: string;
           prompt?: string;
+          prioritizeText?: boolean;
           turnstileToken?: string;
         };
 
-        const { imageR2Key, imageBase64, refImageBase64, modelType, upscaleEngine, prompt, turnstileToken } = body;
+        const { imageR2Key, imageBase64, refImageBase64, modelType, upscaleEngine, prompt, prioritizeText, turnstileToken } = body;
 
         // 1. Direct Edge Processing (Turnstile bypassed for zero-latency direct access)
 
@@ -84,6 +85,13 @@ export default {
             'high quality studio asset, detailed, clean composition, studio lighting'
           );
 
+          const hasQuotes = prompt ? (/"[^"]+"/.test(prompt) || /'[^']+'/.test(prompt)) : false;
+          const isTextPriority = Boolean(prioritizeText || hasQuotes);
+
+          if (isTextPriority && !userPrompt.toLowerCase().includes('typography')) {
+            userPrompt += `, crisp legible typography, sharp vector text rendering, exact spelling`;
+          }
+
           if (env.AI) {
             // Contextual prompt synthesis for portrait image generation & natural edits
             if (userPrompt.toLowerCase().startsWith('add ') || userPrompt.toLowerCase().includes('wear')) {
@@ -97,8 +105,26 @@ export default {
             let aiImageStream: any = null;
             let lastErr: any = null;
 
+            // Priority Tier for Text/Typography: FLUX.1 [schnell] & Leonardo Phoenix
+            if (isTextPriority) {
+              try {
+                aiImageStream = await env.AI.run('@cf/black-forest-labs/flux-1-schnell', {
+                  prompt: userPrompt
+                });
+              } catch (errTextFlux: any) {
+                lastErr = errTextFlux;
+                try {
+                  aiImageStream = await env.AI.run('@cf/leonardoai/phoenix-1.0', {
+                    prompt: userPrompt
+                  });
+                } catch (errPhoenix: any) {
+                  lastErr = errPhoenix;
+                }
+              }
+            }
+
             // Tier 1: FLUX.2 [klein] 4B (Native Image-to-Image / Multi-Image Editing)
-            if (imageBase64 && typeof imageBase64 === 'string') {
+            if (!aiImageStream && imageBase64 && typeof imageBase64 === 'string') {
               try {
                 const formData = new FormData();
                 formData.append('prompt', userPrompt);
