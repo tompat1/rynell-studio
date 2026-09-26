@@ -282,7 +282,13 @@ const QwenStudio = () => {
 
               {!previewUrl ? (
                 <label htmlFor="qwen-file-input" className="qwen-dropzone-label">
-                  <div className="drop-icon">🖼️</div>
+                  <div className="drop-icon">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--primary-orange)" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="17 8 12 3 7 8"/>
+                      <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                  </div>
                   <h4>DROP IMAGE OR CLICK TO UPLOAD</h4>
                   <span>SUPPORTS PNG, JPG, WEBP • MAX 50MB</span>
                 </label>

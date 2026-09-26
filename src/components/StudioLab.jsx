@@ -4,6 +4,7 @@ import BeforeAfterSlider from './BeforeAfterSlider';
 import PricingTable from './PricingTable';
 import heroClean from '../assets/hero_page_rynell_studio_clean.webp';
 import { useAuth } from '../contexts/AuthContext';
+import { traceRasterToSVG } from '../utils/vectorize';
 
 export const UPSCALE_PRESETS = [
   {
@@ -90,6 +91,86 @@ const StudioLab = () => {
   const [refPreviewUrl, setRefPreviewUrl] = useState(null);
   const [prioritizeText, setPrioritizeText] = useState(false);
   const [showTextGuide, setShowTextGuide] = useState(false);
+
+  // Vectorine Studio State & Fine-Tuning Parameters
+  const [vectorViewMode, setVectorViewMode] = useState('vector'); // 'vector' | 'compare' | 'source' | 'code'
+  const [vectorZoom, setVectorZoom] = useState(100);
+  const [vectorEngineMode, setVectorEngineMode] = useState('sharp'); // 'sharp' | 'classic'
+  const [vectorPreset, setVectorPreset] = useState('flat'); // 'flat' | 'bw' | 'lineart' | 'grayscale' | 'poster' | 'detailed'
+  const [vectorColors, setVectorColors] = useState(8);
+  const [vectorDetail, setVectorDetail] = useState(0.5);
+  const [vectorSmoothing, setVectorSmoothing] = useState(0.8);
+  const [vectorCorners, setVectorCorners] = useState(0.65);
+  const [vectorMinShapeSize, setVectorMinShapeSize] = useState(8);
+  const [vectorNoiseCleanup, setVectorNoiseCleanup] = useState(2);
+  const [vectorIsGrayscale, setVectorIsGrayscale] = useState(false);
+  const [vectorIsPureBW, setVectorIsPureBW] = useState(false);
+  const [vectorMeta, setVectorMeta] = useState({ pathCount: 0, colorCount: 8, fileSizeKb: 0, svgString: '' });
+  const [showSourceQualityInfo, setShowSourceQualityInfo] = useState(true);
+  const [copySuccess, setCopySuccess] = useState(false);
+
+  const runVectorineTrace = async (customConfig = {}) => {
+    const rawImage = outputUrl || previewUrl || refPreviewUrl || heroClean;
+    if (!rawImage) return;
+
+    const config = {
+      engineMode: vectorEngineMode,
+      preset: vectorPreset,
+      numberOfColors: vectorColors,
+      detail: vectorDetail,
+      smoothing: vectorSmoothing,
+      corners: vectorCorners,
+      minShapeSize: vectorMinShapeSize,
+      noiseCleanup: vectorNoiseCleanup,
+      isGrayscale: vectorIsGrayscale,
+      isPureBW: vectorIsPureBW,
+      ...customConfig
+    };
+
+    try {
+      setStatus('PROCESSING');
+      setStatusMessage('VECTORINE GPU ENGINE: QUANTIZING COLOR PALETTE & TRACING BEZIER CURVES...');
+      const res = await traceRasterToSVG(rawImage, config);
+      setStatus('SUCCESS');
+      setStatusMessage(`PROCESS COMPLETE: SVG VECTOR CREATED (${res.pathCount} CURVES, ${res.colorCount} COLORS, ${res.fileSizeKb} KB).`);
+      setVectorMeta({
+        pathCount: res.pathCount,
+        colorCount: res.colorCount,
+        fileSizeKb: res.fileSizeKb,
+        svgString: res.svgString
+      });
+      handleSetOutputUrl(res.svgDataUrl, 'logo', qwenPrompt, rawImage);
+    } catch (err) {
+      console.warn("Vectorine trace error:", err);
+    }
+  };
+
+  const applyVectorPreset = (presetKey) => {
+    setVectorPreset(presetKey);
+    let overrides = {};
+    if (presetKey === 'flat') {
+      overrides = { preset: 'flat', numberOfColors: 8, detail: 0.5, isGrayscale: false, isPureBW: false };
+      setVectorColors(8); setVectorDetail(0.5); setVectorIsGrayscale(false); setVectorIsPureBW(false);
+    } else if (presetKey === 'bw') {
+      overrides = { preset: 'bw', numberOfColors: 2, detail: 0.2, isPureBW: true };
+      setVectorColors(2); setVectorDetail(0.2); setVectorIsPureBW(true);
+    } else if (presetKey === 'lineart') {
+      overrides = { preset: 'lineart', numberOfColors: 2, detail: 0.1, minShapeSize: 4 };
+      setVectorColors(2); setVectorDetail(0.1); setVectorMinShapeSize(4);
+    } else if (presetKey === 'grayscale') {
+      overrides = { preset: 'grayscale', numberOfColors: 8, isGrayscale: true };
+      setVectorColors(8); setVectorIsGrayscale(true);
+    } else if (presetKey === 'poster') {
+      overrides = { preset: 'poster', numberOfColors: 6, detail: 0.8 };
+      setVectorColors(6); setVectorDetail(0.8);
+    } else if (presetKey === 'detailed') {
+      overrides = { preset: 'detailed', numberOfColors: 24, detail: 0.05, minShapeSize: 1 };
+      setVectorColors(24); setVectorDetail(0.05); setVectorMinShapeSize(1);
+    }
+    if (previewUrl || outputUrl) {
+      runVectorineTrace(overrides);
+    }
+  };
 
   const [history, setHistory] = useState(() => {
     try {
@@ -467,6 +548,16 @@ const StudioLab = () => {
             const sourceImg = previewUrl || refPreviewUrl || heroClean;
             const upscaledUrl = await generateUpscaled4KImage(sourceImg, upscaleEngine, 4);
             handleSetOutputUrl(upscaledUrl, 'upscale', qwenPrompt, sourceImg);
+          } else if (selectedModel === 'logo') {
+            const sourceImg = previewUrl || refPreviewUrl || heroClean;
+            try {
+              const presetMode = qwenPrompt.toLowerCase().includes('monochrome') ? 'posterized2' : 'sharp';
+              const vectorRes = await traceRasterToSVG(sourceImg, presetMode);
+              setStatusMessage(`PROCESS COMPLETE: SVG VECTOR READY (${vectorRes.pathCount} CURVES).`);
+              handleSetOutputUrl(vectorRes.svgDataUrl, 'logo', qwenPrompt, sourceImg);
+            } catch (errTrace) {
+              handleSetOutputUrl(sourceImg, 'logo', qwenPrompt, sourceImg);
+            }
           } else {
             const sourceImg = previewUrl || refPreviewUrl || heroClean;
             handleSetOutputUrl(sourceImg, selectedModel, qwenPrompt, sourceImg);
@@ -570,6 +661,55 @@ const StudioLab = () => {
         return;
       } catch (err) {
         console.warn('Upscaler pipeline error:', err);
+        runSimulatedPipeline();
+        return;
+      }
+    }
+
+    // Dedicated Vectorine SVG Vector Tracing Pipeline
+    if (selectedModel === 'logo') {
+      try {
+        setStatus('UPLOADING');
+        setStatusMessage('ANALYZING RASTER GEOMETRY & COLOR PALETTE...');
+
+        // Notify edge gateway asynchronously for analytics
+        fetch(`${WORKER_ENDPOINT}/api/process`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            imageR2Key: file ? file.name : 'vectorine-source.png',
+            imageBase64: rawImage,
+            modelType: 'logo',
+            prompt: qwenPrompt
+          })
+        }).catch(() => {});
+
+        setTimeout(() => {
+          setStatus('PROCESSING');
+          setStatusMessage('VECTORINE GPU ENGINE: QUANTIZING COLOR PALETTE & TRACING BEZIER CURVES...');
+
+          setTimeout(async () => {
+            try {
+              const presetMode = qwenPrompt.toLowerCase().includes('monochrome') 
+                ? 'posterized2' 
+                : qwenPrompt.toLowerCase().includes('geometric') || qwenPrompt.toLowerCase().includes('contour')
+                ? 'sharp' 
+                : 'curvy';
+
+              const vectorRes = await traceRasterToSVG(rawImage, presetMode);
+              setStatus('SUCCESS');
+              deductQuota(selectedModel);
+              setStatusMessage(`PROCESS COMPLETE: SVG VECTOR CREATED (${vectorRes.pathCount} CURVES, ${vectorRes.colorCount} COLORS).`);
+              handleSetOutputUrl(vectorRes.svgDataUrl, 'logo', qwenPrompt, rawImage);
+            } catch (errTrace) {
+              console.warn("Vectorine trace fallback:", errTrace);
+              runSimulatedPipeline();
+            }
+          }, 1200);
+        }, 600);
+        return;
+      } catch (err) {
+        console.warn('Vectorine pipeline error:', err);
         runSimulatedPipeline();
         return;
       }
@@ -1034,6 +1174,672 @@ const StudioLab = () => {
                 </div>
               )}
             </div>
+          ) : selectedModel === 'logo' ? (
+            <div className="lab-workbench-grid vectorine-workbench-grid">
+              {/* LEFT DISPLAY PANEL: SVG Viewer, Modes, Zoom, Code Inspector, Meta Stats */}
+              <div className="lab-display-panel vectorine-display-panel">
+                {/* Header Mode Tabs */}
+                <div className="vectorine-mode-tabs">
+                  <button 
+                    type="button" 
+                    className={`vectorine-tab-btn ${vectorViewMode === 'vector' ? 'active' : ''}`}
+                    onClick={() => setVectorViewMode('vector')}
+                  >
+                    📐 VECTOR
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`vectorine-tab-btn ${vectorViewMode === 'compare' ? 'active' : ''}`}
+                    onClick={() => setVectorViewMode('compare')}
+                  >
+                    🔀 COMPARE
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`vectorine-tab-btn ${vectorViewMode === 'source' ? 'active' : ''}`}
+                    onClick={() => setVectorViewMode('source')}
+                  >
+                    📁 SOURCE
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`vectorine-tab-btn ${vectorViewMode === 'code' ? 'active' : ''}`}
+                    onClick={() => setVectorViewMode('code')}
+                  >
+                    💻 SVG CODE
+                  </button>
+                </div>
+
+                {/* Zoom & Action Bar */}
+                <div className="vectorine-zoom-bar">
+                  <div className="zoom-controls">
+                    <button type="button" className="zoom-btn" onClick={() => setVectorZoom(z => Math.max(25, z - 25))}>-</button>
+                    <span className="zoom-val">{vectorZoom}%</span>
+                    <button type="button" className="zoom-btn" onClick={() => setVectorZoom(z => Math.min(400, z + 25))}>+</button>
+                    <button type="button" className="zoom-reset-btn" onClick={() => setVectorZoom(100)}>RESET</button>
+                  </div>
+
+                  <button 
+                    type="button" 
+                    className="vectorine-download-btn"
+                    onClick={() => {
+                      if (!outputUrl && !vectorMeta.svgString) return;
+                      const element = document.createElement('a');
+                      let svgContent = vectorMeta.svgString;
+                      if (!svgContent && outputUrl) {
+                        try {
+                          svgContent = decodeURIComponent(outputUrl.replace(/^data:image\/svg\+xml;(utf8,)?/, ''));
+                        } catch (_) {
+                          svgContent = outputUrl;
+                        }
+                      }
+                      const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+                      element.href = URL.createObjectURL(blob);
+                      element.download = 'VECTORINE_GRAPHIC.svg';
+                      document.body.appendChild(element);
+                      element.click();
+                      document.body.removeChild(element);
+                    }}
+                  >
+                    📥 DOWNLOAD SVG
+                  </button>
+                </div>
+
+                {/* Viewport Canvas Container */}
+                <div className="vectorine-canvas-viewport">
+                  {['UPLOADING', 'QUEUED', 'PROCESSING'].includes(status) && (
+                    <div className="display-loading-overlay">
+                      <div className="spinner-ring large"></div>
+                      <span className="overlay-pulse-text">{statusMessage || 'VECTORINE GPU ENGINE: QUANTIZING COLOR PALETTE & TRACING BEZIER CURVES...'}</span>
+                    </div>
+                  )}
+
+                  {vectorViewMode === 'vector' ? (
+                    <div className="vectorine-svg-render-area" style={{ transform: `scale(${vectorZoom / 100})` }}>
+                      {vectorMeta.svgString ? (
+                        <div 
+                          className="native-svg-container"
+                          dangerouslySetInnerHTML={{ __html: vectorMeta.svgString }} 
+                        />
+                      ) : outputUrl ? (
+                        <img src={outputUrl} alt="Vector SVG Render" className="vectorine-svg-img" />
+                      ) : previewUrl ? (
+                        <div className="vectorine-pending-preview">
+                          <img src={previewUrl} alt="Source Preview" className="vectorine-source-thumb" style={{ maxHeight: '420px', objectFit: 'contain', borderRadius: '4px' }} />
+                          <div className="pending-badge" style={{ marginTop: '12px', background: 'var(--primary-orange)', color: '#000', padding: '6px 14px', borderRadius: '4px', fontWeight: 900, fontSize: '11px' }}>
+                            READY TO TRACE — CLICK "TRACE SVG VECTOR"
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="placeholder-workbench">
+                          <div className="placeholder-pattern"></div>
+                          <div className="placeholder-content">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#00E5FF" strokeWidth="1.5">
+                              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                            <h4>VECTORINE WORKBENCH READY</h4>
+                            <p>Upload a raster graphic (PNG, JPG) on the right panel to trace scalable SVG vector curves.</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : vectorViewMode === 'compare' ? (
+                    outputUrl || previewUrl ? (
+                      <BeforeAfterSlider 
+                        beforeImage={previewUrl || refPreviewUrl || heroClean}
+                        afterImage={outputUrl || previewUrl}
+                        beforeLabel="RASTER SOURCE"
+                        afterLabel="VECTOR SVG"
+                      />
+                    ) : (
+                      <div className="placeholder-workbench">
+                        <div className="placeholder-content">
+                          <h4>SELECT AN IMAGE TO COMPARE</h4>
+                        </div>
+                      </div>
+                    )
+                  ) : vectorViewMode === 'source' ? (
+                    previewUrl || refPreviewUrl || heroClean ? (
+                      <div className="single-preview-wrapper">
+                        <img src={previewUrl || refPreviewUrl || heroClean} alt="Source Raster" className="single-preview-img" style={{ objectFit: 'contain', maxHeight: '100%' }} />
+                        <div className="preview-overlay-tag">ORIGINAL RASTER INPUT</div>
+                      </div>
+                    ) : (
+                      <div className="placeholder-workbench">
+                        <div className="placeholder-content">
+                          <h4>NO SOURCE IMAGE UPLOADED YET</h4>
+                        </div>
+                      </div>
+                    )
+                  ) : vectorViewMode === 'code' ? (
+                    <div className="vectorine-code-inspector-container">
+                      <div className="code-inspector-header">
+                        <span>RAW SVG XML SOURCE CODE</span>
+                        <button 
+                          type="button"
+                          className="copy-code-btn"
+                          onClick={() => {
+                            let svgContent = vectorMeta.svgString;
+                            if (!svgContent && outputUrl) {
+                              try {
+                                svgContent = decodeURIComponent(outputUrl.replace(/^data:image\/svg\+xml;(utf8,)?/, ''));
+                              } catch (_) {}
+                            }
+                            if (svgContent) {
+                              navigator.clipboard.writeText(svgContent);
+                              setCopySuccess(true);
+                              setTimeout(() => setCopySuccess(false), 2000);
+                            }
+                          }}
+                        >
+                          {copySuccess ? '✔️ COPIED TO CLIPBOARD' : '📋 COPY XML CODE'}
+                        </button>
+                      </div>
+                      <pre className="vectorine-code-block">
+                        <code>{vectorMeta.svgString || (outputUrl ? decodeURIComponent(outputUrl.replace(/^data:image\/svg\+xml;(utf8,)?/, '')) : '<svg xmlns="http://www.w3.org/2000/svg">\n  <!-- Upload an image to vectorize and generate SVG XML code -->\n</svg>')}</code>
+                      </pre>
+                    </div>
+                  ) : null}
+                </div>
+
+                {/* Meta Stats Footer Bar */}
+                <div className="vectorine-stats-footer">
+                  <div className="stat-item">
+                    <span className="stat-label">📐 BEZIER CURVES</span>
+                    <span className="stat-val">{vectorMeta.pathCount || '--'}</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">🎨 COLOR PALETTE</span>
+                    <span className="stat-val">{vectorMeta.colorCount || vectorColors} COLORS</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">💾 SVG FILE SIZE</span>
+                    <span className="stat-val">{vectorMeta.fileSizeKb ? `${vectorMeta.fileSizeKb} KB` : '--'}</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">⚡ TRACING ENGINE</span>
+                    <span className="stat-val" style={{ color: '#00E5FF' }}>
+                      {vectorEngineMode === 'sharp' ? 'SHARP (NEURAL)' : 'CLASSIC BEZIER'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT CONTROLS PANEL */}
+              <div className="lab-control-panel vectorine-control-panel">
+                <div className="vectorine-control-header" style={{ marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <h3 className="vectorine-title" style={{ margin: 0, fontFamily: 'var(--font-heading)', color: '#FFF', fontSize: '1.2rem', letterSpacing: '1px' }}>
+                      📐 VECTORINE STUDIO WORKBENCH
+                    </h3>
+                    <span className="vectorine-badge" style={{ background: 'rgba(0, 229, 255, 0.15)', border: '1px solid #00E5FF', color: '#00E5FF', fontSize: '10px', fontWeight: 800, padding: '2px 8px', borderRadius: '3px' }}>
+                      RASTER-TO-VECTOR
+                    </span>
+                  </div>
+                </div>
+
+                {/* Cyan Source Dropzone */}
+                <div 
+                  className={`dropzone-container vectorine-cyan-dropzone ${previewUrl ? 'has-file' : ''}`}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={handleFileDrop}
+                  style={{
+                    border: '1.5px dashed #2b2b3b',
+                    borderRadius: '6px',
+                    padding: '1.25rem',
+                    background: 'rgba(11, 11, 18, 0.6)',
+                    transition: 'all 0.25s ease',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <input 
+                    type="file" 
+                    id="vectorine-file-input" 
+                    accept="image/png, image/jpeg, image/webp" 
+                    onChange={handleFileDrop}
+                    style={{ display: 'none' }}
+                  />
+
+                  {!previewUrl ? (
+                    <label htmlFor="vectorine-file-input" className="dropzone-label" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', textAlign: 'center' }}>
+                      <div className="dropzone-icon" style={{ marginBottom: '8px' }}>
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#00E5FF" strokeWidth="2">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                          <polyline points="17 8 12 3 7 8"/>
+                          <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                      </div>
+                      <h4 className="dropzone-title" style={{ margin: '4px 0', color: '#FFF', fontSize: '0.95rem', fontWeight: 700 }}>
+                        CHOOSE OR DROP RASTER GRAPHIC TO VECTORIZE
+                      </h4>
+                      <span className="dropzone-info" style={{ fontSize: '11px', color: '#00E5FF', fontFamily: 'monospace' }}>
+                        CLICK TO SELECT FILE (PNG, JPG, WEBP)
+                      </span>
+                    </label>
+                  ) : (
+                    <div className="file-preview-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <img src={previewUrl} alt="Upload Preview" className="preview-thumb" style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #00E5FF' }} />
+                      <div className="preview-info" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <span className="file-name" style={{ color: '#FFF', fontWeight: 700, fontSize: '13px' }}>{file ? file.name : "SOURCE_IMAGE.PNG"}</span>
+                        <span className="file-size" style={{ color: '#888', fontSize: '11px', fontFamily: 'monospace' }}>{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "ORIGINAL RESOLUTION"}</span>
+                        <button className="change-file-btn" onClick={handleReset} style={{ background: 'none', border: 'none', color: '#00E5FF', fontSize: '11px', fontWeight: 700, textAlign: 'left', padding: 0, cursor: 'pointer', marginTop: '4px' }}>
+                          REPLACE SOURCE FILE
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Collapsible Source Quality Advice Box */}
+                <div className="vectorine-quality-notice-box" style={{
+                  background: 'rgba(0, 229, 255, 0.05)',
+                  border: '1px dashed rgba(0, 229, 255, 0.3)',
+                  borderRadius: '6px',
+                  padding: '12px 14px',
+                  marginTop: '12px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showSourceQualityInfo ? '8px' : 0 }}>
+                    <span style={{ fontSize: '12px', fontWeight: 800, color: '#00E5FF', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      💡 SOURCE QUALITY MATTERS
+                    </span>
+                    <button 
+                      type="button" 
+                      onClick={() => setShowSourceQualityInfo(!showSourceQualityInfo)}
+                      style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '11px', fontFamily: 'monospace' }}
+                    >
+                      {showSourceQualityInfo ? '[ HIDE ADVICE ]' : '[ SHOW ADVICE ]'}
+                    </button>
+                  </div>
+
+                  {showSourceQualityInfo && (
+                    <p style={{ margin: 0, fontSize: '11px', color: '#CCC', lineHeight: '1.55' }}>
+                      Vector tracing follows pixel detail. For fine lettering and sharp icons, start with a large, sharp image (1000–2000px). Small or pixelated images produce rounded corners and wavy edges.
+                    </p>
+                  )}
+                </div>
+
+                {/* Vector Tracing Engine Picker */}
+                <div className="vectorine-engine-picker" style={{ marginTop: '16px' }}>
+                  <label className="prompt-field-title" style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary-orange)', letterSpacing: '0.05em', marginBottom: '8px', display: 'block' }}>
+                    SELECT VECTOR TRACING ENGINE:
+                  </label>
+                  <div className="engine-picker-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                    <button
+                      type="button"
+                      className={`engine-card-pill ${vectorEngineMode === 'sharp' ? 'active' : ''}`}
+                      onClick={() => {
+                        setVectorEngineMode('sharp');
+                        if (previewUrl || outputUrl) runVectorineTrace({ engineMode: 'sharp' });
+                      }}
+                      style={{
+                        padding: '10px 12px',
+                        background: vectorEngineMode === 'sharp' ? 'rgba(0, 229, 255, 0.12)' : 'rgba(255,255,255,0.02)',
+                        border: `1px solid ${vectorEngineMode === 'sharp' ? '#00E5FF' : '#222'}`,
+                        borderRadius: '4px',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <strong style={{ fontSize: '11px', color: vectorEngineMode === 'sharp' ? '#00E5FF' : '#FFF' }}>⚡ SHARP TRACE (NEURAL)</strong>
+                        {vectorEngineMode === 'sharp' && <span style={{ fontSize: '9px', background: '#00E5FF', color: '#000', padding: '1px 5px', fontWeight: 900, borderRadius: '2px' }}>ACTIVE</span>}
+                      </div>
+                      <p style={{ margin: 0, fontSize: '10px', color: '#AAA', lineHeight: '1.4' }}>
+                        Sharp angles & text. Best for logos, typography & icons.
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      className={`engine-card-pill ${vectorEngineMode === 'classic' ? 'active' : ''}`}
+                      onClick={() => {
+                        setVectorEngineMode('classic');
+                        if (previewUrl || outputUrl) runVectorineTrace({ engineMode: 'classic' });
+                      }}
+                      style={{
+                        padding: '10px 12px',
+                        background: vectorEngineMode === 'classic' ? 'rgba(255, 85, 0, 0.12)' : 'rgba(255,255,255,0.02)',
+                        border: `1px solid ${vectorEngineMode === 'classic' ? 'var(--primary-orange)' : '#222'}`,
+                        borderRadius: '4px',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <strong style={{ fontSize: '11px', color: vectorEngineMode === 'classic' ? 'var(--primary-orange)' : '#FFF' }}>📐 CLASSIC BEZIER</strong>
+                        {vectorEngineMode === 'classic' && <span style={{ fontSize: '9px', background: 'var(--primary-orange)', color: '#000', padding: '1px 5px', fontWeight: 900, borderRadius: '2px' }}>ACTIVE</span>}
+                      </div>
+                      <p style={{ margin: 0, fontSize: '10px', color: '#AAA', lineHeight: '1.4' }}>
+                        Smooth organic curves. Best for drawings & continuous lines.
+                      </p>
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVectorEngineMode('sharp');
+                      applyVectorPreset('flat');
+                    }}
+                    style={{
+                      width: '100%',
+                      marginTop: '8px',
+                      padding: '6px 10px',
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid #333',
+                      borderRadius: '4px',
+                      color: '#00FF66',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    ✨ AUTO-PICK BEST ENGINE & BALANCED PRESET
+                  </button>
+                </div>
+
+                {/* Presets Grid */}
+                <div className="vectorine-presets-wrapper" style={{ marginTop: '16px' }}>
+                  <label className="prompt-field-title" style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary-orange)', letterSpacing: '0.05em', marginBottom: '8px', display: 'block' }}>
+                    PRESET:
+                  </label>
+                  <div className="vectorine-presets-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                    {[
+                      { id: 'flat', name: 'Flat color', desc: '8 colors' },
+                      { id: 'bw', name: 'Black & white', desc: '2 colors' },
+                      { id: 'lineart', name: 'Line art', desc: 'Outlines' },
+                      { id: 'grayscale', name: 'Grayscale', desc: '8 grays' },
+                      { id: 'poster', name: 'Poster', desc: '6 colors' },
+                      { id: 'detailed', name: 'Detailed', desc: '24 colors' }
+                    ].map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className={`preset-pill ${vectorPreset === p.id ? 'active' : ''}`}
+                        onClick={() => applyVectorPreset(p.id)}
+                        style={{
+                          padding: '8px 6px',
+                          background: vectorPreset === p.id ? 'rgba(0, 229, 255, 0.15)' : 'rgba(255,255,255,0.02)',
+                          border: `1px solid ${vectorPreset === p.id ? '#00E5FF' : '#222'}`,
+                          borderRadius: '4px',
+                          textAlign: 'center',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <div style={{ fontSize: '11px', fontWeight: 700, color: vectorPreset === p.id ? '#00E5FF' : '#FFF' }}>{p.name}</div>
+                        <div style={{ fontSize: '9px', color: '#888', fontFamily: 'monospace' }}>{p.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Fine-Tuning Sliders */}
+                <div className="vectorine-sliders-card" style={{ marginTop: '16px', background: 'rgba(0,0,0,0.4)', border: '1px solid #222', borderRadius: '6px', padding: '14px' }}>
+                  <label className="prompt-field-title" style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary-orange)', letterSpacing: '0.05em', marginBottom: '12px', display: 'block' }}>
+                    FINE-TUNING CONTROLS:
+                  </label>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    {/* Colors */}
+                    <div className="slider-item">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#DDD', marginBottom: '4px' }}>
+                        <span>Colors</span>
+                        <span style={{ color: '#00E5FF', fontWeight: 800, fontFamily: 'monospace' }}>{vectorColors}</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="2" 
+                        max="32" 
+                        step="1"
+                        value={vectorColors}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          setVectorColors(val);
+                          if (previewUrl || outputUrl) runVectorineTrace({ numberOfColors: val });
+                        }}
+                        style={{ width: '100%', accentColor: '#00E5FF', cursor: 'pointer' }}
+                      />
+                    </div>
+
+                    {/* Detail */}
+                    <div className="slider-item">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#DDD', marginBottom: '4px' }}>
+                        <span>Detail (lower=sharper)</span>
+                        <span style={{ color: '#00E5FF', fontWeight: 800, fontFamily: 'monospace' }}>{vectorDetail}</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="0.05" 
+                        max="2.0" 
+                        step="0.05"
+                        value={vectorDetail}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          setVectorDetail(val);
+                          if (previewUrl || outputUrl) runVectorineTrace({ detail: val });
+                        }}
+                        style={{ width: '100%', accentColor: '#00E5FF', cursor: 'pointer' }}
+                      />
+                    </div>
+
+                    {/* Smoothing */}
+                    <div className="slider-item">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#DDD', marginBottom: '4px' }}>
+                        <span>Smoothing</span>
+                        <span style={{ color: '#00E5FF', fontWeight: 800, fontFamily: 'monospace' }}>{vectorSmoothing}</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="5" 
+                        step="0.1"
+                        value={vectorSmoothing}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          setVectorSmoothing(val);
+                          if (previewUrl || outputUrl) runVectorineTrace({ smoothing: val });
+                        }}
+                        style={{ width: '100%', accentColor: '#00E5FF', cursor: 'pointer' }}
+                      />
+                    </div>
+
+                    {/* Corners */}
+                    <div className="slider-item">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#DDD', marginBottom: '4px' }}>
+                        <span>Corners</span>
+                        <span style={{ color: '#00E5FF', fontWeight: 800, fontFamily: 'monospace' }}>{vectorCorners}</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="1.0" 
+                        step="0.05"
+                        value={vectorCorners}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          setVectorCorners(val);
+                          if (previewUrl || outputUrl) runVectorineTrace({ corners: val });
+                        }}
+                        style={{ width: '100%', accentColor: '#00E5FF', cursor: 'pointer' }}
+                      />
+                    </div>
+
+                    {/* Min shape size */}
+                    <div className="slider-item">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#DDD', marginBottom: '4px' }}>
+                        <span>Min shape size</span>
+                        <span style={{ color: '#00E5FF', fontWeight: 800, fontFamily: 'monospace' }}>{vectorMinShapeSize}</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="1" 
+                        max="50" 
+                        step="1"
+                        value={vectorMinShapeSize}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          setVectorMinShapeSize(val);
+                          if (previewUrl || outputUrl) runVectorineTrace({ minShapeSize: val });
+                        }}
+                        style={{ width: '100%', accentColor: '#00E5FF', cursor: 'pointer' }}
+                      />
+                    </div>
+
+                    {/* Noise cleanup */}
+                    <div className="slider-item">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#DDD', marginBottom: '4px' }}>
+                        <span>Noise cleanup</span>
+                        <span style={{ color: '#00E5FF', fontWeight: 800, fontFamily: 'monospace' }}>{vectorNoiseCleanup}</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="10" 
+                        step="1"
+                        value={vectorNoiseCleanup}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          setVectorNoiseCleanup(val);
+                          if (previewUrl || outputUrl) runVectorineTrace({ noiseCleanup: val });
+                        }}
+                        style={{ width: '100%', accentColor: '#00E5FF', cursor: 'pointer' }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Toggles */}
+                  <div style={{ display: 'flex', gap: '16px', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid #222' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '11px', color: '#DDD' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={vectorIsGrayscale} 
+                        onChange={(e) => {
+                          setVectorIsGrayscale(e.target.checked);
+                          if (previewUrl || outputUrl) runVectorineTrace({ isGrayscale: e.target.checked });
+                        }} 
+                        style={{ accentColor: '#00E5FF' }} 
+                      />
+                      <span>Grayscale mode</span>
+                    </label>
+
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '11px', color: '#DDD' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={vectorIsPureBW} 
+                        onChange={(e) => {
+                          setVectorIsPureBW(e.target.checked);
+                          if (previewUrl || outputUrl) runVectorineTrace({ isPureBW: e.target.checked });
+                        }} 
+                        style={{ accentColor: '#00E5FF' }} 
+                      />
+                      <span>Pure black & white</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="action-buttons-stack" style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <button 
+                    className="action-btn process-btn" 
+                    onClick={() => runVectorineTrace()}
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      background: 'var(--primary-orange)',
+                      border: 'none',
+                      color: '#000',
+                      fontSize: '13px',
+                      fontWeight: 900,
+                      letterSpacing: '0.05em',
+                      cursor: 'pointer',
+                      borderRadius: '4px',
+                      boxShadow: '0 4px 15px rgba(255, 85, 0, 0.3)'
+                    }}
+                  >
+                    {!isPremiumUser && (usage.vectorineTrialsLeft ?? 1) <= 0
+                      ? '🔒 VECTORINE TRIAL USED — UPGRADE TO DELUXE'
+                      : (isAdmin ? '⚡ TRACE SVG VECTOR (👑 ADMIN UNLIMITED)' : (!isPremiumUser && (usage.vectorineTrialsLeft ?? 1) > 0 ? '⚡ TRACE SVG VECTOR (1 FREE TRIAL)' : '⚡ TRACE SVG VECTOR (BEZIER CURVES)'))}
+                  </button>
+
+                  {(outputUrl || vectorMeta.svgString) && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      <button 
+                        type="button"
+                        className="action-btn download-btn"
+                        onClick={() => {
+                          const element = document.createElement('a');
+                          let svgContent = vectorMeta.svgString;
+                          if (!svgContent && outputUrl) {
+                            try {
+                              svgContent = decodeURIComponent(outputUrl.replace(/^data:image\/svg\+xml;(utf8,)?/, ''));
+                            } catch (_) {
+                              svgContent = outputUrl;
+                            }
+                          }
+                          const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+                          element.href = URL.createObjectURL(blob);
+                          element.download = 'VECTORINE_GRAPHIC.svg';
+                          document.body.appendChild(element);
+                          element.click();
+                          document.body.removeChild(element);
+                        }}
+                        style={{
+                          padding: '10px',
+                          background: 'rgba(0, 229, 255, 0.15)',
+                          border: '1px solid #00E5FF',
+                          color: '#00E5FF',
+                          fontSize: '11px',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          borderRadius: '4px',
+                          textAlign: 'center'
+                        }}
+                      >
+                        📥 DOWNLOAD SVG
+                      </button>
+
+                      <button 
+                        type="button"
+                        className="action-btn copy-code-btn"
+                        onClick={() => {
+                          let svgContent = vectorMeta.svgString;
+                          if (!svgContent && outputUrl) {
+                            try {
+                              svgContent = decodeURIComponent(outputUrl.replace(/^data:image\/svg\+xml;(utf8,)?/, ''));
+                            } catch (_) {}
+                          }
+                          if (svgContent) {
+                            navigator.clipboard.writeText(svgContent);
+                            setCopySuccess(true);
+                            setTimeout(() => setCopySuccess(false), 2000);
+                          }
+                        }}
+                        style={{
+                          padding: '10px',
+                          background: 'rgba(0, 255, 102, 0.15)',
+                          border: '1px solid #00FF66',
+                          color: '#00FF66',
+                          fontSize: '11px',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          borderRadius: '4px',
+                          textAlign: 'center'
+                        }}
+                      >
+                        {copySuccess ? '✔️ COPIED' : '📋 COPY SVG XML'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           ) : (
             <div className="lab-workbench-grid">
             
@@ -1415,8 +2221,34 @@ const StudioLab = () => {
                       download={selectedModel === 'logo' ? 'VECTORINE_GRAPHIC.svg' : 'RYNELL_STUDIO_AI_ASSET.png'} 
                       className="action-btn download-btn"
                     >
-                      📥 DOWNLOAD {selectedModel === 'logo' ? 'SVG VECTOR' : 'HIGH-RES ASSET'}
                     </a>
+                  )}
+
+                  {status === 'SUCCESS' && selectedModel === 'logo' && (
+                    <button 
+                      className="action-btn copy-svg-btn"
+                      style={{
+                        background: 'rgba(0, 255, 102, 0.12)',
+                        border: '1px solid #00FF66',
+                        color: '#00FF66',
+                        marginTop: '6px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        padding: '10px 14px'
+                      }}
+                      onClick={() => {
+                        try {
+                          const svgRaw = decodeURIComponent((outputUrl || '').replace(/^data:image\/svg\+xml;(utf8,)?/, ''));
+                          navigator.clipboard.writeText(svgRaw);
+                          alert('SVG Code copied to clipboard!');
+                        } catch (_) {
+                          alert('SVG ready for download.');
+                        }
+                      }}
+                    >
+                      📋 COPY RAW SVG XML CODE
+                    </button>
                   )}
 
                   {status === 'SUCCESS' && selectedModel === 'qwen_edit' && (
@@ -1563,6 +2395,226 @@ const StudioLab = () => {
         .workbench-wrapper {
           width: 100%;
           scroll-margin-top: 85px;
+        }
+
+        .vectorine-workbench-grid {
+          display: grid;
+          grid-template-columns: 1.15fr 0.85fr;
+          gap: 1.5rem;
+          width: 100%;
+        }
+
+        .vectorine-mode-tabs {
+          display: flex;
+          gap: 6px;
+          margin-bottom: 12px;
+          padding: 4px;
+          background: rgba(0, 0, 0, 0.5);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 6px;
+        }
+
+        .vectorine-tab-btn {
+          flex: 1;
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          color: #888;
+          background: transparent;
+          border: none;
+          padding: 8px 10px;
+          border-radius: 4px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .vectorine-tab-btn.active {
+          color: #00E5FF;
+          background: rgba(0, 229, 255, 0.12);
+          border: 1px solid rgba(0, 229, 255, 0.3);
+        }
+
+        .vectorine-zoom-bar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 12px;
+          padding: 8px 12px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 4px;
+        }
+
+        .zoom-controls {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .zoom-btn {
+          background: #1a1a24;
+          border: 1px solid #333;
+          color: #fff;
+          width: 26px;
+          height: 26px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-weight: bold;
+        }
+
+        .zoom-val {
+          font-family: monospace;
+          font-size: 12px;
+          color: #00E5FF;
+          min-width: 42px;
+          text-align: center;
+        }
+
+        .zoom-reset-btn {
+          background: none;
+          border: 1px solid #444;
+          color: #888;
+          font-size: 10px;
+          font-family: monospace;
+          padding: 3px 6px;
+          border-radius: 3px;
+          cursor: pointer;
+        }
+
+        .vectorine-download-btn {
+          background: rgba(0, 229, 255, 0.15);
+          border: 1px solid #00E5FF;
+          color: #00E5FF;
+          font-size: 11px;
+          font-weight: 800;
+          padding: 5px 12px;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+
+        .vectorine-canvas-viewport {
+          height: 680px;
+          max-height: 82vh;
+          background-color: #0b0b12;
+          background-image: conic-gradient(#151522 90deg, #0b0b12 90deg 180deg, #151522 180deg 270deg, #0b0b12 270deg);
+          background-size: 24px 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 6px;
+          overflow: auto;
+        }
+
+        .vectorine-svg-render-area {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          height: 100%;
+          transition: transform 0.2s ease;
+        }
+
+        .native-svg-container {
+          max-width: 90%;
+          max-height: 90%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .native-svg-container svg {
+          max-width: 100%;
+          max-height: 100%;
+          height: auto;
+          width: auto;
+        }
+
+        .vectorine-code-inspector-container {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          background: #05050a;
+        }
+
+        .code-inspector-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 10px 14px;
+          background: #0a0a14;
+          border-bottom: 1px solid #222;
+          font-family: monospace;
+          font-size: 11px;
+          color: #888;
+        }
+
+        .copy-code-btn {
+          background: rgba(0, 255, 102, 0.12);
+          border: 1px solid #00FF66;
+          color: #00FF66;
+          font-size: 11px;
+          font-weight: 700;
+          padding: 4px 10px;
+          border-radius: 3px;
+          cursor: pointer;
+        }
+
+        .vectorine-code-block {
+          flex: 1;
+          margin: 0;
+          padding: 14px;
+          font-family: monospace;
+          font-size: 11px;
+          color: #00E5FF;
+          overflow: auto;
+          white-space: pre-wrap;
+          word-break: break-all;
+          line-height: 1.5;
+        }
+
+        .vectorine-stats-footer {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 8px;
+          margin-top: 12px;
+          padding: 10px 14px;
+          background: rgba(0, 0, 0, 0.5);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 6px;
+        }
+
+        .stat-item {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .stat-label {
+          font-size: 9px;
+          font-family: monospace;
+          color: #777;
+          letter-spacing: 0.05em;
+        }
+
+        .stat-val {
+          font-size: 12px;
+          font-weight: 800;
+          font-family: monospace;
+          color: var(--primary-orange);
+        }
+
+        .vectorine-cyan-dropzone:hover {
+          border-color: #00E5FF !important;
+          box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
+        }
+
+        @media (max-width: 992px) {
+          .vectorine-workbench-grid {
+            grid-template-columns: 1fr;
+          }
         }
 
         .upscale-engine-picker {
