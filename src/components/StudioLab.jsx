@@ -91,6 +91,74 @@ const StudioLab = () => {
   const [prioritizeText, setPrioritizeText] = useState(false);
   const [showTextGuide, setShowTextGuide] = useState(false);
 
+  const [history, setHistory] = useState(() => {
+    try {
+      const userKey = user ? (user.email || user.id || 'registered') : 'guest';
+      const raw = localStorage.getItem(`rynell_studio_asset_library_${userKey}`);
+      if (raw) return JSON.parse(raw);
+    } catch (_) {}
+    return [];
+  });
+
+  useEffect(() => {
+    try {
+      const userKey = user ? (user.email || user.id || 'registered') : 'guest';
+      const raw = localStorage.getItem(`rynell_studio_asset_library_${userKey}`);
+      if (raw) setHistory(JSON.parse(raw));
+      else setHistory([]);
+    } catch (_) {}
+  }, [user]);
+
+  const saveToHistory = (outputAssetUrl, modelKey = selectedModel, promptText = qwenPrompt, previewSourceUrl = previewUrl) => {
+    if (!outputAssetUrl) return;
+    const userKey = user ? (user.email || user.id || 'registered') : 'guest';
+    const isTextMode = (/"[^"]+"/.test(promptText) || prioritizeText);
+    const modelTitle = modelKey === 'logo' ? 'Vectorine SVG' : (modelKey === 'upscale' ? `4K ${upscaleEngine.toUpperCase()}` : (isTextMode ? 'FLUX.1 / Phoenix' : 'AI Studio'));
+    const newItem = {
+      id: `asset_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      timestamp: new Date().toISOString(),
+      formattedDate: new Date().toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      modelType: modelKey,
+      modelTitle: modelTitle,
+      prompt: promptText || 'Studio AI Asset',
+      outputUrl: outputAssetUrl,
+      previewUrl: previewSourceUrl || outputAssetUrl
+    };
+
+    setHistory((prev) => {
+      const filtered = prev.filter(item => item.outputUrl !== outputAssetUrl);
+      const updated = [newItem, ...filtered].slice(0, 50);
+      try {
+        localStorage.setItem(`rynell_studio_asset_library_${userKey}`, JSON.stringify(updated));
+      } catch (_) {}
+      return updated;
+    });
+  };
+
+  const deleteFromHistory = (itemId) => {
+    const userKey = user ? (user.email || user.id || 'registered') : 'guest';
+    setHistory((prev) => {
+      const updated = prev.filter(item => item.id !== itemId);
+      try {
+        localStorage.setItem(`rynell_studio_asset_library_${userKey}`, JSON.stringify(updated));
+      } catch (_) {}
+      return updated;
+    });
+  };
+
+  const handleSetOutputUrl = (url, modelKey = selectedModel, promptText = qwenPrompt, previewSource = previewUrl) => {
+    setOutputUrl(url);
+    if (url) {
+      saveToHistory(url, modelKey, promptText, previewSource);
+    }
+  };
+
   const handleFileDrop = (e) => {
     e.preventDefault();
     const droppedFile = e.dataTransfer ? (e.dataTransfer.files ? e.dataTransfer.files[0] : null) : (e.target.files ? e.target.files[0] : null);
@@ -394,13 +462,14 @@ const StudioLab = () => {
           if (selectedModel === 'qwen_edit') {
             const sourceImg = previewUrl || heroClean;
             const editedUrl = await generateQwenEditedImage(sourceImg, qwenPrompt, refPreviewUrl, null);
-            setOutputUrl(editedUrl);
+            handleSetOutputUrl(editedUrl, 'qwen_edit', qwenPrompt, sourceImg);
           } else if (selectedModel === 'upscale') {
             const sourceImg = previewUrl || refPreviewUrl || heroClean;
             const upscaledUrl = await generateUpscaled4KImage(sourceImg, upscaleEngine, 4);
-            setOutputUrl(upscaledUrl);
+            handleSetOutputUrl(upscaledUrl, 'upscale', qwenPrompt, sourceImg);
           } else {
-            setOutputUrl(previewUrl || refPreviewUrl || heroClean);
+            const sourceImg = previewUrl || refPreviewUrl || heroClean;
+            handleSetOutputUrl(sourceImg, selectedModel, qwenPrompt, sourceImg);
           }
         }, 2200);
 
@@ -495,7 +564,7 @@ const StudioLab = () => {
             setStatus('SUCCESS');
             deductQuota(selectedModel);
             setStatusMessage(`PROCESS COMPLETE: 4K ${upscaleEngine === 'pruna' ? 'PRUNA AI' : 'REAL-ESRGAN'} READY.`);
-            setOutputUrl(upscaled);
+            handleSetOutputUrl(upscaled, 'upscale', qwenPrompt, rawImage);
           }, 1400);
         }, 800);
         return;
@@ -542,7 +611,7 @@ const StudioLab = () => {
         setStatus('SUCCESS');
         deductQuota(selectedModel);
         setStatusMessage(`PROCESS COMPLETE: ${activeModelConfig.title} READY.`);
-        setOutputUrl(processData.outputUrl);
+        handleSetOutputUrl(processData.outputUrl, selectedModel, qwenPrompt, rawImage);
         return;
       }
 
@@ -570,9 +639,9 @@ const StudioLab = () => {
             setStatusMessage(`PROCESS COMPLETE: ${activeModelConfig.title} READY.`);
             
             if (statusData.outputUrl) {
-              setOutputUrl(statusData.outputUrl);
+              handleSetOutputUrl(statusData.outputUrl, selectedModel, qwenPrompt, rawImage);
             } else {
-              setOutputUrl(rawImage);
+              handleSetOutputUrl(rawImage, selectedModel, qwenPrompt, rawImage);
             }
           } else if (statusData.status === 'failed') {
             clearInterval(pollInterval);
@@ -729,8 +798,238 @@ const StudioLab = () => {
         {/* Workbench Wrapper with explicit anchor ID */}
         <div id="studio-workbench" className="workbench-wrapper">
 
-          {/* Workbench Grid */}
-          <div className="lab-workbench-grid">
+          {/* Workbench Grid / Asset Library View */}
+          {selectedModel === 'history' ? (
+            <div className="asset-library-container" style={{
+              width: '100%',
+              background: '#08080C',
+              border: '3px solid #1A1A24',
+              padding: '2rem',
+              boxShadow: '6px 6px 0 #000'
+            }}>
+              {!isRegistered && !isAdmin && !isPremiumUser ? (
+                /* Locked State for Guest Users */
+                <div className="locked-library-card" style={{
+                  textAlign: 'center',
+                  padding: '4rem 1.5rem',
+                  background: 'rgba(255, 51, 102, 0.03)',
+                  border: '2px dashed #FF3366',
+                  borderRadius: '6px'
+                }}>
+                  <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>🔒</div>
+                  <h3 style={{ fontFamily: 'var(--font-heading)', color: '#FFF', fontSize: '1.8rem', letterSpacing: '1px', marginBottom: '0.8rem' }}>
+                    MEMBER ASSET LIBRARY & RENDER HISTORY IS LOCKED
+                  </h3>
+                  <p style={{ color: '#AAA', maxWidth: '560px', margin: '0 auto 1.8rem', fontSize: '1rem', lineHeight: '1.6' }}>
+                    Render History & Asset Library is exclusive to registered members. Register a free account to automatically save all your generated assets, prompts, SVG vectors, and high-res downloads!
+                  </p>
+                  <button 
+                    type="button" 
+                    onClick={openRegister}
+                    style={{
+                      background: 'var(--primary-orange)',
+                      color: '#FFF',
+                      border: '2px solid #000',
+                      boxShadow: '4px 4px 0 #000',
+                      fontFamily: 'var(--font-heading)',
+                      fontSize: '1.1rem',
+                      padding: '0.9rem 2.2rem',
+                      cursor: 'pointer',
+                      letterSpacing: '1px'
+                    }}
+                  >
+                    🎁 REGISTER FREE ACCOUNT TO UNLOCK LIBRARY →
+                  </button>
+                </div>
+              ) : history.length === 0 ? (
+                /* Empty State for Registered Users */
+                <div className="empty-library-card" style={{
+                  textAlign: 'center',
+                  padding: '4rem 1.5rem',
+                  background: '#0D0D14',
+                  border: '2px dashed #333'
+                }}>
+                  <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🖼️</div>
+                  <h4 style={{ fontFamily: 'var(--font-heading)', color: '#FFF', fontSize: '1.5rem', marginBottom: '0.5rem' }}>
+                    NO SAVED RENDERS YET
+                  </h4>
+                  <p style={{ color: '#888', maxWidth: '400px', margin: '0 auto 1.5rem', fontSize: '0.95rem' }}>
+                    Your generated images, 4K upscales, and SVG vectorizations will automatically appear here.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedModel('qwen_edit')}
+                    style={{
+                      background: 'transparent',
+                      color: 'var(--primary-orange)',
+                      border: '2px solid var(--primary-orange)',
+                      fontFamily: 'var(--font-heading)',
+                      padding: '0.6rem 1.5rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ✨ START GENERATING NOW →
+                  </button>
+                </div>
+              ) : (
+                /* Saved Assets Grid */
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem', borderBottom: '1px solid #222', paddingBottom: '1rem' }}>
+                    <div>
+                      <h3 style={{ fontFamily: 'var(--font-heading)', color: '#FFF', fontSize: '1.6rem', letterSpacing: '1px', margin: 0 }}>
+                        📜 MY SAVED AI ASSET LIBRARY ({history.length})
+                      </h3>
+                      <span style={{ fontSize: '0.8rem', color: '#888', fontFamily: 'monospace' }}>
+                        REGISTERED MEMBER STORAGE // PERMANENT ACCESS
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to clear your saved asset history?')) {
+                          const userKey = user ? (user.email || user.id || 'registered') : 'guest';
+                          setHistory([]);
+                          localStorage.removeItem(`rynell_studio_asset_library_${userKey}`);
+                        }
+                      }}
+                      style={{
+                        background: 'transparent',
+                        border: '1px solid #ff4d6d',
+                        color: '#ff4d6d',
+                        fontSize: '0.8rem',
+                        fontFamily: 'monospace',
+                        padding: '0.4rem 0.8rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      🗑️ CLEAR ENTIRE LIBRARY
+                    </button>
+                  </div>
+
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                    gap: '1.5rem'
+                  }}>
+                    {history.map((item) => (
+                      <div key={item.id} style={{
+                        background: '#111118',
+                        border: '2px solid #222230',
+                        borderRadius: '4px',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column'
+                      }}>
+                        {/* Image Preview Thumbnail */}
+                        <div style={{ position: 'relative', width: '100%', height: '260px', background: '#000', overflow: 'hidden' }}>
+                          <img src={item.outputUrl} alt="Saved Asset" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                          <span style={{
+                            position: 'absolute',
+                            top: '10px',
+                            left: '10px',
+                            background: 'var(--primary-orange)',
+                            color: '#FFF',
+                            fontSize: '0.7rem',
+                            fontFamily: 'var(--font-heading)',
+                            padding: '2px 8px',
+                            letterSpacing: '1px',
+                            boxShadow: '2px 2px 0 #000'
+                          }}>
+                            {item.modelTitle}
+                          </span>
+                          <span style={{
+                            position: 'absolute',
+                            bottom: '10px',
+                            right: '10px',
+                            background: 'rgba(0,0,0,0.85)',
+                            color: '#AAA',
+                            fontSize: '0.65rem',
+                            fontFamily: 'monospace',
+                            padding: '2px 6px'
+                          }}>
+                            {item.formattedDate}
+                          </span>
+                        </div>
+
+                        {/* Asset Meta Info & Prompt */}
+                        <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', flex: 1, gap: '0.8rem' }}>
+                          <div style={{ fontSize: '0.8rem', color: '#DDD', fontFamily: 'monospace', background: 'rgba(255,255,255,0.03)', padding: '8px', borderLeft: '3px solid var(--primary-orange)', minHeight: '54px', wordBreak: 'break-word' }}>
+                            "{item.prompt}"
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
+                            <a
+                              href={item.outputUrl}
+                              download={item.modelType === 'logo' ? `VECTORINE_${item.id}.svg` : `RYNELL_AI_${item.id}.png`}
+                              style={{
+                                flex: 1,
+                                textAlign: 'center',
+                                background: 'var(--primary-orange)',
+                                color: '#FFF',
+                                border: '1px solid #000',
+                                boxShadow: '2px 2px 0 #000',
+                                fontFamily: 'var(--font-heading)',
+                                fontSize: '0.8rem',
+                                padding: '0.6rem 0.4rem',
+                                textDecoration: 'none',
+                                letterSpacing: '0.5px'
+                              }}
+                            >
+                              📥 DOWNLOAD
+                            </a>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedModel(item.modelType);
+                                setQwenPrompt(item.prompt);
+                                if (item.previewUrl) {
+                                  setPreviewUrl(item.previewUrl);
+                                }
+                                setOutputUrl(item.outputUrl);
+                                setStatus('SUCCESS');
+                                document.getElementById('studio-workbench')?.scrollIntoView({ behavior: 'smooth' });
+                              }}
+                              style={{
+                                background: 'rgba(0, 229, 255, 0.1)',
+                                border: '1px solid #00E5FF',
+                                color: '#00E5FF',
+                                fontFamily: 'var(--font-heading)',
+                                fontSize: '0.8rem',
+                                padding: '0.6rem 0.8rem',
+                                cursor: 'pointer'
+                              }}
+                              title="Load into Workbench"
+                            >
+                              ⚡ WORKBENCH
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => deleteFromHistory(item.id)}
+                              style={{
+                                background: 'transparent',
+                                border: '1px solid #ff4d6d',
+                                color: '#ff4d6d',
+                                fontSize: '0.9rem',
+                                padding: '0.6rem 0.6rem',
+                                cursor: 'pointer'
+                              }}
+                              title="Delete Asset"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="lab-workbench-grid">
             
             {/* Left Controls & File Upload Area */}
             <div className="lab-control-panel">
@@ -1184,7 +1483,8 @@ const StudioLab = () => {
               )}
             </div>
 
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Deluxe Upgrade CTA Banner */}

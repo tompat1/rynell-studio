@@ -43,6 +43,14 @@ export const STUDIO_MODES = [
       'High-contrast monochrome vector',
       'Geometric vector contours'
     ]
+  },
+  {
+    id: 'history',
+    icon: '📜',
+    title: 'ASSET LIBRARY',
+    subtitle: 'SAVED RENDERS & HISTORY',
+    desc: 'View, re-download, and reload all your saved AI generations (registered members only).',
+    isPaid: false
   }
 ];
 
@@ -55,12 +63,19 @@ const StudioModelSelector = ({
   onModelChange, 
   isPremiumUser, 
   isAdmin,
+  isRegistered = false,
   onOpenUpgrade,
   usage = { imageStudioRendersLeft: 5, upscalerTrialsLeft: 1, vectorineTrialsLeft: 1 }
 }) => {
   const getModeStatus = (modeId) => {
     if (isAdmin) return { isLocked: false, tag: '👑 ADMIN UNLIMITED', type: 'admin' };
     if (isPremiumUser) return { isLocked: false, tag: 'PRO UNLIMITED', type: 'pro' };
+
+    if (modeId === 'history') {
+      return isRegistered || isAdmin || isPremiumUser
+        ? { isLocked: false, tag: 'SAVED RENDERS', type: 'pro' }
+        : { isLocked: false, tag: 'MEMBERS ONLY 🔒', type: 'locked' };
+    }
 
     if (modeId === 'qwen_edit') {
       const left = usage.imageStudioRendersLeft ?? 5;
@@ -236,7 +251,7 @@ const StudioModelSelector = ({
 
         .mode-capsule-bar {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: repeat(4, 1fr);
           gap: 1rem;
         }
 
