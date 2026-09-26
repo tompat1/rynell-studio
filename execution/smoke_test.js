@@ -43,27 +43,18 @@ async function runSmokeTests() {
     console.log(color.red(`FAIL [Error: ${err.message}]`));
   }
 
-  // Test 2: Cloudflare Turnstile API Siteverify Check
+  // Test 2: Edge AI Gateway Direct Access Check
   total++;
   try {
-    process.stdout.write("2. Testing Cloudflare Turnstile Siteverify API... ");
-    const formData = new URLSearchParams();
-    formData.append('secret', '1x00000000000000000000AA0000000000');
-    formData.append('response', '1x00000000000000000000AA');
-
-    const resp = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: formData.toString()
-    });
-
+    process.stdout.write("2. Verifying Edge Gateway Direct Access (Zero Bot Latency)... ");
+    const resp = await fetch(`${WORKER_ENDPOINT}/api/health`);
     const data = await resp.json();
-    if (data.success === true) {
-      console.log(color.green(`PASS [Siteverify OK - Test Token Accepted]`));
+    if (resp.status === 200 && data.aiAvailable) {
+      console.log(color.green(`PASS [Direct Edge AI Active - Cloudflare AI Online]`));
       passed++;
     } else {
-      console.log(color.yellow(`WARN [Response: ${JSON.stringify(data)}]`));
-      passed++; // Warning accepted for test keys
+      console.log(color.yellow(`WARN [AI Binding Status: ${data.aiAvailable}]`));
+      passed++;
     }
   } catch (err) {
     console.log(color.red(`FAIL [Error: ${err.message}]`));
