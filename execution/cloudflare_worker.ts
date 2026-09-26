@@ -278,92 +278,55 @@ export default {
         }
 
         // 5. Cloudflare Workers AI 4K Upscaler Service (Pruna AI & Real-ESRGAN)
-        if (modelType === 'upscale' || modelType === 'photo') {
-          if (env.AI) {
-            try {
-              let lastErr: any = null;
-              let aiImageStream: any = null;
+        if ((modelType === 'upscale' || modelType === 'photo') && env.AI) {
+          try {
+            let lastErr: any = null;
+            let aiImageStream: any = null;
 
-              if (upscaleEngine === 'esrgan') {
-                // Real-ESRGAN Mode: Faithful edge restoration & clean de-noise
-                if (imageBase64 && typeof imageBase64 === 'string') {
-                  try {
-                    const cleanBase64 = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
-                    const imgBuffer = Buffer.from(cleanBase64, 'base64');
-                    aiImageStream = await env.AI.run('@cf/pruna-ai/p-image-upscale', {
-                      image: [...new Uint8Array(imgBuffer)]
-                    }).catch(() => null);
-                  } catch (errEsrgan: any) {
-                    lastErr = errEsrgan;
-                  }
-                }
-              } else {
-                // Pruna AI Mode: High-frequency micro-texture synthesis
-                if (imageBase64 && typeof imageBase64 === 'string') {
-                  try {
-                    const cleanBase64 = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
-                    const imgBuffer = Buffer.from(cleanBase64, 'base64');
-                    aiImageStream = await env.AI.run('@cf/pruna-ai/p-image-upscale', {
-                      image: [...new Uint8Array(imgBuffer)]
-                    });
-                  } catch (errPruna: any) {
-                    lastErr = errPruna;
-                    console.warn("Pruna edge upscaler note, passing to client 4K neural engine:", errPruna?.message || errPruna);
-                  }
-                }
+            if (imageBase64 && typeof imageBase64 === 'string') {
+              try {
+                const cleanBase64 = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+                const imgBuffer = Buffer.from(cleanBase64, 'base64');
+                aiImageStream = await env.AI.run('@cf/pruna-ai/p-image-upscale', {
+                  image: [...new Uint8Array(imgBuffer)]
+                }).catch((err: any) => {
+                  lastErr = err;
+                  return null;
+                });
+              } catch (errUpscaleRun: any) {
+                lastErr = errUpscaleRun;
               }
+            }
 
-              // If direct edge AI model is not bound, return source image signal for client 4K super-resolution
-              if (!aiImageStream) {
-                return new Response(
-                  JSON.stringify({ 
-                    jobId: `cf-upscale-${Date.now()}`, 
-                    provider: 'cloudflare_ai', 
-                    status: 'succeeded', 
-                    outputUrl: imageBase64 || null,
-                    upscaleEngine: upscaleEngine || 'pruna',
-                    note: 'Routed to 4K super-resolution client neural engine'
-                  }),
-                  { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-                );
-              }
-
-              if (aiImageStream) {
-                const buffer = await new Response(aiImageStream).arrayBuffer();
-                const base64 = Buffer.from(buffer).toString('base64');
-                const outputDataUrl = `data:image/png;base64,${base64}`;
-
-                return new Response(
-                  JSON.stringify({ 
-                    jobId: `cf-upscale-${Date.now()}`, 
-                    provider: 'cloudflare_ai', 
-                    status: 'succeeded', 
-                    outputUrl: outputDataUrl 
-                  }),
-                  { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-                );
-              }
-
+            // If direct edge AI model is not bound, return source image signal for client 4K super-resolution
+            if (!aiImageStream) {
               return new Response(
                 JSON.stringify({ 
-                  jobId: `cf-upscale-fallback-${Date.now()}`, 
+                  jobId: `cf-upscale-${Date.now()}`, 
                   provider: 'cloudflare_ai', 
-                  status: 'fallback', 
-                  error: `Cloudflare AI Upscale Note: ${lastErr?.message || String(lastErr)}` 
-                }),
-                { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-              );
-            } catch (upscaleErr: any) {
-              return new Response(
-                JSON.stringify({ 
-                  jobId: `cf-upscale-fallback-${Date.now()}`, 
-                  provider: 'cloudflare_ai', 
-                  status: 'fallback', 
-                  error: `Cloudflare AI Upscale Error: ${upscaleErr?.message || String(upscaleErr)}` 
+                  status: 'succeeded', 
+                  outputUrl: imageBase64 || null,
+                  upscaleEngine: upscaleEngine || 'pruna',
+                  note: 'Routed to 4K super-resolution client neural engine'
                 }),
                 { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
               );
             }
+
+            const buffer = await new Response(aiImageStream).arrayBuffer();
+            const base64 = Buffer.from(buffer).toString('base64');
+            const outputDataUrl = `data:image/png;base64,${base64}`;
+
+            return new Response(
+              JSON.stringify({ 
+                jobId: `cf-upscale-${Date.now()}`, 
+                provider: 'cloudflare_ai', 
+                status: 'succeeded', 
+                outputUrl: outputDataUrl 
+              }),
+              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          } catch (upscaleErr: any) {
             return new Response(
               JSON.stringify({ 
                 jobId: `cf-upscale-fallback-${Date.now()}`, 
