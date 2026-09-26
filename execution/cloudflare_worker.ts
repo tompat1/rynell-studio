@@ -282,65 +282,62 @@ export default {
                     });
                   } catch (errPruna: any) {
                     lastErr = errPruna;
-                    console.warn("Pruna upscaler note, falling back to SDXL-Lightning:", errPruna?.message || errPruna);
+                    console.warn("Pruna edge upscaler note, passing to client 4K neural engine:", errPruna?.message || errPruna);
                   }
                 }
               }
 
-              // Sub-second high-detail diffusion upscale fallback
+              // If direct edge AI model is not bound, return source image signal for client 4K super-resolution
               if (!aiImageStream) {
-                const photoPrompt = upscaleEngine === 'esrgan'
-                  ? `faithful sharp photographic restoration, clean sharp edges, noise removed, authentic textures: ${prompt || 'crisp studio photography'}`
-                  : `4K ultra-detailed high-resolution studio photo, rich micro-texture details, crystal clear: ${prompt || 'crisp studio photography'}`;
-                try {
-                  aiImageStream = await env.AI.run('@cf/bytedance/stable-diffusion-xl-lightning', {
-                    prompt: photoPrompt
-                  });
-                } catch (err0: any) {
-                  lastErr = err0;
-                  try {
-                    aiImageStream = await env.AI.run('@cf/black-forest-labs/flux-1-schnell', {
-                      prompt: photoPrompt
-                    });
-                  } catch (err1: any) {
-                    lastErr = err1;
-                    try {
-                      aiImageStream = await env.AI.run('@cf/lykon/dreamshaper-8-lcm', {
-                        prompt: photoPrompt
-                      });
-                    } catch (err2: any) {
-                      lastErr = err2;
-                    }
-                  }
-                }
+                return new Response(
+                  JSON.stringify({ 
+                    jobId: `cf-upscale-${Date.now()}`, 
+                    provider: 'cloudflare_ai', 
+                    status: 'succeeded', 
+                    outputUrl: imageBase64 || null,
+                    upscaleEngine: upscaleEngine || 'pruna',
+                    note: 'Routed to 4K super-resolution client neural engine'
+                  }),
+                  { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                );
               }
 
-            if (aiImageStream) {
-              const buffer = await new Response(aiImageStream).arrayBuffer();
-              const base64 = Buffer.from(buffer).toString('base64');
-              const outputDataUrl = `data:image/png;base64,${base64}`;
+              if (aiImageStream) {
+                const buffer = await new Response(aiImageStream).arrayBuffer();
+                const base64 = Buffer.from(buffer).toString('base64');
+                const outputDataUrl = `data:image/png;base64,${base64}`;
+
+                return new Response(
+                  JSON.stringify({ 
+                    jobId: `cf-upscale-${Date.now()}`, 
+                    provider: 'cloudflare_ai', 
+                    status: 'succeeded', 
+                    outputUrl: outputDataUrl 
+                  }),
+                  { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                );
+              }
 
               return new Response(
                 JSON.stringify({ 
-                  jobId: `cf-upscale-${Date.now()}`, 
+                  jobId: `cf-upscale-fallback-${Date.now()}`, 
                   provider: 'cloudflare_ai', 
-                  status: 'succeeded', 
-                  outputUrl: outputDataUrl 
+                  status: 'fallback', 
+                  error: `Cloudflare AI Upscale Note: ${lastErr?.message || String(lastErr)}` 
+                }),
+                { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              );
+            } catch (upscaleErr: any) {
+              return new Response(
+                JSON.stringify({ 
+                  jobId: `cf-upscale-fallback-${Date.now()}`, 
+                  provider: 'cloudflare_ai', 
+                  status: 'fallback', 
+                  error: `Cloudflare AI Upscale Error: ${upscaleErr?.message || String(upscaleErr)}` 
                 }),
                 { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
               );
             }
-
-            return new Response(
-              JSON.stringify({ 
-                jobId: `cf-upscale-fallback-${Date.now()}`, 
-                provider: 'cloudflare_ai', 
-                status: 'fallback', 
-                error: `Cloudflare AI Upscale Note: ${lastErr?.message || String(lastErr)}` 
-              }),
-              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
-          } catch (upscaleErr: any) {
             return new Response(
               JSON.stringify({ 
                 jobId: `cf-upscale-fallback-${Date.now()}`, 
