@@ -100,75 +100,17 @@ const StudioLab = () => {
           }
         }
 
-        // 3. AI Generated Asset Compositing or Filter Layer
+        // 3. AI Neural Style & Palette Blending
         const lowerPrompt = (prompt || '').toLowerCase();
-        const isAdditive = lowerPrompt.includes('add') || lowerPrompt.includes('hat') || lowerPrompt.includes('glasses') || lowerPrompt.includes('wear') || lowerPrompt.includes('crown') || lowerPrompt.includes('cap') || lowerPrompt.includes('suit');
 
         if (aiAssetUrl && aiAssetUrl !== imageSrc) {
           const aiImg = await loadImage(aiAssetUrl);
           if (aiImg) {
-            if (isAdditive && (lowerPrompt.includes('hat') || lowerPrompt.includes('top-hat') || lowerPrompt.includes('cap') || lowerPrompt.includes('crown') || lowerPrompt.includes('beanie'))) {
-              // Isolate accessory from solid/light background
-              const assetCanvas = document.createElement('canvas');
-              const assetCtx = assetCanvas.getContext('2d');
-              assetCanvas.width = aiImg.naturalWidth || aiImg.width;
-              assetCanvas.height = aiImg.naturalHeight || aiImg.height;
-              assetCtx.drawImage(aiImg, 0, 0);
-
-              const aData = assetCtx.getImageData(0, 0, assetCanvas.width, assetCanvas.height);
-              const ad = aData.data;
-              const bgR = ad[0], bgG = ad[1], bgB = ad[2];
-              for (let i = 0; i < ad.length; i += 4) {
-                const diff = Math.abs(ad[i] - bgR) + Math.abs(ad[i+1] - bgG) + Math.abs(ad[i+2] - bgB);
-                if (diff < 60) {
-                  ad[i + 3] = 0; // Alpha key background
-                }
-              }
-              assetCtx.putImageData(aData, 0, 0);
-
-              // Position hat onto upper head area of source portrait
-              const hatWidth = canvas.width * 0.54;
-              const hatHeight = hatWidth * (assetCanvas.height / assetCanvas.width);
-              const hatX = (canvas.width - hatWidth) / 2;
-              const hatY = Math.max(0, canvas.height * 0.03);
-
-              // Contact drop shadow
-              ctx.shadowColor = 'rgba(0,0,0,0.6)';
-              ctx.shadowBlur = 18;
-              ctx.shadowOffsetY = 10;
-              ctx.drawImage(assetCanvas, hatX, hatY, hatWidth, hatHeight);
-              ctx.shadowColor = 'transparent';
-            } else if (isAdditive && (lowerPrompt.includes('glasses') || lowerPrompt.includes('sunglasses'))) {
-              const glassCanvas = document.createElement('canvas');
-              const gCtx = glassCanvas.getContext('2d');
-              glassCanvas.width = aiImg.naturalWidth;
-              glassCanvas.height = aiImg.naturalHeight;
-              gCtx.drawImage(aiImg, 0, 0);
-
-              const gData = gCtx.getImageData(0, 0, glassCanvas.width, glassCanvas.height);
-              const gd = gData.data;
-              const bgR = gd[0], bgG = gd[1], bgB = gd[2];
-              for (let i = 0; i < gd.length; i += 4) {
-                if (Math.abs(gd[i] - bgR) + Math.abs(gd[i+1] - bgG) + Math.abs(gd[i+2] - bgB) < 60) {
-                  gd[i+3] = 0;
-                }
-              }
-              gCtx.putImageData(gData, 0, 0);
-
-              const gW = canvas.width * 0.44;
-              const gH = gW * (glassCanvas.height / glassCanvas.width);
-              const gX = (canvas.width - gW) / 2;
-              const gY = canvas.height * 0.32;
-              ctx.drawImage(glassCanvas, gX, gY, gW, gH);
-            } else {
-              // General style blending: Blend AI texture while preserving subject facial contours
-              ctx.globalAlpha = 0.65;
-              ctx.drawImage(aiImg, 0, 0, canvas.width, canvas.height);
-              ctx.globalAlpha = 1.0;
-            }
+            // Draw AI output directly on the canvas to present the true AI generation
+            ctx.drawImage(aiImg, 0, 0, canvas.width, canvas.height);
           }
         } else {
-          // Edge matrix filter when no external asset URL
+          // Edge matrix filter when no external asset URL (Simulation Fallback Mode)
           const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
           const d = imgData.data;
           if (lowerPrompt.includes('orange') || lowerPrompt.includes('tangerine')) {
@@ -288,8 +230,8 @@ const StudioLab = () => {
       setStatus('UPLOADING');
       setStatusMessage('UPLOADING FILE TO CLOUDFLARE R2 STORAGE (0 KB EGRESS)...');
 
-      // Optimize image payload size to 512px for edge AI processing
-      const activeImage = await compressImageForAI(rawImage, 512);
+      // Optimize image payload size to 1024px for edge AI processing
+      const activeImage = await compressImageForAI(rawImage, 1024);
 
       // Dispatch live HTTP POST request directly to Cloudflare Worker Edge API
       const processResp = await fetch(`${WORKER_ENDPOINT}/api/process`, {
@@ -317,12 +259,7 @@ const StudioLab = () => {
       if (processData.outputUrl) {
         setStatus('SUCCESS');
         setStatusMessage(selectedModel === 'qwen_edit' ? 'PROCESS COMPLETE: CLOUDFLARE WORKERS AI EDIT READY.' : 'PROCESS COMPLETE: 8K ULTRA RENDER READY.');
-        if (selectedModel === 'qwen_edit') {
-          const finalResult = await generateQwenEditedImage(rawImage, qwenPrompt, refPreviewUrl, processData.outputUrl);
-          setOutputUrl(finalResult);
-        } else {
-          setOutputUrl(processData.outputUrl);
-        }
+        setOutputUrl(processData.outputUrl);
         return;
       }
 
@@ -350,10 +287,7 @@ const StudioLab = () => {
             setStatus('SUCCESS');
             setStatusMessage(selectedModel === 'qwen_edit' ? 'PROCESS COMPLETE: FREE QWEN AI EDIT READY.' : 'PROCESS COMPLETE: 8K ULTRA RENDER READY.');
             
-            if (selectedModel === 'qwen_edit') {
-              const finalResult = await generateQwenEditedImage(rawImage, qwenPrompt, refPreviewUrl, statusData.outputUrl || null);
-              setOutputUrl(finalResult);
-            } else if (statusData.outputUrl) {
+            if (statusData.outputUrl) {
               setOutputUrl(statusData.outputUrl);
             } else {
               setOutputUrl(rawImage);

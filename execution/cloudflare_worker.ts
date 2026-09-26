@@ -72,24 +72,89 @@ export default {
         // 2. Construct public/signed R2 source image URL
         const imageUrl = `${env.PUBLIC_R2_URL || 'https://storage.rynell.org'}/${imageR2Key}`;
 
-        // 3. Image Generation & Edit Routing (FLUX.2 Klein 4B, FLUX.1 Schnell & SDXL Lightning)
+        // 3. Image Generation & Edit Routing
         if (modelType === 'qwen_edit' || modelType === 'art') {
+          let userPrompt = prompt || 'high quality studio asset, detailed, masterpiece, clean background, 8k resolution';
+          const originalInstruction = prompt ? prompt.trim() : 'add a top-hat';
+
+          // Tier 0: Replicate InstructPix2Pix (True natural-language image editing preserving likeness and background)
+          if (imageBase64 && typeof imageBase64 === 'string' && env.REPLICATE_API_TOKEN) {
+            try {
+              let editPrompt = originalInstruction;
+              if (refImageBase64 && typeof refImageBase64 === 'string') {
+                editPrompt += ', matching reference image aesthetic and style';
+              }
+
+              // Normalize base64 data URI if needed
+              const formattedImage = imageBase64.startsWith('data:') 
+                ? imageBase64 
+                : `data:image/jpeg;base64,${imageBase64}`;
+
+              const repResp = await fetch('https://api.replicate.com/v1/predictions', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${env.REPLICATE_API_TOKEN}`,
+                  'Content-Type': 'application/json',
+                  'Prefer': 'wait'
+                },
+                body: JSON.stringify({
+                  version: '30c1d0b916a6f8efce20493f5d61ee27491ab2a60437c13c588468b9810f23f3',
+                  input: {
+                    image: formattedImage,
+                    prompt: editPrompt,
+                    num_inference_steps: 30,
+                    image_guidance_scale: 1.5,
+                    guidance_scale: 7.5
+                  }
+                })
+              });
+
+              const repData = (await repResp.json()) as any;
+              
+              if (repData) {
+                if (repData.status === 'succeeded' && repData.output) {
+                  const finalUrl = Array.isArray(repData.output) ? repData.output[0] : repData.output;
+                  return new Response(
+                    JSON.stringify({ 
+                      jobId: repData.id || `rep-${Date.now()}`, 
+                      provider: 'replicate', 
+                      status: 'succeeded', 
+                      outputUrl: finalUrl 
+                    }),
+                    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                  );
+                } else if (repData.id && (repData.status === 'starting' || repData.status === 'processing')) {
+                  return new Response(
+                    JSON.stringify({ 
+                      jobId: repData.id, 
+                      provider: 'replicate', 
+                      status: repData.status 
+                    }),
+                    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                  );
+                } else if (repData.error) {
+                  console.warn("Replicate API notice, falling back to edge models:", repData.error);
+                }
+              }
+            } catch (errRep: any) {
+              console.warn("Replicate InstructPix2Pix note:", errRep?.message || errRep);
+            }
+          }
+
           if (env.AI) {
-            let userPrompt = prompt || 'high quality studio asset, detailed, masterpiece, clean background, 8k resolution';
-            
-            // Contextual prompt synthesis for accessories and reference styling
+            // Contextual prompt synthesis for portrait image generation
             if (userPrompt.toLowerCase().startsWith('add ') || userPrompt.toLowerCase().includes('wear')) {
-              const item = userPrompt.replace(/^add (a|an)?\s*/i, '');
-              userPrompt = `isolated ${item}, clean neutral background, detailed studio asset, photorealistic, sharp focus, 8k masterpiece`;
+              const item = userPrompt.replace(/^add (a|an)?\s*/i, '').trim();
+              userPrompt = `Realistic portrait photo of the person naturally wearing a stylish ${item} on their head, perfect fit, coherent realistic lighting and shadows, 8k masterpiece portrait`;
             }
             if (refImageBase64 && typeof refImageBase64 === 'string') {
-              userPrompt += `, matching artistic style, color palette, and textures of the reference image`;
+              userPrompt += `, matching artistic style, color grading, and aesthetic of the reference image`;
             }
 
             let aiImageStream: any = null;
             let lastErr: any = null;
 
-            // Tier 0: FLUX.2 [klein] 4B (Image-to-Image / Reference-guided editing with input_image_0 & input_image_1)
+            // Tier 1: FLUX.2 [klein] 4B (Native Image-to-Image / Multi-Image Editing)
             if (imageBase64 && typeof imageBase64 === 'string') {
               try {
                 const formData = new FormData();
@@ -97,12 +162,14 @@ export default {
                 formData.append('width', '1024');
                 formData.append('height', '1024');
 
-                const sourceBytes = getImageBytes(imageBase64);
-                formData.append('input_image_0', new Blob([new Uint8Array(sourceBytes)], { type: 'image/png' }));
+                const sourceClean = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+                const sourceBuffer = Buffer.from(sourceClean, 'base64');
+                formData.append('input_image_0', new Blob([sourceBuffer], { type: 'image/png' }), 'source.png');
 
-                if (refImageBase64 && typeof refImageBase64 === 'string' && refImageBase64.includes('base64,')) {
-                  const refBytes = getImageBytes(refImageBase64);
-                  formData.append('input_image_1', new Blob([new Uint8Array(refBytes)], { type: 'image/png' }));
+                if (refImageBase64 && typeof refImageBase64 === 'string') {
+                  const refClean = refImageBase64.replace(/^data:image\/\w+;base64,/, '');
+                  const refBuffer = Buffer.from(refClean, 'base64');
+                  formData.append('input_image_1', new Blob([refBuffer], { type: 'image/png' }), 'reference.png');
                 }
 
                 const formResp = new Response(formData);
@@ -138,8 +205,7 @@ export default {
             if (!aiImageStream) {
               try {
                 aiImageStream = await env.AI.run('@cf/black-forest-labs/flux-1-schnell', {
-                  prompt: userPrompt,
-                  num_steps: 4
+                  prompt: userPrompt
                 });
               } catch (errFlux: any) {
                 lastErr = errFlux;
@@ -148,8 +214,7 @@ export default {
                 // Tier 2: SDXL Lightning (Sub-second diffusion engine)
                 try {
                   aiImageStream = await env.AI.run('@cf/bytedance/stable-diffusion-xl-lightning', {
-                    prompt: userPrompt,
-                    num_steps: 4
+                    prompt: userPrompt
                   });
                 } catch (errSdxl: any) {
                   lastErr = errSdxl;
@@ -158,8 +223,7 @@ export default {
                   // Tier 3: Dreamshaper 8 LCM (Ultra-fast photorealism)
                   try {
                     aiImageStream = await env.AI.run('@cf/lykon/dreamshaper-8-lcm', {
-                      prompt: userPrompt,
-                      num_steps: 6
+                      prompt: userPrompt
                     });
                   } catch (errLcm: any) {
                     lastErr = errLcm;
@@ -168,8 +232,7 @@ export default {
                     // Tier 4: SDXL Base 1.0
                     try {
                       aiImageStream = await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0', {
-                        prompt: userPrompt,
-                        num_steps: 20
+                        prompt: userPrompt
                       });
                     } catch (errBase: any) {
                       lastErr = errBase;
@@ -255,8 +318,7 @@ export default {
             // Primary: SDXL Lightning high-res generation
             try {
               aiImageStream = await env.AI.run('@cf/bytedance/stable-diffusion-xl-lightning', {
-                prompt: photoPrompt,
-                num_steps: 4
+                prompt: photoPrompt
               });
             } catch (err0: any) {
               lastErr = err0;
@@ -265,8 +327,7 @@ export default {
               // Secondary: FLUX.1 [schnell]
               try {
                 aiImageStream = await env.AI.run('@cf/black-forest-labs/flux-1-schnell', {
-                  prompt: photoPrompt,
-                  num_steps: 4
+                  prompt: photoPrompt
                 });
               } catch (err1: any) {
                 lastErr = err1;
@@ -275,8 +336,7 @@ export default {
                 // Tertiary: Dreamshaper 8 LCM
                 try {
                   aiImageStream = await env.AI.run('@cf/lykon/dreamshaper-8-lcm', {
-                    prompt: photoPrompt,
-                    num_steps: 6
+                    prompt: photoPrompt
                   });
                 } catch (err2: any) {
                   lastErr = err2;
@@ -355,6 +415,26 @@ export default {
             }),
             { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
+        }
+
+        if (provider === 'replicate') {
+          if (env.REPLICATE_API_TOKEN) {
+            const statusResp = await fetch(`https://api.replicate.com/v1/predictions/${jobId}`, {
+              headers: { 'Authorization': `Bearer ${env.REPLICATE_API_TOKEN}` }
+            });
+            const statusData = (await statusResp.json()) as any;
+            const finalUrl = Array.isArray(statusData.output) ? statusData.output[0] : statusData.output;
+            
+            return new Response(
+              JSON.stringify({
+                jobId,
+                status: statusData.status, // 'starting', 'processing', 'succeeded', 'failed', 'canceled'
+                outputUrl: finalUrl || null,
+                error: statusData.error || null
+              }),
+              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
         }
 
         return new Response(
