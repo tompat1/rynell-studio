@@ -3,12 +3,13 @@ import StudioModelSelector, { MODELS, FREE_MODELS } from './StudioModelSelector'
 import BeforeAfterSlider from './BeforeAfterSlider';
 import PricingTable from './PricingTable';
 import heroClean from '../assets/hero_page_rynell_studio_clean.webp';
+import { useAuth } from '../contexts/AuthContext';
 
 const StudioLab = () => {
+  const { user, isRegistered, isAdmin, isPremiumUser, openRegister } = useAuth();
   const [selectedModel, setSelectedModel] = useState('qwen_edit');
   const activeModelConfig = MODELS.find(m => m.id === selectedModel) || FREE_MODELS[0];
   const [upscaleEngine, setUpscaleEngine] = useState('pruna'); // 'pruna' | 'esrgan'
-  const [userTier, setUserTier] = useState({ isPremium: false });
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [usage, setUsage] = useState(() => {
     try {
@@ -22,8 +23,20 @@ const StudioLab = () => {
     };
   });
 
+  // Sync quota whenever registration or updates occur
+  useEffect(() => {
+    const handleStorageChange = () => {
+      try {
+        const raw = localStorage.getItem('rynell_studio_quota_v1');
+        if (raw) setUsage(JSON.parse(raw));
+      } catch (_) {}
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   const deductQuota = (modelKey) => {
-    if (userTier.isPremium) return;
+    if (isPremiumUser) return;
     setUsage((prev) => {
       const next = { ...prev };
       if (modelKey === 'qwen_edit') {
@@ -253,9 +266,13 @@ const StudioLab = () => {
 
   const handleStartProcess = async () => {
     // Free Quota & Try-Before-Buy checks
-    if (!userTier.isPremium) {
+    if (!isPremiumUser) {
       if (selectedModel === 'qwen_edit' && (usage.imageStudioRendersLeft ?? 5) <= 0) {
-        setIsPricingOpen(true);
+        if (!isRegistered) {
+          openRegister();
+        } else {
+          setIsPricingOpen(true);
+        }
         return;
       }
       if (selectedModel === 'upscale' && (usage.upscalerTrialsLeft ?? 1) <= 0) {
@@ -456,14 +473,39 @@ const StudioLab = () => {
           >
             ⚡ RUN LIVE SYSTEM DIAGNOSTICS
           </button>
+
+          {/* Member Registration Reward Strip / Admin Status Banner */}
+          {isAdmin ? (
+            <div className="admin-status-strip">
+              <span className="admin-status-badge">👑 ROOT ADMIN ACTIVE</span>
+              <span className="admin-status-text">
+                Full administrative privileges enabled. <strong>Unlimited renders & zero rate limits</strong> across all 3 workbenches.
+              </span>
+            </div>
+          ) : !isRegistered ? (
+            <div className="guest-reward-strip" onClick={openRegister}>
+              <span className="guest-badge">MEMBER BONUS</span>
+              <span className="guest-text">
+                Running in guest mode. <strong>Register a free account to unlock +10 more renders</strong> in AI Studio.
+              </span>
+              <button type="button" className="guest-btn">REGISTER FREE →</button>
+            </div>
+          ) : null}
         </div>
 
         {/* Model Engine Selector - Full Width Above Workbench Grid */}
         <StudioModelSelector 
           selectedModel={selectedModel}
           onModelChange={setSelectedModel}
-          isPremiumUser={userTier.isPremium}
-          onOpenUpgrade={() => setIsPricingOpen(true)}
+          isPremiumUser={isPremiumUser}
+          isAdmin={isAdmin}
+          onOpenUpgrade={() => {
+            if (selectedModel === 'qwen_edit' && !isRegistered && (usage.imageStudioRendersLeft ?? 5) <= 0) {
+              openRegister();
+            } else {
+              setIsPricingOpen(true);
+            }
+          }}
           usage={usage}
         />
 
@@ -660,17 +702,19 @@ const StudioLab = () => {
                     className="action-btn process-btn" 
                     onClick={handleStartProcess}
                   >
-                    {!userTier.isPremium && selectedModel === 'qwen_edit' && (usage.imageStudioRendersLeft ?? 5) <= 0
-                      ? '🔒 5 FREE RENDERS EXHAUSTED — UPGRADE TO DELUXE'
-                      : !userTier.isPremium && selectedModel === 'upscale' && (usage.upscalerTrialsLeft ?? 1) <= 0
+                    {!isPremiumUser && selectedModel === 'qwen_edit' && (usage.imageStudioRendersLeft ?? 5) <= 0
+                      ? (!isRegistered 
+                          ? '🎁 5 FREE RENDERS USED — REGISTER FREE FOR +10 MORE' 
+                          : '🔒 ALL FREE RENDERS USED — UPGRADE TO DELUXE')
+                      : !isPremiumUser && selectedModel === 'upscale' && (usage.upscalerTrialsLeft ?? 1) <= 0
                       ? '🔒 4K UPSCALE TRIAL USED — UPGRADE TO DELUXE'
-                      : !userTier.isPremium && selectedModel === 'logo' && (usage.vectorineTrialsLeft ?? 1) <= 0
+                      : !isPremiumUser && selectedModel === 'logo' && (usage.vectorineTrialsLeft ?? 1) <= 0
                       ? '🔒 VECTORINE TRIAL USED — UPGRADE TO DELUXE'
                       : selectedModel === 'logo' 
-                      ? (!userTier.isPremium && (usage.vectorineTrialsLeft ?? 1) > 0 ? '⚡ TRACE SVG VECTOR (1 FREE TRIAL)' : '⚡ TRACE SVG VECTOR (RUNPOD GPU)')
+                      ? (isAdmin ? '⚡ TRACE SVG VECTOR (👑 ADMIN UNLIMITED)' : (!isPremiumUser && (usage.vectorineTrialsLeft ?? 1) > 0 ? '⚡ TRACE SVG VECTOR (1 FREE TRIAL)' : '⚡ TRACE SVG VECTOR (RUNPOD GPU)'))
                       : selectedModel === 'upscale'
-                      ? (!userTier.isPremium && (usage.upscalerTrialsLeft ?? 1) > 0 ? '⚡ RUN 4K UPSCALE (1 FREE TRIAL)' : '⚡ EXECUTE 4K UPSCALE')
-                      : (!userTier.isPremium ? `⚡ EXECUTE AI RENDER (${usage.imageStudioRendersLeft ?? 5}/5 FREE LEFT)` : `⚡ EXECUTE AI STUDIO`)}
+                      ? (isAdmin ? '⚡ RUN 4K UPSCALE (👑 ADMIN UNLIMITED)' : (!isPremiumUser && (usage.upscalerTrialsLeft ?? 1) > 0 ? '⚡ RUN 4K UPSCALE (1 FREE TRIAL)' : '⚡ EXECUTE 4K UPSCALE'))
+                      : (isAdmin ? '⚡ EXECUTE AI STUDIO (👑 ADMIN UNLIMITED)' : (!isPremiumUser ? `⚡ EXECUTE AI RENDER (${usage.imageStudioRendersLeft ?? 5}/5 FREE LEFT)` : `⚡ EXECUTE AI STUDIO`))}
                   </button>
 
                   {status === 'SUCCESS' && (
@@ -881,6 +925,89 @@ const StudioLab = () => {
           .upscale-engine-grid {
             grid-template-columns: 1fr;
           }
+        }
+
+        .admin-status-strip {
+          margin-top: 1rem;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          background: rgba(255, 51, 102, 0.08);
+          border: 1px solid rgba(255, 51, 102, 0.4);
+          padding: 0.6rem 1rem;
+          box-shadow: 0 0 15px rgba(255, 51, 102, 0.15);
+          width: fit-content;
+        }
+
+        .admin-status-badge {
+          font-family: var(--font-heading);
+          font-size: 0.72rem;
+          font-weight: 800;
+          color: #fff;
+          background: #ff3366;
+          padding: 0.25rem 0.6rem;
+          letter-spacing: 1px;
+        }
+
+        .admin-status-text {
+          font-family: var(--font-body);
+          font-size: 0.85rem;
+          color: #eee;
+        }
+
+        .admin-status-text strong {
+          color: #ff3366;
+        }
+
+        .guest-reward-strip {
+          margin-top: 1rem;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          background: rgba(0, 255, 102, 0.08);
+          border: 1px solid rgba(0, 255, 102, 0.3);
+          padding: 0.6rem 1rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          width: fit-content;
+        }
+
+        .guest-reward-strip:hover {
+          background: rgba(0, 255, 102, 0.14);
+          border-color: #00FF66;
+          transform: translateY(-1px);
+        }
+
+        .guest-badge {
+          font-family: var(--font-heading);
+          font-size: 0.7rem;
+          font-weight: 800;
+          color: #000;
+          background: #00FF66;
+          padding: 0.2rem 0.5rem;
+          letter-spacing: 1px;
+        }
+
+        .guest-text {
+          font-family: var(--font-body);
+          font-size: 0.85rem;
+          color: #ccc;
+        }
+
+        .guest-text strong {
+          color: #00FF66;
+        }
+
+        .guest-btn {
+          background: none;
+          border: none;
+          color: #00FF66;
+          font-family: var(--font-heading);
+          font-size: 0.85rem;
+          font-weight: 700;
+          cursor: pointer;
+          letter-spacing: 0.5px;
+          margin-left: 0.5rem;
         }
 
         .active-tool-banner {

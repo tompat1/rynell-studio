@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import boltSvg from '../assets/lightning_bolt_sticker_vector.svg';
 import { useAudio } from '../contexts/AudioContext';
+import { useAuth } from '../contexts/AuthContext';
 
 // Images for Mobile Menu
 import adImg from '../assets/campaigns/campaign_02.webp';
@@ -13,6 +14,7 @@ const Navbar = ({ cartCount, onCartClick, onSearchClick, onAccountClick, onConta
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isMuted, toggleMute } = useAudio();
+  const { user, isRegistered, isAdmin, isPremiumUser } = useAuth();
 
   const navItems = [
     { name: 'AI LABS', link: '#studio-lab', image: adImg },
@@ -112,11 +114,21 @@ const Navbar = ({ cartCount, onCartClick, onSearchClick, onAccountClick, onConta
                 </svg>
               </button>
               
-              <button className="icon-btn" aria-label="Account" onClick={onAccountClick}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
+              <button 
+                className={`icon-btn account-icon-btn ${isRegistered ? 'active-user' : ''} ${isAdmin ? 'admin-user' : ''}`} 
+                aria-label="Account" 
+                onClick={onAccountClick}
+                title={isAdmin ? "👑 Signed in as ROOT ADMIN (Unlimited Renders)" : (isRegistered ? `Signed in as ${user?.name || user?.email}` : "Sign In or Register")}
+              >
+                {isAdmin ? (
+                  <span className="nav-admin-crown">👑</span>
+                ) : (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                )}
+                {isRegistered && <span className={`nav-account-dot ${isAdmin ? 'admin' : ''}`} />}
               </button>
 
               <button className="icon-btn cart-icon-btn" aria-label="Cart" onClick={onCartClick}>
@@ -293,6 +305,32 @@ const Navbar = ({ cartCount, onCartClick, onSearchClick, onAccountClick, onConta
           display: flex;
           align-items: center;
           gap: 1.5rem;
+        }
+
+        .account-icon-btn {
+          position: relative;
+        }
+
+        .nav-account-dot {
+          position: absolute;
+          top: 6px;
+          right: 6px;
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: #00FF66;
+          box-shadow: 0 0 6px #00FF66;
+        }
+
+        .nav-account-dot.admin {
+          background: #ff3366;
+          box-shadow: 0 0 8px #ff3366;
+        }
+
+        .nav-admin-crown {
+          font-size: 1.25rem;
+          line-height: 1;
+          filter: drop-shadow(0 0 6px rgba(255, 51, 102, 0.6));
         }
 
         .icon-btn {

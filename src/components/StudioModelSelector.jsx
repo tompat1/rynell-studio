@@ -54,10 +54,12 @@ const StudioModelSelector = ({
   selectedModel, 
   onModelChange, 
   isPremiumUser, 
+  isAdmin,
   onOpenUpgrade,
   usage = { imageStudioRendersLeft: 5, upscalerTrialsLeft: 1, vectorineTrialsLeft: 1 }
 }) => {
   const getModeStatus = (modeId) => {
+    if (isAdmin) return { isLocked: false, tag: '👑 ADMIN UNLIMITED', type: 'admin' };
     if (isPremiumUser) return { isLocked: false, tag: 'PRO UNLIMITED', type: 'pro' };
 
     if (modeId === 'qwen_edit') {
@@ -105,7 +107,9 @@ const StudioModelSelector = ({
           <span className="engine-name-label">UNIFIED AI STUDIO // 3 WORKBENCH MODES</span>
         </div>
         <div className="quota-strip-summary">
-          {!isPremiumUser ? (
+          {isAdmin ? (
+            <span className="quota-text admin">👑 ROOT ADMIN ACCESS • UNLIMITED RENDERS (CF & RUNPOD)</span>
+          ) : !isPremiumUser ? (
             <span className="quota-text">
               ✨ <strong>{usage.imageStudioRendersLeft ?? 5}/5</strong> Free Studio Renders • ⚡ <strong>{usage.upscalerTrialsLeft ?? 1}</strong> 4K Upscale Trial • 📐 <strong>{usage.vectorineTrialsLeft ?? 1}</strong> Vector Trial
             </span>
@@ -224,6 +228,12 @@ const StudioModelSelector = ({
           font-weight: 700;
         }
 
+        .quota-text.admin {
+          color: #ff3366;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+        }
+
         .mode-capsule-bar {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
@@ -330,6 +340,13 @@ const StudioModelSelector = ({
           color: #00E5FF;
           background: rgba(0, 229, 255, 0.12);
           border: 1px solid rgba(0, 229, 255, 0.3);
+        }
+
+        .mode-status-tag.admin {
+          color: #ff3366;
+          background: rgba(255, 51, 102, 0.16);
+          border: 1px solid rgba(255, 51, 102, 0.4);
+          box-shadow: 0 0 8px rgba(255, 51, 102, 0.2);
         }
 
         .mode-tab-engine {
