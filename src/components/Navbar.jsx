@@ -188,7 +188,8 @@ const Navbar = ({ cartCount, onCartClick, onSearchClick, onAccountClick, onConta
                 const target = document.querySelector(item.link || `#${item.name.toLowerCase()}`);
                 if (target) {
                   e.preventDefault();
-                  const offset = parseFloat(getComputedStyle(target).scrollMarginTop) || 80;
+                  const parsedOffset = parseFloat(getComputedStyle(target).scrollMarginTop);
+                  const offset = Number.isFinite(parsedOffset) ? parsedOffset : 80;
                   const top = target.getBoundingClientRect().top + window.scrollY - offset;
                   window.scrollTo({ top, behavior: 'auto' });
                 }
