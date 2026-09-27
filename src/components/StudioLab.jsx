@@ -889,15 +889,17 @@ const StudioLab = () => {
             Cloudflare Workers AI edge generation and RunPod GPU Vector Tracing.
           </p>
 
-          <button 
-            className="diagnostic-trigger-btn"
-            onClick={() => {
-              setIsSmokeModalOpen(true);
-              runLiveDiagnostics();
-            }}
-          >
-            ⚡ RUN LIVE SYSTEM DIAGNOSTICS
-          </button>
+          {isAdmin && (
+            <button 
+              className="diagnostic-trigger-btn"
+              onClick={() => {
+                setIsSmokeModalOpen(true);
+                runLiveDiagnostics();
+              }}
+            >
+              ⚡ RUN LIVE SYSTEM DIAGNOSTICS
+            </button>
+          )}
 
           {/* Member Registration Reward Strip / Admin Status Banner */}
           {isAdmin ? (
