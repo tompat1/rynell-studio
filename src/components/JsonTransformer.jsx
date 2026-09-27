@@ -153,7 +153,7 @@ const JsonTransformer = () => {
         <p className="json-lab-footnote">Arrays become rows. Nested objects become dot-notated columns. Values are escaped for spreadsheet-safe CSV.</p>
       </div>
       <style>{`
-        .json-lab-section { position: relative; padding: 8rem 0 7rem; background: var(--bg-secondary); overflow: hidden; }
+        .json-lab-section { position: relative; padding: 8rem 0 7rem; background: var(--bg-secondary); overflow: hidden; scroll-margin-top: 80px; }
         .json-lab-section::before { content: ''; position: absolute; inset: 0; opacity: .34; background-image: radial-gradient(var(--pattern-color) 1px, transparent 1px); background-size: 10px 10px; pointer-events: none; }
         .json-lab-section .container { position: relative; z-index: 1; }
         .json-lab-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; margin-bottom: 2.5rem; }

@@ -5,6 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 
 // Images for Mobile Menu
 import adImg from '../assets/campaigns/campaign_02.webp';
+import aiLabImg from '../assets/services/service_ai.png';
+import jsonLabImg from '../assets/journal/brutalist_typography.png';
 import collImg from '../assets/collection/collection_02.webp';
 import shopImg from '../assets/merch/hoodie_merch_blackout_07.webp';
 import aboutImg from '../assets/studio_portrait.jpg';
@@ -17,8 +19,8 @@ const Navbar = ({ cartCount, onCartClick, onSearchClick, onAccountClick, onConta
   const { user, isRegistered, isAdmin, isPremiumUser } = useAuth();
 
   const navItems = [
-    { name: 'AI LABS', link: '#studio-lab', image: adImg },
-    { name: 'JSON LAB', link: '#json-lab', image: adImg },
+    { name: 'AI LABS', link: '#studio-lab', image: aiLabImg },
+    { name: 'JSON LAB', link: '#json-lab', image: jsonLabImg },
     { name: 'COLLECTIONS', link: '#collections', image: collImg },
     { name: 'SHOP', link: '#shop', image: shopImg },
     { name: 'ADS', link: '#ads', image: adImg },
@@ -180,9 +182,18 @@ const Navbar = ({ cartCount, onCartClick, onSearchClick, onAccountClick, onConta
           {navItems.map((item) => (
             <a 
               key={item.name} 
-              href={`#${item.name.toLowerCase()}`} 
+              href={item.link || `#${item.name.toLowerCase()}`} 
               className="mobile-nav-link-wrapper"
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={(e) => {
+                const target = document.querySelector(item.link || `#${item.name.toLowerCase()}`);
+                if (target) {
+                  e.preventDefault();
+                  const offset = parseFloat(getComputedStyle(target).scrollMarginTop) || 80;
+                  const top = target.getBoundingClientRect().top + window.scrollY - offset;
+                  window.scrollTo({ top, behavior: 'auto' });
+                }
+                setIsMobileMenuOpen(false);
+              }}
             >
               <div className="mobile-nav-image-placeholder">
                 <img src={item.image} alt={item.name} />

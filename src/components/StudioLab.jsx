@@ -3353,6 +3353,7 @@ const StudioLab = () => {
         }
 
         .studio-lab-section {
+          scroll-margin-top: 80px;
           padding: 8rem 0;
           background-color: var(--bg-secondary);
           border-top: 4px solid var(--text-primary);
