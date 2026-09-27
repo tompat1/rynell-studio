@@ -108,10 +108,43 @@ const StudioLab = () => {
   const [vectorMeta, setVectorMeta] = useState({ pathCount: 0, colorCount: 8, fileSizeKb: 0, svgString: '' });
   const [showSourceQualityInfo, setShowSourceQualityInfo] = useState(true);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [vectorObjectUrl, setVectorObjectUrl] = useState(null);
+  const vectorRasterRef = useRef(null);
+  const vectorTraceSeq = useRef(0);
+  const vectorTraceTimer = useRef(null);
+  const vectorObjectUrlRef = useRef(null);
 
-  const runVectorineTrace = async (customConfig = {}) => {
-    const rawImage = outputUrl || previewUrl || refPreviewUrl || heroClean;
+  const isSvgImageSource = (src) => typeof src === 'string' && /^\s*data:image\/svg\+xml/i.test(src);
+
+  const pickRasterSource = (...candidates) => {
+    for (const src of candidates) {
+      if (src && !isSvgImageSource(src)) return src;
+    }
+    return null;
+  };
+
+  const clearVectorPreview = () => {
+    if (vectorObjectUrlRef.current) {
+      URL.revokeObjectURL(vectorObjectUrlRef.current);
+      vectorObjectUrlRef.current = null;
+    }
+    setVectorObjectUrl(null);
+    setVectorMeta({ pathCount: 0, colorCount: 0, fileSizeKb: 0, svgString: '' });
+  };
+
+  const runVectorineTrace = (customConfig = {}, options = {}) => {
+    const delay = options.delay ?? 160;
+    // Always trace the uploaded raster. outputUrl is the SVG from the last
+    // trace; feeding it back in draws a blank canvas and replaces the vector
+    // with a black frame.
+    const rawImage = pickRasterSource(
+      vectorRasterRef.current,
+      previewUrl,
+      refPreviewUrl,
+      options.allowSample ? heroClean : null
+    );
     if (!rawImage) return;
+    vectorRasterRef.current = rawImage;
 
     const config = {
       engineMode: vectorEngineMode,
@@ -127,48 +160,63 @@ const StudioLab = () => {
       ...customConfig
     };
 
-    try {
-      setStatus('PROCESSING');
-      setStatusMessage('VECTORINE GPU ENGINE: QUANTIZING COLOR PALETTE & TRACING BEZIER CURVES...');
-      const res = await traceRasterToSVG(rawImage, config);
-      setStatus('SUCCESS');
-      setStatusMessage(`PROCESS COMPLETE: SVG VECTOR CREATED (${res.pathCount} CURVES, ${res.colorCount} COLORS, ${res.fileSizeKb} KB).`);
-      setVectorMeta({
-        pathCount: res.pathCount,
-        colorCount: res.colorCount,
-        fileSizeKb: res.fileSizeKb,
-        svgString: res.svgString
-      });
-      handleSetOutputUrl(res.svgDataUrl, 'logo', qwenPrompt, rawImage);
-    } catch (err) {
-      console.warn("Vectorine trace error:", err);
-    }
+    window.clearTimeout(vectorTraceTimer.current);
+    const seq = ++vectorTraceSeq.current;
+
+    vectorTraceTimer.current = window.setTimeout(async () => {
+      if (seq !== vectorTraceSeq.current) return;
+      try {
+        setStatus('PROCESSING');
+        setStatusMessage('VECTORINE GPU ENGINE: QUANTIZING COLOR PALETTE & TRACING BEZIER CURVES...');
+        const res = await traceRasterToSVG(rawImage, config);
+        if (seq !== vectorTraceSeq.current) return;
+
+        if (vectorObjectUrlRef.current) URL.revokeObjectURL(vectorObjectUrlRef.current);
+        const objectUrl = URL.createObjectURL(new Blob([res.svgString], { type: 'image/svg+xml;charset=utf-8' }));
+        vectorObjectUrlRef.current = objectUrl;
+        setVectorObjectUrl(objectUrl);
+        setStatus('SUCCESS');
+        setStatusMessage(`PROCESS COMPLETE: SVG VECTOR CREATED (${res.pathCount} CURVES, ${res.colorCount} COLORS, ${res.fileSizeKb} KB).`);
+        setVectorMeta({
+          pathCount: res.pathCount,
+          colorCount: res.colorCount,
+          fileSizeKb: res.fileSizeKb,
+          svgString: res.svgString
+        });
+        handleSetOutputUrl(res.svgDataUrl, 'logo', qwenPrompt, rawImage);
+      } catch (err) {
+        if (seq !== vectorTraceSeq.current) return;
+        console.warn("Vectorine trace error:", err);
+        setStatus('ERROR');
+        setStatusMessage(err?.message || 'VECTOR TRACE FAILED. THE ORIGINAL RASTER IS STILL LOADED.');
+      }
+    }, delay);
   };
 
-  const applyVectorPreset = (presetKey) => {
+  const applyVectorPreset = (presetKey, extraOverrides = {}) => {
     setVectorPreset(presetKey);
-    let overrides = {};
+    let overrides = { ...extraOverrides };
     if (presetKey === 'flat') {
-      overrides = { preset: 'flat', numberOfColors: 8, detail: 0.5, isGrayscale: false, isPureBW: false };
+      overrides = { ...overrides, preset: 'flat', numberOfColors: 8, detail: 0.5, isGrayscale: false, isPureBW: false };
       setVectorColors(8); setVectorDetail(0.5); setVectorIsGrayscale(false); setVectorIsPureBW(false);
     } else if (presetKey === 'bw') {
-      overrides = { preset: 'bw', numberOfColors: 2, detail: 0.2, isPureBW: true };
-      setVectorColors(2); setVectorDetail(0.2); setVectorIsPureBW(true);
+      overrides = { ...overrides, preset: 'bw', numberOfColors: 2, detail: 0.2, isPureBW: true, isGrayscale: false };
+      setVectorColors(2); setVectorDetail(0.2); setVectorIsPureBW(true); setVectorIsGrayscale(false);
     } else if (presetKey === 'lineart') {
-      overrides = { preset: 'lineart', numberOfColors: 2, detail: 0.1, minShapeSize: 4 };
-      setVectorColors(2); setVectorDetail(0.1); setVectorMinShapeSize(4);
+      overrides = { ...overrides, preset: 'lineart', numberOfColors: 2, detail: 0.1, minShapeSize: 4, isGrayscale: false, isPureBW: false };
+      setVectorColors(2); setVectorDetail(0.1); setVectorMinShapeSize(4); setVectorIsGrayscale(false); setVectorIsPureBW(false);
     } else if (presetKey === 'grayscale') {
-      overrides = { preset: 'grayscale', numberOfColors: 8, isGrayscale: true };
-      setVectorColors(8); setVectorIsGrayscale(true);
+      overrides = { ...overrides, preset: 'grayscale', numberOfColors: 8, isGrayscale: true, isPureBW: false };
+      setVectorColors(8); setVectorIsGrayscale(true); setVectorIsPureBW(false);
     } else if (presetKey === 'poster') {
-      overrides = { preset: 'poster', numberOfColors: 6, detail: 0.8 };
-      setVectorColors(6); setVectorDetail(0.8);
+      overrides = { ...overrides, preset: 'poster', numberOfColors: 6, detail: 0.8, isGrayscale: false, isPureBW: false };
+      setVectorColors(6); setVectorDetail(0.8); setVectorIsGrayscale(false); setVectorIsPureBW(false);
     } else if (presetKey === 'detailed') {
-      overrides = { preset: 'detailed', numberOfColors: 24, detail: 0.05, minShapeSize: 1 };
-      setVectorColors(24); setVectorDetail(0.05); setVectorMinShapeSize(1);
+      overrides = { ...overrides, preset: 'detailed', numberOfColors: 24, detail: 0.05, minShapeSize: 1, isGrayscale: false, isPureBW: false };
+      setVectorColors(24); setVectorDetail(0.05); setVectorMinShapeSize(1); setVectorIsGrayscale(false); setVectorIsPureBW(false);
     }
-    if (previewUrl || outputUrl) {
-      runVectorineTrace(overrides);
+    if (pickRasterSource(vectorRasterRef.current, previewUrl, refPreviewUrl)) {
+      runVectorineTrace(overrides, { delay: 0 });
     }
   };
 
@@ -252,6 +300,10 @@ const StudioLab = () => {
       const reader = new FileReader();
       reader.onload = (evt) => {
         const base64Uri = evt.target.result;
+        vectorTraceSeq.current += 1;
+        window.clearTimeout(vectorTraceTimer.current);
+        vectorRasterRef.current = base64Uri;
+        clearVectorPreview();
         setPreviewUrl(base64Uri);
         setStatus('IDLE');
         setOutputUrl(null);
@@ -548,10 +600,20 @@ const StudioLab = () => {
             const upscaledUrl = await generateUpscaled4KImage(sourceImg, upscaleEngine, 4);
             handleSetOutputUrl(upscaledUrl, 'upscale', qwenPrompt, sourceImg);
           } else if (selectedModel === 'logo') {
-            const sourceImg = previewUrl || refPreviewUrl || heroClean;
+            const sourceImg = pickRasterSource(vectorRasterRef.current, previewUrl, refPreviewUrl, heroClean);
             try {
-              const presetMode = qwenPrompt.toLowerCase().includes('monochrome') ? 'posterized2' : 'sharp';
-              const vectorRes = await traceRasterToSVG(sourceImg, presetMode);
+              const vectorRes = await traceRasterToSVG(sourceImg, {
+                engineMode: vectorEngineMode,
+                preset: qwenPrompt.toLowerCase().includes('monochrome') ? 'bw' : vectorPreset,
+                numberOfColors: vectorColors,
+                detail: vectorDetail,
+                smoothing: vectorSmoothing,
+                corners: vectorCorners,
+                minShapeSize: vectorMinShapeSize,
+                noiseCleanup: vectorNoiseCleanup,
+                isGrayscale: vectorIsGrayscale,
+                isPureBW: vectorIsPureBW || qwenPrompt.toLowerCase().includes('monochrome')
+              });
               setStatusMessage(`PROCESS COMPLETE: SVG VECTOR READY (${vectorRes.pathCount} CURVES).`);
               handleSetOutputUrl(vectorRes.svgDataUrl, 'logo', qwenPrompt, sourceImg);
             } catch (errTrace) {
@@ -677,7 +739,7 @@ const StudioLab = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             imageR2Key: file ? file.name : 'vectorine-source.png',
-            imageBase64: rawImage,
+            imageBase64: pickRasterSource(vectorRasterRef.current, previewUrl, refPreviewUrl, heroClean),
             modelType: 'logo',
             prompt: qwenPrompt
           })
@@ -689,17 +751,36 @@ const StudioLab = () => {
 
           setTimeout(async () => {
             try {
-              const presetMode = qwenPrompt.toLowerCase().includes('monochrome') 
-                ? 'posterized2' 
-                : qwenPrompt.toLowerCase().includes('geometric') || qwenPrompt.toLowerCase().includes('contour')
-                ? 'sharp' 
-                : 'curvy';
-
-              const vectorRes = await traceRasterToSVG(rawImage, presetMode);
+              const rasterImage = pickRasterSource(vectorRasterRef.current, previewUrl, refPreviewUrl, heroClean);
+              const vectorRes = await traceRasterToSVG(rasterImage, {
+                engineMode: qwenPrompt.toLowerCase().includes('geometric') || qwenPrompt.toLowerCase().includes('contour')
+                  ? 'sharp'
+                  : (qwenPrompt.toLowerCase().includes('curvy') ? 'classic' : vectorEngineMode),
+                preset: qwenPrompt.toLowerCase().includes('monochrome') ? 'bw' : vectorPreset,
+                numberOfColors: vectorColors,
+                detail: vectorDetail,
+                smoothing: vectorSmoothing,
+                corners: vectorCorners,
+                minShapeSize: vectorMinShapeSize,
+                noiseCleanup: vectorNoiseCleanup,
+                isGrayscale: vectorIsGrayscale,
+                isPureBW: vectorIsPureBW || qwenPrompt.toLowerCase().includes('monochrome')
+              });
+              if (rasterImage) vectorRasterRef.current = rasterImage;
               setStatus('SUCCESS');
               deductQuota(selectedModel);
               setStatusMessage(`PROCESS COMPLETE: SVG VECTOR CREATED (${vectorRes.pathCount} CURVES, ${vectorRes.colorCount} COLORS).`);
-              handleSetOutputUrl(vectorRes.svgDataUrl, 'logo', qwenPrompt, rawImage);
+              setVectorMeta({
+                pathCount: vectorRes.pathCount,
+                colorCount: vectorRes.colorCount,
+                fileSizeKb: vectorRes.fileSizeKb,
+                svgString: vectorRes.svgString
+              });
+              if (vectorObjectUrlRef.current) URL.revokeObjectURL(vectorObjectUrlRef.current);
+              const objectUrl = URL.createObjectURL(new Blob([vectorRes.svgString], { type: 'image/svg+xml;charset=utf-8' }));
+              vectorObjectUrlRef.current = objectUrl;
+              setVectorObjectUrl(objectUrl);
+              handleSetOutputUrl(vectorRes.svgDataUrl, 'logo', qwenPrompt, rasterImage);
             } catch (errTrace) {
               console.warn("Vectorine trace fallback:", errTrace);
               runSimulatedPipeline();
@@ -800,6 +881,10 @@ const StudioLab = () => {
   };
 
   const handleReset = () => {
+    vectorTraceSeq.current += 1;
+    window.clearTimeout(vectorTraceTimer.current);
+    vectorRasterRef.current = null;
+    clearVectorPreview();
     setFile(null);
     setPreviewUrl(null);
     setOutputUrl(null);
@@ -1288,7 +1373,7 @@ const StudioLab = () => {
                     outputUrl || previewUrl ? (
                       <BeforeAfterSlider 
                         beforeImage={previewUrl || refPreviewUrl || heroClean}
-                        afterImage={outputUrl || previewUrl}
+                        afterImage={vectorObjectUrl || outputUrl || previewUrl}
                         beforeLabel="RASTER SOURCE"
                         afterLabel="VECTOR SVG"
                       />
@@ -1470,7 +1555,7 @@ const StudioLab = () => {
                       className={`engine-card-pill ${vectorEngineMode === 'sharp' ? 'active' : ''}`}
                       onClick={() => {
                         setVectorEngineMode('sharp');
-                        if (previewUrl || outputUrl) runVectorineTrace({ engineMode: 'sharp' });
+                        runVectorineTrace({ engineMode: 'sharp' }, { delay: 0 });
                       }}
                       style={{
                         padding: '10px 12px',
@@ -1496,7 +1581,7 @@ const StudioLab = () => {
                       className={`engine-card-pill ${vectorEngineMode === 'classic' ? 'active' : ''}`}
                       onClick={() => {
                         setVectorEngineMode('classic');
-                        if (previewUrl || outputUrl) runVectorineTrace({ engineMode: 'classic' });
+                        runVectorineTrace({ engineMode: 'classic' }, { delay: 0 });
                       }}
                       style={{
                         padding: '10px 12px',
@@ -1522,7 +1607,7 @@ const StudioLab = () => {
                     type="button"
                     onClick={() => {
                       setVectorEngineMode('sharp');
-                      applyVectorPreset('flat');
+                      applyVectorPreset('flat', { engineMode: 'sharp' });
                     }}
                     style={{
                       width: '100%',
@@ -1603,7 +1688,7 @@ const StudioLab = () => {
                         onChange={(e) => {
                           const val = parseInt(e.target.value);
                           setVectorColors(val);
-                          if (previewUrl || outputUrl) runVectorineTrace({ numberOfColors: val });
+                          runVectorineTrace({ numberOfColors: val });
                         }}
                         style={{ width: '100%', accentColor: '#00E5FF', cursor: 'pointer' }}
                       />
@@ -1624,7 +1709,7 @@ const StudioLab = () => {
                         onChange={(e) => {
                           const val = parseFloat(e.target.value);
                           setVectorDetail(val);
-                          if (previewUrl || outputUrl) runVectorineTrace({ detail: val });
+                          runVectorineTrace({ detail: val });
                         }}
                         style={{ width: '100%', accentColor: '#00E5FF', cursor: 'pointer' }}
                       />
@@ -1645,7 +1730,7 @@ const StudioLab = () => {
                         onChange={(e) => {
                           const val = parseFloat(e.target.value);
                           setVectorSmoothing(val);
-                          if (previewUrl || outputUrl) runVectorineTrace({ smoothing: val });
+                          runVectorineTrace({ smoothing: val });
                         }}
                         style={{ width: '100%', accentColor: '#00E5FF', cursor: 'pointer' }}
                       />
@@ -1666,7 +1751,7 @@ const StudioLab = () => {
                         onChange={(e) => {
                           const val = parseFloat(e.target.value);
                           setVectorCorners(val);
-                          if (previewUrl || outputUrl) runVectorineTrace({ corners: val });
+                          runVectorineTrace({ corners: val });
                         }}
                         style={{ width: '100%', accentColor: '#00E5FF', cursor: 'pointer' }}
                       />
@@ -1687,7 +1772,7 @@ const StudioLab = () => {
                         onChange={(e) => {
                           const val = parseInt(e.target.value);
                           setVectorMinShapeSize(val);
-                          if (previewUrl || outputUrl) runVectorineTrace({ minShapeSize: val });
+                          runVectorineTrace({ minShapeSize: val });
                         }}
                         style={{ width: '100%', accentColor: '#00E5FF', cursor: 'pointer' }}
                       />
@@ -1708,7 +1793,7 @@ const StudioLab = () => {
                         onChange={(e) => {
                           const val = parseInt(e.target.value);
                           setVectorNoiseCleanup(val);
-                          if (previewUrl || outputUrl) runVectorineTrace({ noiseCleanup: val });
+                          runVectorineTrace({ noiseCleanup: val });
                         }}
                         style={{ width: '100%', accentColor: '#00E5FF', cursor: 'pointer' }}
                       />
@@ -1723,7 +1808,7 @@ const StudioLab = () => {
                         checked={vectorIsGrayscale} 
                         onChange={(e) => {
                           setVectorIsGrayscale(e.target.checked);
-                          if (previewUrl || outputUrl) runVectorineTrace({ isGrayscale: e.target.checked });
+                          runVectorineTrace({ isGrayscale: e.target.checked });
                         }} 
                         style={{ accentColor: '#00E5FF' }} 
                       />
@@ -1736,7 +1821,7 @@ const StudioLab = () => {
                         checked={vectorIsPureBW} 
                         onChange={(e) => {
                           setVectorIsPureBW(e.target.checked);
-                          if (previewUrl || outputUrl) runVectorineTrace({ isPureBW: e.target.checked });
+                          runVectorineTrace({ isPureBW: e.target.checked });
                         }} 
                         style={{ accentColor: '#00E5FF' }} 
                       />
@@ -1749,7 +1834,7 @@ const StudioLab = () => {
                 <div className="action-buttons-stack" style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <button 
                     className="action-btn process-btn" 
-                    onClick={() => runVectorineTrace()}
+                    onClick={() => runVectorineTrace({}, { delay: 0, allowSample: true })}
                     style={{
                       width: '100%',
                       padding: '14px',
@@ -1768,6 +1853,9 @@ const StudioLab = () => {
                       ? '🔒 VECTORINE TRIAL USED — UPGRADE TO DELUXE'
                       : (isAdmin ? '⚡ TRACE SVG VECTOR (👑 ADMIN UNLIMITED)' : (!isPremiumUser && (usage.vectorineTrialsLeft ?? 1) > 0 ? '⚡ TRACE SVG VECTOR (1 FREE TRIAL)' : '⚡ TRACE SVG VECTOR (BEZIER CURVES)'))}
                   </button>
+                  {status === 'ERROR' && statusMessage && (
+                    <p style={{ margin: 0, color: '#ff4d6d', fontSize: '11px', lineHeight: 1.45 }}>{statusMessage}</p>
+                  )}
 
                   {(outputUrl || vectorMeta.svgString) && (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>

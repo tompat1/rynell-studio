@@ -14,6 +14,13 @@ export const traceRasterToSVG = (imageSrc, customConfig = {}) => {
       return reject(new Error("No image source provided for vector tracing."));
     }
 
+    // A previous SVG result must never be the next trace input. Drawing an SVG
+    // into a canvas often yields an empty bitmap, which ImageTracer then emits
+    // as a solid black graphic.
+    if (typeof imageSrc === 'string' && /^\s*data:image\/svg\+xml/i.test(imageSrc)) {
+      return reject(new Error("Vectorine must trace the original raster image, not a previous SVG result."));
+    }
+
     const {
       engineMode = 'sharp',       // 'sharp' | 'classic'
       preset = 'flat',             // 'flat' | 'bw' | 'lineart' | 'grayscale' | 'poster' | 'detailed'
@@ -53,7 +60,10 @@ export const traceRasterToSVG = (imageSrc, customConfig = {}) => {
         canvas.width = scaleW;
         canvas.height = scaleH;
 
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (!ctx) {
+          throw new Error("Could not read pixels from the source image.");
+        }
         ctx.drawImage(img, 0, 0, scaleW, scaleH);
 
         // Optional grayscale or high-contrast B&W canvas pre-processing
@@ -77,6 +87,17 @@ export const traceRasterToSVG = (imageSrc, customConfig = {}) => {
         }
 
         const imgData = ctx.getImageData(0, 0, scaleW, scaleH);
+        let opaqueSamples = 0;
+        const pixels = imgData.data;
+        for (let i = 3; i < pixels.length; i += 16) {
+          if (pixels[i] > 8) {
+            opaqueSamples += 1;
+            if (opaqueSamples > 12) break;
+          }
+        }
+        if (opaqueSamples === 0) {
+          throw new Error("Source image produced an empty bitmap. Trace the original raster, not an SVG.");
+        }
 
         // Build ImageTracer configuration options
         let options = {
