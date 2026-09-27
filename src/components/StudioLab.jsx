@@ -1268,6 +1268,13 @@ const StudioLab = () => {
                 <div className="vectorine-mode-tabs">
                   <button 
                     type="button" 
+                    className={`vectorine-tab-btn ${vectorViewMode === 'source' ? 'active' : ''}`}
+                    onClick={() => setVectorViewMode('source')}
+                  >
+                    📁 SOURCE
+                  </button>
+                  <button 
+                    type="button" 
                     className={`vectorine-tab-btn ${vectorViewMode === 'vector' ? 'active' : ''}`}
                     onClick={() => setVectorViewMode('vector')}
                   >
@@ -1279,13 +1286,6 @@ const StudioLab = () => {
                     onClick={() => setVectorViewMode('compare')}
                   >
                     🔀 COMPARE
-                  </button>
-                  <button 
-                    type="button" 
-                    className={`vectorine-tab-btn ${vectorViewMode === 'source' ? 'active' : ''}`}
-                    onClick={() => setVectorViewMode('source')}
-                  >
-                    📁 SOURCE
                   </button>
                   <button 
                     type="button" 
