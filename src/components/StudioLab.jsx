@@ -1357,16 +1357,21 @@ const StudioLab = () => {
                           </div>
                         </div>
                       ) : (
-                        <div className="placeholder-workbench">
+                        <label
+                          htmlFor="vectorine-file-input"
+                          className="placeholder-workbench vectorine-canvas-upload"
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={handleFileDrop}
+                        >
                           <div className="placeholder-pattern"></div>
                           <div className="placeholder-content">
                             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#00E5FF" strokeWidth="1.5">
                               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                             </svg>
                             <h4>VECTORINE WORKBENCH READY</h4>
-                            <p>Upload a raster graphic (PNG, JPG) on the right panel to trace scalable SVG vector curves.</p>
+                            <p>Click to upload artwork (PNG, JPG, WEBP) and trace it into scalable SVG curves.</p>
                           </div>
-                        </div>
+                        </label>
                       )}
                     </div>
                   ) : vectorViewMode === 'compare' ? (
@@ -3647,6 +3652,14 @@ const StudioLab = () => {
           justify-content: center;
           text-align: center;
           padding: 2rem;
+        }
+
+        .vectorine-canvas-upload {
+          cursor: pointer;
+        }
+
+        .vectorine-canvas-upload:hover {
+          border-color: #00E5FF;
         }
 
         .placeholder-content {
