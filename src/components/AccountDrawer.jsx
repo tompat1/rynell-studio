@@ -12,21 +12,28 @@ const AccountDrawer = ({ isOpen, setIsOpen }) => {
     login, 
     loginAsAdmin,
     register, 
-    logout 
+    logout,
+    openForgotPassword,
+    requestPasswordReset,
+    resetPasswordWithCode
   } = useAuth();
 
-  const [isLogin, setIsLogin] = useState(authMode === 'login');
+  const [isLogin, setIsLogin] = useState(authMode === 'login' || !authMode);
   const [status, setStatus] = useState('IDLE'); // IDLE, PROCESSING, SUCCESS
-  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', resetCode: '', newPassword: '' });
+  const [resetMessage, setResetMessage] = useState(null);
+  const [sentCode, setSentCode] = useState(null);
 
   useEffect(() => {
-    setIsLogin(authMode === 'login');
+    if (authMode === 'login') setIsLogin(true);
+    if (authMode === 'register') setIsLogin(false);
   }, [authMode]);
 
   useEffect(() => {
     if (isOpen) {
       document.body.classList.add('drawer-open');
       setStatus('IDLE');
+      setResetMessage(null);
     } else {
       document.body.classList.remove('drawer-open');
     }
@@ -47,12 +54,54 @@ const AccountDrawer = ({ isOpen, setIsOpen }) => {
     }, 1000);
   };
 
+  const handleRequestReset = async (e) => {
+    e.preventDefault();
+    setStatus('PROCESSING');
+    const res = await requestPasswordReset(formData.email);
+    setStatus('IDLE');
+    if (res.success) {
+      setResetMessage(res.message);
+      if (res.token) {
+        setSentCode(res.token);
+        setFormData(prev => ({ ...prev, resetCode: res.token }));
+      }
+      setAuthMode('reset_password');
+    } else {
+      setResetMessage(res.message);
+    }
+  };
+
+  const handleConfirmReset = async (e) => {
+    e.preventDefault();
+    setStatus('PROCESSING');
+    setTimeout(async () => {
+      const res = await resetPasswordWithCode({
+        email: formData.email,
+        code: formData.resetCode || sentCode,
+        newPassword: formData.newPassword
+      });
+      if (res.success) {
+        setStatus('SUCCESS');
+      } else {
+        setStatus('IDLE');
+        setResetMessage(res.message || 'Error updating password.');
+      }
+    }, 1000);
+  };
+
   const handleCloseAndGoToStudio = () => {
     setIsOpen(false);
     const studioEl = document.getElementById('studio-lab');
     if (studioEl) {
       studioEl.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+
+  const getHeaderTitle = () => {
+    if (isRegistered) return 'STUDIO ACCOUNT';
+    if (authMode === 'forgot_password') return 'RECOVER PASSWORD';
+    if (authMode === 'reset_password') return 'NEW PASSWORD';
+    return isLogin ? 'LOGIN' : 'CREATE ACCOUNT';
   };
 
   return (
@@ -64,7 +113,7 @@ const AccountDrawer = ({ isOpen, setIsOpen }) => {
 
       <div className={`cart-drawer account-drawer ${isOpen ? 'open' : ''}`}>
         <div className="cart-header">
-          <h2>{isRegistered ? 'STUDIO ACCOUNT' : (isLogin ? 'LOGIN' : 'CREATE ACCOUNT')}</h2>
+          <h2>{getHeaderTitle()}</h2>
           <button className="cart-close" onClick={() => setIsOpen(false)}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -139,8 +188,126 @@ const AccountDrawer = ({ isOpen, setIsOpen }) => {
             </div>
           )}
 
-          {/* STATE 2: NOT LOGGED IN - FORM */}
-          {!isRegistered && status === 'IDLE' && (
+          {/* STATE 2A: FORGOT PASSWORD VIEW */}
+          {!isRegistered && status === 'IDLE' && authMode === 'forgot_password' && (
+            <div className="password-recovery-view">
+              <div className="register-reward-banner" style={{ borderColor: '#00E5FF', background: 'rgba(0, 229, 255, 0.08)' }}>
+                <span className="reward-icon">🔑</span>
+                <div className="reward-text">
+                  <strong style={{ color: '#00E5FF' }}>LOST PASSWORD RECOVERY</strong>
+                  <p>Enter your account email below to generate a secure reset token & code.</p>
+                </div>
+              </div>
+
+              {resetMessage && (
+                <div className="reset-notice-box error">
+                  {resetMessage}
+                </div>
+              )}
+
+              <form className="brutalist-form" onSubmit={handleRequestReset}>
+                <div className="form-group">
+                  <label>REGISTERED EMAIL ADDRESS</label>
+                  <input 
+                    type="email" 
+                    placeholder="YOUR@EMAIL.COM" 
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required 
+                  />
+                </div>
+
+                <button type="submit" className="checkout-btn" style={{ marginTop: '1rem', background: '#00E5FF', color: '#000' }}>
+                  SEND RESET LINK & CODE →
+                </button>
+              </form>
+
+              <div className="auth-toggle">
+                <p>
+                  Remembered your password?
+                  <button 
+                    type="button" 
+                    className="text-btn" 
+                    onClick={() => {
+                      setIsLogin(true);
+                      setAuthMode('login');
+                    }}
+                  >
+                    LOG IN
+                  </button>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* STATE 2B: RESET PASSWORD WITH CODE VIEW */}
+          {!isRegistered && status === 'IDLE' && authMode === 'reset_password' && (
+            <div className="password-reset-view">
+              {resetMessage && (
+                <div className="reset-notice-box success">
+                  {resetMessage}
+                </div>
+              )}
+
+              <form className="brutalist-form" onSubmit={handleConfirmReset}>
+                <div className="form-group">
+                  <label>EMAIL ADDRESS</label>
+                  <input 
+                    type="email" 
+                    placeholder="YOUR@EMAIL.COM" 
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required 
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>6-DIGIT VERIFICATION CODE</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. 583920" 
+                    value={formData.resetCode}
+                    onChange={(e) => setFormData({ ...formData, resetCode: e.target.value })}
+                    required 
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>NEW PASSWORD</label>
+                  <input 
+                    type="password" 
+                    placeholder="••••••••" 
+                    value={formData.newPassword}
+                    onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                    required 
+                  />
+                </div>
+
+                <button type="submit" className="checkout-btn" style={{ marginTop: '1rem' }}>
+                  UPDATE PASSWORD & SIGN IN →
+                </button>
+              </form>
+
+              <div className="auth-toggle">
+                <p>
+                  Back to login?
+                  <button 
+                    type="button" 
+                    className="text-btn" 
+                    onClick={() => {
+                      setIsLogin(true);
+                      setAuthMode('login');
+                    }}
+                  >
+                    LOG IN
+                  </button>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* STATE 2C: STANDARD LOGIN / REGISTER FORM */}
+          {!isRegistered && status === 'IDLE' && authMode !== 'forgot_password' && authMode !== 'reset_password' && (
             <>
               {!isLogin && (
                 <div className="register-reward-banner">
@@ -178,7 +345,18 @@ const AccountDrawer = ({ isOpen, setIsOpen }) => {
                 </div>
 
                 <div className="form-group">
-                  <label>PASSWORD</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label>PASSWORD</label>
+                    {isLogin && (
+                      <button 
+                        type="button"
+                        className="forgot-password-link"
+                        onClick={() => setAuthMode('forgot_password')}
+                      >
+                        FORGOT PASSWORD?
+                      </button>
+                    )}
+                  </div>
                   <input 
                     type="password" 
                     placeholder="••••••••" 
@@ -539,6 +717,44 @@ const AccountDrawer = ({ isOpen, setIsOpen }) => {
           flex-direction: column;
           gap: 0.75rem;
           margin-top: 1rem;
+        }
+
+        .forgot-password-link {
+          background: none;
+          border: none;
+          color: var(--primary-orange);
+          font-family: var(--font-heading);
+          font-size: 0.75rem;
+          letter-spacing: 0.5px;
+          cursor: pointer;
+          text-decoration: underline;
+          padding: 0;
+          transition: color 0.2s ease;
+        }
+
+        .forgot-password-link:hover {
+          color: #00E5FF;
+        }
+
+        .reset-notice-box {
+          padding: 0.85rem 1rem;
+          margin-bottom: 1.25rem;
+          font-family: monospace;
+          font-size: 0.85rem;
+          line-height: 1.4;
+          border-left: 3px solid var(--primary-orange);
+        }
+
+        .reset-notice-box.success {
+          background: rgba(0, 229, 255, 0.1);
+          border-color: #00E5FF;
+          color: #00E5FF;
+        }
+
+        .reset-notice-box.error {
+          background: rgba(255, 51, 102, 0.1);
+          border-color: #ff3366;
+          color: #ff3366;
         }
 
         .signout-btn {

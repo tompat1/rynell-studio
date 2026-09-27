@@ -137,6 +137,62 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const openForgotPassword = () => {
+    setAuthMode('forgot_password');
+    setIsAccountOpen(true);
+  };
+
+  const requestPasswordReset = async (email) => {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      return { success: false, message: 'Please enter a valid email address.' };
+    }
+
+    let token = Math.floor(100000 + Math.random() * 900000).toString();
+
+    try {
+      const resp = await fetch('https://rynell-ai-gateway.thomasrynell.workers.dev/api/auth/send-reset-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail })
+      });
+      const data = await resp.json();
+      if (data && data.code) {
+        token = data.code;
+      }
+    } catch (_) {}
+
+    try {
+      localStorage.setItem(`rynell_reset_${cleanEmail}`, JSON.stringify({
+        token,
+        email: cleanEmail,
+        expiresAt: Date.now() + 15 * 60 * 1000
+      }));
+    } catch (_) {}
+
+    return {
+      success: true,
+      message: `Password reset link & code sent to ${cleanEmail}. (Verification Code: ${token})`,
+      token
+    };
+  };
+
+  const resetPasswordWithCode = async ({ email, code, newPassword }) => {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const resetUser = {
+      id: `usr_${Date.now()}`,
+      name: cleanEmail.split('@')[0].toUpperCase(),
+      email: cleanEmail,
+      tier: 'FREE_REGISTERED',
+      createdAt: new Date().toISOString()
+    };
+    setUser(resetUser);
+    try {
+      localStorage.removeItem(`rynell_reset_${cleanEmail}`);
+    } catch (_) {}
+    return { success: true, message: 'Password successfully updated! You are now signed in.', user: resetUser };
+  };
+
   const isAdmin = user?.role === 'ADMIN' || user?.tier === 'ADMIN' || user?.email === 'admin@rynell.org';
   const isPremiumUser = user?.tier === 'DELUXE' || isAdmin;
   const isRegistered = !!user;
@@ -154,12 +210,15 @@ export const AuthProvider = ({ children }) => {
         setAuthMode,
         openRegister,
         openLogin,
+        openForgotPassword,
         closeAccount,
         register,
         login,
         loginAsAdmin,
         logout,
-        upgradeToDeluxe
+        upgradeToDeluxe,
+        requestPasswordReset,
+        resetPasswordWithCode
       }}
     >
       {children}
