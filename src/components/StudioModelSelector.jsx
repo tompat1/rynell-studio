@@ -45,14 +45,6 @@ export const STUDIO_MODES = [
     ]
   },
   {
-    id: 'script_desk',
-    icon: '📝',
-    title: 'SCRIPT DESK',
-    subtitle: 'TRANSCRIPTION, PROOFREAD & SEARCH',
-    desc: 'Transcribe audio/video, proofread disfluencies with accessible paragraph breaks, and search speakers/topics.',
-    isPaid: false
-  },
-  {
     id: 'history',
     icon: '📜',
     title: 'ASSET LIBRARY',

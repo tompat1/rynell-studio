@@ -5,7 +5,6 @@ import PricingTable from './PricingTable';
 import heroClean from '../assets/hero_page_rynell_studio_clean.webp';
 import { useAuth } from '../contexts/AuthContext';
 import { traceRasterToSVG } from '../utils/vectorize';
-import ScriptDesk from './ScriptDesk';
 
 export const UPSCALE_PRESETS = [
   {
@@ -941,9 +940,7 @@ const StudioLab = () => {
         <div id="studio-workbench" className="workbench-wrapper">
 
           {/* Workbench Grid / Asset Library View */}
-          {selectedModel === 'script_desk' ? (
-            <ScriptDesk />
-          ) : selectedModel === 'history' ? (
+          {selectedModel === 'history' ? (
             <div className="asset-library-container" style={{
               width: '100%',
               background: '#08080C',
