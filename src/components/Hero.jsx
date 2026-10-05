@@ -45,7 +45,8 @@ const Hero = () => {
           <div className="hero-bottom-lockup">
             <img src={boltSvg} alt="Bolt Accent" className="hero-bolt-icon" />
             <p className="hero-bottom-text">
-              Creative Strategy.<br />Bold Execution.
+              Creative Strategy.<br />
+              <strong className="hero-bottom-emphasis">Bold Execution.</strong>
             </p>
           </div>
         </div>
@@ -207,6 +208,10 @@ const Hero = () => {
           border-left: 4px solid var(--primary-orange);
           padding-left: 1.5rem;
           line-height: 1.2;
+        }
+
+        .hero-bottom-emphasis {
+          font-weight: 900;
         }
 
         /* Responsive Viewports */
