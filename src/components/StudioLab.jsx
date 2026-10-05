@@ -1059,8 +1059,8 @@ const StudioLab = () => {
           {selectedModel === 'history' ? (
             <div className="asset-library-container" style={{
               width: '100%',
-              background: '#08080C',
-              border: '3px solid #1A1A24',
+              background: 'var(--studio-surface)',
+              border: '3px solid var(--studio-border)',
               padding: '2rem',
               boxShadow: '6px 6px 0 #000'
             }}>
@@ -1074,10 +1074,10 @@ const StudioLab = () => {
                   borderRadius: '6px'
                 }}>
                   <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>🔒</div>
-                  <h3 style={{ fontFamily: 'var(--font-heading)', color: '#FFF', fontSize: '1.8rem', letterSpacing: '1px', marginBottom: '0.8rem' }}>
+                  <h3 style={{ fontFamily: 'var(--font-heading)', color: 'var(--studio-text)', fontSize: '1.8rem', letterSpacing: '1px', marginBottom: '0.8rem' }}>
                     MEMBER ASSET LIBRARY & RENDER HISTORY IS LOCKED
                   </h3>
-                  <p style={{ color: '#AAA', maxWidth: '560px', margin: '0 auto 1.8rem', fontSize: '1rem', lineHeight: '1.6' }}>
+                  <p style={{ color: 'var(--studio-text-muted)', maxWidth: '560px', margin: '0 auto 1.8rem', fontSize: '1rem', lineHeight: '1.6' }}>
                     Render History & Asset Library is exclusive to registered members. Register a free account to automatically save all your generated assets, prompts, SVG vectors, and high-res downloads!
                   </p>
                   <button 
@@ -1103,8 +1103,8 @@ const StudioLab = () => {
                 <div className="empty-library-card" style={{
                   textAlign: 'center',
                   padding: '4rem 1.5rem',
-                  background: '#0D0D14',
-                  border: '2px dashed #333'
+                  background: 'var(--studio-surface-raised)',
+                  border: '2px dashed var(--studio-border)'
                 }}>
                   <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
                     <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--primary-orange)" strokeWidth="1.5">
@@ -1113,10 +1113,10 @@ const StudioLab = () => {
                       <polyline points="21 15 16 10 5 21"/>
                     </svg>
                   </div>
-                  <h4 style={{ fontFamily: 'var(--font-heading)', color: '#FFF', fontSize: '1.5rem', marginBottom: '0.5rem' }}>
+                  <h4 style={{ fontFamily: 'var(--font-heading)', color: 'var(--studio-text)', fontSize: '1.5rem', marginBottom: '0.5rem' }}>
                     NO SAVED RENDERS YET
                   </h4>
-                  <p style={{ color: '#888', maxWidth: '400px', margin: '0 auto 1.5rem', fontSize: '0.95rem' }}>
+                  <p style={{ color: 'var(--studio-text-muted)', maxWidth: '400px', margin: '0 auto 1.5rem', fontSize: '0.95rem' }}>
                     Your generated images, 4K upscales, and SVG vectorizations will automatically appear here.
                   </p>
                   <button
@@ -1139,10 +1139,10 @@ const StudioLab = () => {
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem', borderBottom: '1px solid #222', paddingBottom: '1rem' }}>
                     <div>
-                      <h3 style={{ fontFamily: 'var(--font-heading)', color: '#FFF', fontSize: '1.6rem', letterSpacing: '1px', margin: 0 }}>
+                      <h3 style={{ fontFamily: 'var(--font-heading)', color: 'var(--studio-text)', fontSize: '1.6rem', letterSpacing: '1px', margin: 0 }}>
                         📜 MY SAVED AI ASSET LIBRARY ({history.length})
                       </h3>
-                      <span style={{ fontSize: '0.8rem', color: '#888', fontFamily: 'monospace' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--studio-text-muted)', fontFamily: 'monospace' }}>
                         REGISTERED MEMBER STORAGE // PERMANENT ACCESS
                       </span>
                     </div>
@@ -1177,8 +1177,8 @@ const StudioLab = () => {
                   }}>
                     {history.map((item) => (
                       <div key={item.id} style={{
-                        background: '#111118',
-                        border: '2px solid #222230',
+                        background: 'var(--studio-surface-raised)',
+                        border: '2px solid var(--studio-border)',
                         borderRadius: '4px',
                         overflow: 'hidden',
                         display: 'flex',
@@ -1217,7 +1217,7 @@ const StudioLab = () => {
 
                         {/* Asset Meta Info & Prompt */}
                         <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', flex: 1, gap: '0.8rem' }}>
-                          <div style={{ fontSize: '0.8rem', color: '#DDD', fontFamily: 'monospace', background: 'rgba(255,255,255,0.03)', padding: '8px', borderLeft: '3px solid var(--primary-orange)', minHeight: '54px', wordBreak: 'break-word' }}>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--studio-text)', fontFamily: 'monospace', background: 'var(--studio-surface-soft)', padding: '8px', borderLeft: '3px solid var(--primary-orange)', minHeight: '54px', wordBreak: 'break-word' }}>
                             "{item.prompt}"
                           </div>
 
@@ -1254,9 +1254,9 @@ const StudioLab = () => {
                                 document.getElementById('studio-workbench')?.scrollIntoView({ behavior: 'smooth' });
                               }}
                               style={{
-                                background: 'rgba(0, 229, 255, 0.1)',
-                                border: '1px solid #00E5FF',
-                                color: '#00E5FF',
+                                background: 'color-mix(in srgb, var(--studio-accent-cyan) 10%, transparent)',
+                                border: '1px solid var(--studio-accent-cyan)',
+                                color: 'var(--studio-accent-cyan)',
                                 fontFamily: 'var(--font-heading)',
                                 fontSize: '0.8rem',
                                 padding: '0.6rem 0.8rem',
@@ -1395,7 +1395,7 @@ const StudioLab = () => {
                         >
                           <div className="placeholder-pattern"></div>
                           <div className="placeholder-content">
-                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#00E5FF" strokeWidth="1.5">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--studio-accent-cyan)" strokeWidth="1.5">
                               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                             </svg>
                             <h4>VECTORINE WORKBENCH READY</h4>
@@ -1479,7 +1479,7 @@ const StudioLab = () => {
                   </div>
                   <div className="stat-item">
                     <span className="stat-label">⚡ TRACING ENGINE</span>
-                    <span className="stat-val" style={{ color: '#00E5FF' }}>
+                    <span className="stat-val" style={{ color: 'var(--studio-accent-cyan)' }}>
                       {vectorEngineMode === 'sharp' ? 'SHARP (NEURAL)' : 'CLASSIC BEZIER'}
                     </span>
                   </div>
@@ -1490,10 +1490,10 @@ const StudioLab = () => {
               <div className="lab-control-panel vectorine-control-panel">
                 <div className="vectorine-control-header" style={{ marginBottom: '12px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <h3 className="vectorine-title" style={{ margin: 0, fontFamily: 'var(--font-heading)', color: '#FFF', fontSize: '1.2rem', letterSpacing: '1px' }}>
+                    <h3 className="vectorine-title" style={{ margin: 0, fontFamily: 'var(--font-heading)', color: 'var(--studio-text)', fontSize: '1.2rem', letterSpacing: '1px' }}>
                       📐 VECTORINE STUDIO WORKBENCH
                     </h3>
-                    <span className="vectorine-badge" style={{ background: 'rgba(0, 229, 255, 0.15)', border: '1px solid #00E5FF', color: '#00E5FF', fontSize: '10px', fontWeight: 800, padding: '2px 8px', borderRadius: '3px' }}>
+                    <span className="vectorine-badge" style={{ background: 'rgba(0, 229, 255, 0.15)', border: '1px solid var(--studio-accent-cyan)', color: 'var(--studio-accent-cyan)', fontSize: '10px', fontWeight: 800, padding: '2px 8px', borderRadius: '3px' }}>
                       RASTER-TO-VECTOR
                     </span>
                   </div>
@@ -1505,10 +1505,10 @@ const StudioLab = () => {
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={handleFileDrop}
                   style={{
-                    border: '1.5px dashed #2b2b3b',
+                    border: '1.5px dashed var(--studio-border)',
                     borderRadius: '6px',
                     padding: '1.25rem',
-                    background: 'rgba(11, 11, 18, 0.6)',
+                    background: 'var(--studio-surface-raised)',
                     transition: 'all 0.25s ease',
                     cursor: 'pointer'
                   }}
@@ -1523,11 +1523,11 @@ const StudioLab = () => {
 
                   {previewUrl ? (
                     <div className="file-preview-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <img src={previewUrl} alt="Upload Preview" className="preview-thumb" style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #00E5FF' }} />
+                      <img src={previewUrl} alt="Upload Preview" className="preview-thumb" style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--studio-accent-cyan)' }} />
                       <div className="preview-info" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span className="file-name" style={{ color: '#FFF', fontWeight: 700, fontSize: '13px' }}>{file ? file.name : "SOURCE_IMAGE.PNG"}</span>
-                        <span className="file-size" style={{ color: '#888', fontSize: '11px', fontFamily: 'monospace' }}>{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "ORIGINAL RESOLUTION"}</span>
-                        <button className="change-file-btn" onClick={handleReset} style={{ background: 'none', border: 'none', color: '#00E5FF', fontSize: '11px', fontWeight: 700, textAlign: 'left', padding: 0, cursor: 'pointer', marginTop: '4px' }}>
+                        <span className="file-name" style={{ color: 'var(--studio-text)', fontWeight: 700, fontSize: '13px' }}>{file ? file.name : "SOURCE_IMAGE.PNG"}</span>
+                        <span className="file-size" style={{ color: 'var(--studio-text-muted)', fontSize: '11px', fontFamily: 'monospace' }}>{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "ORIGINAL RESOLUTION"}</span>
+                        <button className="change-file-btn" onClick={handleReset} style={{ background: 'none', border: 'none', color: 'var(--studio-accent-cyan)', fontSize: '11px', fontWeight: 700, textAlign: 'left', padding: 0, cursor: 'pointer', marginTop: '4px' }}>
                           REPLACE SOURCE FILE
                         </button>
                       </div>
@@ -1535,16 +1535,16 @@ const StudioLab = () => {
                   ) : (
                     <label htmlFor="vectorine-file-input" className="dropzone-label" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', textAlign: 'center' }}>
                       <div className="dropzone-icon" style={{ marginBottom: '8px' }}>
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#00E5FF" strokeWidth="2">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--studio-accent-cyan)" strokeWidth="2">
                           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                           <polyline points="17 8 12 3 7 8"/>
                           <line x1="12" y1="3" x2="12" y2="15"/>
                         </svg>
                       </div>
-                      <h4 className="dropzone-title" style={{ margin: '4px 0', color: '#FFF', fontSize: '0.95rem', fontWeight: 700 }}>
+                      <h4 className="dropzone-title" style={{ margin: '4px 0', color: 'var(--studio-text)', fontSize: '0.95rem', fontWeight: 700 }}>
                         CHOOSE OR DROP RASTER GRAPHIC TO VECTORIZE
                       </h4>
-                      <span className="dropzone-info" style={{ fontSize: '11px', color: '#00E5FF', fontFamily: 'monospace' }}>
+                      <span className="dropzone-info" style={{ fontSize: '11px', color: 'var(--studio-accent-cyan)', fontFamily: 'monospace' }}>
                         CLICK TO SELECT FILE (PNG, JPG, WEBP)
                       </span>
                     </label>
@@ -1560,20 +1560,20 @@ const StudioLab = () => {
                   marginTop: '12px'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showSourceQualityInfo ? '8px' : 0 }}>
-                    <span style={{ fontSize: '12px', fontWeight: 800, color: '#00E5FF', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--studio-accent-cyan)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       💡 SOURCE QUALITY MATTERS
                     </span>
                     <button 
                       type="button" 
                       onClick={() => setShowSourceQualityInfo(!showSourceQualityInfo)}
-                      style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '11px', fontFamily: 'monospace' }}
+                      style={{ background: 'none', border: 'none', color: 'var(--studio-text-muted)', cursor: 'pointer', fontSize: '11px', fontFamily: 'monospace' }}
                     >
                       {showSourceQualityInfo ? '[ HIDE ADVICE ]' : '[ SHOW ADVICE ]'}
                     </button>
                   </div>
 
                   {showSourceQualityInfo && (
-                    <p style={{ margin: 0, fontSize: '11px', color: '#CCC', lineHeight: '1.55' }}>
+                    <p style={{ margin: 0, fontSize: '11px', color: 'var(--studio-text-muted)', lineHeight: '1.55' }}>
                       Vector tracing follows pixel detail. For fine lettering and sharp icons, start with a large, sharp image (1000–2000px). Small or pixelated images produce rounded corners and wavy edges.
                     </p>
                   )}
@@ -1594,8 +1594,8 @@ const StudioLab = () => {
                       }}
                       style={{
                         padding: '10px 12px',
-                        background: vectorEngineMode === 'sharp' ? 'rgba(0, 229, 255, 0.12)' : 'rgba(255,255,255,0.02)',
-                        border: `1px solid ${vectorEngineMode === 'sharp' ? '#00E5FF' : '#222'}`,
+                        background: vectorEngineMode === 'sharp' ? 'rgba(0, 229, 255, 0.12)' : 'var(--studio-surface-raised)',
+                        border: `1px solid ${vectorEngineMode === 'sharp' ? 'var(--studio-accent-cyan)' : 'var(--studio-border)'}`,
                         borderRadius: '4px',
                         textAlign: 'left',
                         cursor: 'pointer',
@@ -1603,10 +1603,10 @@ const StudioLab = () => {
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <strong style={{ fontSize: '11px', color: vectorEngineMode === 'sharp' ? '#00E5FF' : '#FFF' }}>⚡ SHARP TRACE (NEURAL)</strong>
-                        {vectorEngineMode === 'sharp' && <span style={{ fontSize: '9px', background: '#00E5FF', color: '#000', padding: '1px 5px', fontWeight: 900, borderRadius: '2px' }}>ACTIVE</span>}
+                        <strong style={{ fontSize: '11px', color: vectorEngineMode === 'sharp' ? 'var(--studio-accent-cyan)' : 'var(--studio-text)' }}>⚡ SHARP TRACE (NEURAL)</strong>
+                        {vectorEngineMode === 'sharp' && <span style={{ fontSize: '9px', background: 'var(--studio-accent-cyan)', color: 'var(--studio-surface)', padding: '1px 5px', fontWeight: 900, borderRadius: '2px' }}>ACTIVE</span>}
                       </div>
-                      <p style={{ margin: 0, fontSize: '10px', color: '#AAA', lineHeight: '1.4' }}>
+                      <p style={{ margin: 0, fontSize: '10px', color: 'var(--studio-text-muted)', lineHeight: '1.4' }}>
                         Sharp angles & text. Best for logos, typography & icons.
                       </p>
                     </button>
@@ -1620,8 +1620,8 @@ const StudioLab = () => {
                       }}
                       style={{
                         padding: '10px 12px',
-                        background: vectorEngineMode === 'classic' ? 'rgba(255, 85, 0, 0.12)' : 'rgba(255,255,255,0.02)',
-                        border: `1px solid ${vectorEngineMode === 'classic' ? 'var(--primary-orange)' : '#222'}`,
+                        background: vectorEngineMode === 'classic' ? 'rgba(255, 85, 0, 0.12)' : 'var(--studio-surface-raised)',
+                        border: `1px solid ${vectorEngineMode === 'classic' ? 'var(--primary-orange)' : 'var(--studio-border)'}`,
                         borderRadius: '4px',
                         textAlign: 'left',
                         cursor: 'pointer',
@@ -1629,10 +1629,10 @@ const StudioLab = () => {
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <strong style={{ fontSize: '11px', color: vectorEngineMode === 'classic' ? 'var(--primary-orange)' : '#FFF' }}>📐 CLASSIC BEZIER</strong>
+                        <strong style={{ fontSize: '11px', color: vectorEngineMode === 'classic' ? 'var(--primary-orange)' : 'var(--studio-text)' }}>📐 CLASSIC BEZIER</strong>
                         {vectorEngineMode === 'classic' && <span style={{ fontSize: '9px', background: 'var(--primary-orange)', color: '#000', padding: '1px 5px', fontWeight: 900, borderRadius: '2px' }}>ACTIVE</span>}
                       </div>
-                      <p style={{ margin: 0, fontSize: '10px', color: '#AAA', lineHeight: '1.4' }}>
+                      <p style={{ margin: 0, fontSize: '10px', color: 'var(--studio-text-muted)', lineHeight: '1.4' }}>
                         Smooth organic curves. Best for drawings & continuous lines.
                       </p>
                     </button>
@@ -1648,10 +1648,10 @@ const StudioLab = () => {
                       width: '100%',
                       marginTop: '8px',
                       padding: '6px 10px',
-                      background: 'rgba(255,255,255,0.03)',
-                      border: '1px solid #333',
+                      background: 'var(--studio-surface-raised)',
+                      border: '1px solid var(--studio-border)',
                       borderRadius: '4px',
-                      color: '#00FF66',
+                      color: 'var(--studio-accent-green)',
                       fontSize: '11px',
                       fontWeight: 700,
                       cursor: 'pointer',
@@ -1686,23 +1686,23 @@ const StudioLab = () => {
                         onClick={() => applyVectorPreset(p.id)}
                         style={{
                           padding: '8px 6px',
-                          background: vectorPreset === p.id ? 'rgba(0, 229, 255, 0.15)' : 'rgba(255,255,255,0.02)',
-                          border: `1px solid ${vectorPreset === p.id ? '#00E5FF' : '#222'}`,
+                          background: vectorPreset === p.id ? 'rgba(0, 229, 255, 0.15)' : 'var(--studio-surface-raised)',
+                          border: `1px solid ${vectorPreset === p.id ? 'var(--studio-accent-cyan)' : 'var(--studio-border)'}`,
                           borderRadius: '4px',
                           textAlign: 'center',
                           cursor: 'pointer',
                           transition: 'all 0.2s ease'
                         }}
                       >
-                        <div style={{ fontSize: '11px', fontWeight: 700, color: vectorPreset === p.id ? '#00E5FF' : '#FFF' }}>{p.name}</div>
-                        <div style={{ fontSize: '9px', color: '#888', fontFamily: 'monospace' }}>{p.desc}</div>
+                        <div style={{ fontSize: '11px', fontWeight: 700, color: vectorPreset === p.id ? 'var(--studio-accent-cyan)' : 'var(--studio-text)' }}>{p.name}</div>
+                        <div style={{ fontSize: '9px', color: 'var(--studio-text-muted)', fontFamily: 'monospace' }}>{p.desc}</div>
                       </button>
                     ))}
                   </div>
                 </div>
 
                 {/* Fine-Tuning Sliders */}
-                <div className="vectorine-sliders-card" style={{ marginTop: '16px', background: 'rgba(0,0,0,0.4)', border: '1px solid #222', borderRadius: '6px', padding: '14px' }}>
+                <div className="vectorine-sliders-card" style={{ marginTop: '16px', background: 'var(--studio-surface-raised)', border: '1px solid var(--studio-border)', borderRadius: '6px', padding: '14px' }}>
                   <label className="prompt-field-title" style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary-orange)', letterSpacing: '0.05em', marginBottom: '12px', display: 'block' }}>
                     FINE-TUNING CONTROLS:
                   </label>
@@ -1710,9 +1710,9 @@ const StudioLab = () => {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     {/* Colors */}
                     <div className="slider-item">
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#DDD', marginBottom: '4px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--studio-text)', marginBottom: '4px' }}>
                         <span>Colors</span>
-                        <span style={{ color: '#00E5FF', fontWeight: 800, fontFamily: 'monospace' }}>{vectorColors}</span>
+                        <span style={{ color: 'var(--studio-accent-cyan)', fontWeight: 800, fontFamily: 'monospace' }}>{vectorColors}</span>
                       </div>
                       <input 
                         type="range" 
@@ -1725,15 +1725,15 @@ const StudioLab = () => {
                           setVectorColors(val);
                           runVectorineTrace({ numberOfColors: val });
                         }}
-                        style={{ width: '100%', accentColor: '#00E5FF', cursor: 'pointer' }}
+                        style={{ width: '100%', accentColor: 'var(--studio-accent-cyan)', cursor: 'pointer' }}
                       />
                     </div>
 
                     {/* Detail */}
                     <div className="slider-item">
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#DDD', marginBottom: '4px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--studio-text)', marginBottom: '4px' }}>
                         <span>Detail (lower=sharper)</span>
-                        <span style={{ color: '#00E5FF', fontWeight: 800, fontFamily: 'monospace' }}>{vectorDetail}</span>
+                        <span style={{ color: 'var(--studio-accent-cyan)', fontWeight: 800, fontFamily: 'monospace' }}>{vectorDetail}</span>
                       </div>
                       <input 
                         type="range" 
@@ -1746,15 +1746,15 @@ const StudioLab = () => {
                           setVectorDetail(val);
                           runVectorineTrace({ detail: val });
                         }}
-                        style={{ width: '100%', accentColor: '#00E5FF', cursor: 'pointer' }}
+                        style={{ width: '100%', accentColor: 'var(--studio-accent-cyan)', cursor: 'pointer' }}
                       />
                     </div>
 
                     {/* Smoothing */}
                     <div className="slider-item">
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#DDD', marginBottom: '4px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--studio-text)', marginBottom: '4px' }}>
                         <span>Smoothing</span>
-                        <span style={{ color: '#00E5FF', fontWeight: 800, fontFamily: 'monospace' }}>{vectorSmoothing}</span>
+                        <span style={{ color: 'var(--studio-accent-cyan)', fontWeight: 800, fontFamily: 'monospace' }}>{vectorSmoothing}</span>
                       </div>
                       <input 
                         type="range" 
@@ -1767,15 +1767,15 @@ const StudioLab = () => {
                           setVectorSmoothing(val);
                           runVectorineTrace({ smoothing: val });
                         }}
-                        style={{ width: '100%', accentColor: '#00E5FF', cursor: 'pointer' }}
+                        style={{ width: '100%', accentColor: 'var(--studio-accent-cyan)', cursor: 'pointer' }}
                       />
                     </div>
 
                     {/* Corners */}
                     <div className="slider-item">
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#DDD', marginBottom: '4px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--studio-text)', marginBottom: '4px' }}>
                         <span>Corners</span>
-                        <span style={{ color: '#00E5FF', fontWeight: 800, fontFamily: 'monospace' }}>{vectorCorners}</span>
+                        <span style={{ color: 'var(--studio-accent-cyan)', fontWeight: 800, fontFamily: 'monospace' }}>{vectorCorners}</span>
                       </div>
                       <input 
                         type="range" 
@@ -1788,15 +1788,15 @@ const StudioLab = () => {
                           setVectorCorners(val);
                           runVectorineTrace({ corners: val });
                         }}
-                        style={{ width: '100%', accentColor: '#00E5FF', cursor: 'pointer' }}
+                        style={{ width: '100%', accentColor: 'var(--studio-accent-cyan)', cursor: 'pointer' }}
                       />
                     </div>
 
                     {/* Min shape size */}
                     <div className="slider-item">
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#DDD', marginBottom: '4px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--studio-text)', marginBottom: '4px' }}>
                         <span>Min shape size</span>
-                        <span style={{ color: '#00E5FF', fontWeight: 800, fontFamily: 'monospace' }}>{vectorMinShapeSize}</span>
+                        <span style={{ color: 'var(--studio-accent-cyan)', fontWeight: 800, fontFamily: 'monospace' }}>{vectorMinShapeSize}</span>
                       </div>
                       <input 
                         type="range" 
@@ -1809,15 +1809,15 @@ const StudioLab = () => {
                           setVectorMinShapeSize(val);
                           runVectorineTrace({ minShapeSize: val });
                         }}
-                        style={{ width: '100%', accentColor: '#00E5FF', cursor: 'pointer' }}
+                        style={{ width: '100%', accentColor: 'var(--studio-accent-cyan)', cursor: 'pointer' }}
                       />
                     </div>
 
                     {/* Noise cleanup */}
                     <div className="slider-item">
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#DDD', marginBottom: '4px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--studio-text)', marginBottom: '4px' }}>
                         <span>Noise cleanup</span>
-                        <span style={{ color: '#00E5FF', fontWeight: 800, fontFamily: 'monospace' }}>{vectorNoiseCleanup}</span>
+                        <span style={{ color: 'var(--studio-accent-cyan)', fontWeight: 800, fontFamily: 'monospace' }}>{vectorNoiseCleanup}</span>
                       </div>
                       <input 
                         type="range" 
@@ -1830,14 +1830,14 @@ const StudioLab = () => {
                           setVectorNoiseCleanup(val);
                           runVectorineTrace({ noiseCleanup: val });
                         }}
-                        style={{ width: '100%', accentColor: '#00E5FF', cursor: 'pointer' }}
+                        style={{ width: '100%', accentColor: 'var(--studio-accent-cyan)', cursor: 'pointer' }}
                       />
                     </div>
                   </div>
 
                   {/* Toggles */}
-                  <div style={{ display: 'flex', gap: '16px', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid #222' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '11px', color: '#DDD' }}>
+                  <div style={{ display: 'flex', gap: '16px', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--studio-border)' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '11px', color: 'var(--studio-text)' }}>
                       <input 
                         type="checkbox" 
                         checked={vectorIsGrayscale} 
@@ -1845,12 +1845,12 @@ const StudioLab = () => {
                           setVectorIsGrayscale(e.target.checked);
                           runVectorineTrace({ isGrayscale: e.target.checked });
                         }} 
-                        style={{ accentColor: '#00E5FF' }} 
+                        style={{ accentColor: 'var(--studio-accent-cyan)' }}
                       />
                       <span>Grayscale mode</span>
                     </label>
 
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '11px', color: '#DDD' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '11px', color: 'var(--studio-text)' }}>
                       <input 
                         type="checkbox" 
                         checked={vectorIsPureBW} 
@@ -1858,7 +1858,7 @@ const StudioLab = () => {
                           setVectorIsPureBW(e.target.checked);
                           runVectorineTrace({ isPureBW: e.target.checked });
                         }} 
-                        style={{ accentColor: '#00E5FF' }} 
+                        style={{ accentColor: 'var(--studio-accent-cyan)' }}
                       />
                       <span>Pure black & white</span>
                     </label>
@@ -1916,9 +1916,9 @@ const StudioLab = () => {
                         }}
                         style={{
                           padding: '10px',
-                          background: 'rgba(0, 229, 255, 0.15)',
-                          border: '1px solid #00E5FF',
-                          color: '#00E5FF',
+                          background: 'color-mix(in srgb, var(--studio-accent-cyan) 15%, transparent)',
+                          border: '1px solid var(--studio-accent-cyan)',
+                          color: 'var(--studio-accent-cyan)',
                           fontSize: '11px',
                           fontWeight: 800,
                           cursor: 'pointer',
@@ -1947,9 +1947,9 @@ const StudioLab = () => {
                         }}
                         style={{
                           padding: '10px',
-                          background: 'rgba(0, 255, 102, 0.15)',
-                          border: '1px solid #00FF66',
-                          color: '#00FF66',
+                          background: 'color-mix(in srgb, var(--studio-accent-green) 15%, transparent)',
+                          border: '1px solid var(--studio-accent-green)',
+                          color: 'var(--studio-accent-green)',
                           fontSize: '11px',
                           fontWeight: 800,
                           cursor: 'pointer',
@@ -2071,7 +2071,7 @@ const StudioLab = () => {
               <div className="qwen-workspace-card">
                 <div className="qwen-workspace-header">
                   <span className="qwen-badge-label">{activeModelConfig.icon} {activeModelConfig.title} WORKSPACE</span>
-                  <span className="qwen-free-tag">{activeModelConfig.badge}</span>
+                  {activeModelConfig.badge && <span className="qwen-free-tag">{activeModelConfig.badge}</span>}
                 </div>
 
                 {/* 4K Upscale Dual-Engine Selector for Comparison */}
@@ -2116,16 +2116,17 @@ const StudioLab = () => {
                 {selectedModel === 'qwen_edit' ? (
                   <>
                     <div className="qwen-prompt-field-wrapper">
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <div className="qwen-prompt-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                         <label className="prompt-field-title" style={{ margin: 0 }}>NATURAL LANGUAGE INSTRUCTION / PROMPT:</label>
                         <button 
                           type="button"
                           onClick={() => setShowTextGuide(!showTextGuide)}
+                          className="prompt-guide-toggle"
                           style={{
                             background: showTextGuide ? 'rgba(0, 229, 255, 0.15)' : 'transparent',
-                            border: `1px solid ${showTextGuide ? 'var(--primary-orange)' : '#444'}`,
+                            border: `1px solid ${showTextGuide ? 'var(--primary-orange)' : 'var(--studio-border)'}`,
                             borderRadius: '3px',
-                            color: showTextGuide ? '#FFF' : 'var(--primary-orange)',
+                            color: showTextGuide ? 'var(--studio-text)' : 'var(--primary-orange)',
                             fontSize: '11px',
                             fontWeight: 700,
                             padding: '2px 8px',
@@ -2161,8 +2162,8 @@ const StudioLab = () => {
                           <div className="text-priority-toggle-box" style={{
                             marginTop: '10px',
                             padding: '10px 14px',
-                            background: isTextActive ? 'rgba(0, 229, 255, 0.08)' : 'rgba(255, 255, 255, 0.02)',
-                            border: `1px solid ${isTextActive ? 'var(--primary-orange)' : '#333'}`,
+                            background: isTextActive ? 'rgba(0, 229, 255, 0.08)' : 'var(--studio-surface-raised)',
+                            border: `1px solid ${isTextActive ? 'var(--primary-orange)' : 'var(--studio-border)'}`,
                             borderRadius: '4px',
                             display: 'flex',
                             alignItems: 'center',
@@ -2170,7 +2171,7 @@ const StudioLab = () => {
                             gap: '12px',
                             transition: 'all 0.2s ease'
                           }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', flex: 1, fontSize: '12px', fontWeight: 600, color: '#E0E0E0', userSelect: 'none' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', flex: 1, fontSize: '12px', fontWeight: 600, color: 'var(--studio-text)', userSelect: 'none' }}>
                               <input
                                 type="checkbox"
                                 checked={isTextActive}
@@ -2186,7 +2187,7 @@ const StudioLab = () => {
                                   ✨ AUTO-DETECTED (QUOTED TEXT)
                                 </span>
                               ) : (
-                                <span style={{ fontSize: '10px', color: '#888', fontFamily: 'monospace' }}>
+                                <span style={{ fontSize: '10px', color: 'var(--studio-text-muted)', fontFamily: 'monospace' }}>
                                   ROUTES TO FLUX.1 & PHOENIX 1.0
                                 </span>
                               )}
@@ -2208,28 +2209,28 @@ const StudioLab = () => {
                         <div className="text-prompt-guide-card" style={{
                           marginTop: '12px',
                           padding: '14px',
-                          background: 'rgba(0, 0, 0, 0.65)',
+                          background: 'var(--studio-surface-raised)',
                           border: '1px dashed var(--primary-orange)',
                           borderRadius: '6px',
                           fontSize: '12px',
                           lineHeight: '1.5'
                         }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #333', paddingBottom: '8px', marginBottom: '10px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--studio-border)', paddingBottom: '8px', marginBottom: '10px' }}>
                             <strong style={{ color: 'var(--primary-orange)', letterSpacing: '0.05em', fontSize: '12px' }}>
                               🔤 PROMPTING TECHNIQUES FOR CRISP TEXT RENDERING
                             </strong>
-                            <span style={{ fontSize: '10px', color: '#888', fontFamily: 'monospace' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--studio-text-muted)', fontFamily: 'monospace' }}>
                               FLUX.1 & PHOENIX 1.0 T5-ENCODER GUIDELINES
                             </span>
                           </div>
 
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             <div>
-                              <strong style={{ color: '#FFF' }}>1. Enclose Exact Words in Double Quotes:</strong>
+                              <strong style={{ color: 'var(--studio-text)' }}>1. Enclose Exact Words in Double Quotes:</strong>
                               <div style={{ margin: '4px 0 0 8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <span style={{ color: '#FF5555' }}>❌ Avoid: <code>Add Rynell Studio logo on the chest</code></span>
+                                <span style={{ color: 'var(--studio-accent-danger)' }}>❌ Avoid: <code>Add Rynell Studio logo on the chest</code></span>
                                 <span 
-                                  style={{ color: '#55FF55', cursor: 'pointer', textDecoration: 'underline' }} 
+                                  style={{ color: 'var(--studio-accent-green)', cursor: 'pointer', textDecoration: 'underline' }}
                                   onClick={() => {
                                     setQwenPrompt('A shirt with clean bold text reading "RYNELL STUDIO" centered on the chest');
                                     setPrioritizeText(true);
@@ -2241,19 +2242,19 @@ const StudioLab = () => {
                             </div>
 
                             <div>
-                              <strong style={{ color: '#FFF' }}>2. Specify Typography Style & Legibility:</strong>
-                              <p style={{ margin: '4px 0 0 8px', color: '#CCC' }}>
-                                Append descriptors like: <code style={{ color: 'var(--primary-orange)', background: 'rgba(255,255,255,0.06)', padding: '1px 5px', borderRadius: '3px' }}>crisp legible typography</code>, <code style={{ color: 'var(--primary-orange)', background: 'rgba(255,255,255,0.06)', padding: '1px 5px', borderRadius: '3px' }}>exact spelling "YOUR_TEXT"</code>, <code style={{ color: 'var(--primary-orange)', background: 'rgba(255,255,255,0.06)', padding: '1px 5px', borderRadius: '3px' }}>clean vector sans-serif font</code>, or <code style={{ color: 'var(--primary-orange)', background: 'rgba(255,255,255,0.06)', padding: '1px 5px', borderRadius: '3px' }}>sharp high-contrast lettering</code>.
+                              <strong style={{ color: 'var(--studio-text)' }}>2. Specify Typography Style & Legibility:</strong>
+                              <p style={{ margin: '4px 0 0 8px', color: 'var(--studio-text-muted)' }}>
+                                Append descriptors like: <code style={{ color: 'var(--primary-orange)', background: 'var(--studio-surface-soft)', padding: '1px 5px', borderRadius: '3px' }}>crisp legible typography</code>, <code style={{ color: 'var(--primary-orange)', background: 'var(--studio-surface-soft)', padding: '1px 5px', borderRadius: '3px' }}>exact spelling "YOUR_TEXT"</code>, <code style={{ color: 'var(--primary-orange)', background: 'var(--studio-surface-soft)', padding: '1px 5px', borderRadius: '3px' }}>clean vector sans-serif font</code>, or <code style={{ color: 'var(--primary-orange)', background: 'var(--studio-surface-soft)', padding: '1px 5px', borderRadius: '3px' }}>sharp high-contrast lettering</code>.
                               </p>
                             </div>
 
                             <div>
-                              <strong style={{ color: '#FFF' }}>3. Separate Style from Text:</strong>
-                              <p style={{ margin: '4px 0 0 8px', color: '#CCC' }}>
+                              <strong style={{ color: 'var(--studio-text)' }}>3. Separate Style from Text:</strong>
+                              <p style={{ margin: '4px 0 0 8px', color: 'var(--studio-text-muted)' }}>
                                 Define the visual style of the image first, then state the text instruction at the end:
                               </p>
                               <div 
-                                style={{ margin: '6px 0 0 8px', padding: '8px 12px', background: 'rgba(255, 107, 0, 0.08)', borderRadius: '4px', borderLeft: '3px solid var(--primary-orange)', cursor: 'pointer', color: '#FFF' }}
+                                style={{ margin: '6px 0 0 8px', padding: '8px 12px', background: 'rgba(255, 107, 0, 0.08)', borderRadius: '4px', borderLeft: '3px solid var(--primary-orange)', cursor: 'pointer', color: 'var(--studio-text)' }}
                                 onClick={() => {
                                   setQwenPrompt('Studio photo of a brutalist poster with dark orange background, with exact typography reading "DESIGN THAT HITS" in sharp bold letters.');
                                   setPrioritizeText(true);
@@ -2373,9 +2374,9 @@ const StudioLab = () => {
                     <button 
                       className="action-btn copy-svg-btn"
                       style={{
-                        background: 'rgba(0, 255, 102, 0.12)',
-                        border: '1px solid #00FF66',
-                        color: '#00FF66',
+                        background: 'color-mix(in srgb, var(--studio-accent-green) 12%, transparent)',
+                        border: '1px solid var(--studio-accent-green)',
+                        color: 'var(--studio-accent-green)',
                         marginTop: '6px',
                         fontSize: '12px',
                         fontWeight: 700,
@@ -2401,9 +2402,9 @@ const StudioLab = () => {
                     <button 
                       className="action-btn text-priority-rerun-btn"
                       style={{
-                        background: 'rgba(0, 229, 255, 0.1)',
-                        border: '1px solid #00E5FF',
-                        color: '#00E5FF',
+                        background: 'color-mix(in srgb, var(--studio-accent-cyan) 10%, transparent)',
+                        border: '1px solid var(--studio-accent-cyan)',
+                        color: 'var(--studio-accent-cyan)',
                         marginTop: '6px',
                         fontSize: '12px',
                         fontWeight: 800,
@@ -2430,9 +2431,9 @@ const StudioLab = () => {
                       className="action-btn reset-btn" 
                       onClick={handleReset}
                       style={{
-                        background: 'rgba(255, 255, 255, 0.03)',
-                        border: '1px solid #333',
-                        color: '#AAA',
+                        background: 'var(--studio-surface-raised)',
+                        border: '1px solid var(--studio-border)',
+                        color: 'var(--studio-text-muted)',
                         marginTop: '6px',
                         fontSize: '12px',
                         fontWeight: 700,
@@ -2587,8 +2588,8 @@ const StudioLab = () => {
           gap: 6px;
           margin-bottom: 12px;
           padding: 4px;
-          background: rgba(0, 0, 0, 0.5);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: var(--studio-surface-raised);
+          border: 1px solid var(--studio-border);
           border-radius: 6px;
         }
 
@@ -2597,7 +2598,7 @@ const StudioLab = () => {
           font-size: 11px;
           font-weight: 700;
           text-transform: uppercase;
-          color: #888;
+          color: var(--studio-text-muted);
           background: transparent;
           border: none;
           padding: 8px 10px;
@@ -2607,9 +2608,9 @@ const StudioLab = () => {
         }
 
         .vectorine-tab-btn.active {
-          color: #00E5FF;
-          background: rgba(0, 229, 255, 0.12);
-          border: 1px solid rgba(0, 229, 255, 0.3);
+          color: var(--studio-accent-cyan);
+          background: color-mix(in srgb, var(--studio-accent-cyan) 12%, transparent);
+          border: 1px solid color-mix(in srgb, var(--studio-accent-cyan) 35%, transparent);
         }
 
         .vectorine-zoom-bar {
@@ -2618,8 +2619,8 @@ const StudioLab = () => {
           justify-content: space-between;
           margin-bottom: 12px;
           padding: 8px 12px;
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.06);
+          background: var(--studio-surface-raised);
+          border: 1px solid var(--studio-border);
           border-radius: 4px;
         }
 
@@ -2630,9 +2631,9 @@ const StudioLab = () => {
         }
 
         .zoom-btn {
-          background: #1a1a24;
-          border: 1px solid #333;
-          color: #fff;
+          background: var(--studio-surface-soft);
+          border: 1px solid var(--studio-border);
+          color: var(--studio-text);
           width: 26px;
           height: 26px;
           border-radius: 4px;
@@ -2643,15 +2644,15 @@ const StudioLab = () => {
         .zoom-val {
           font-family: monospace;
           font-size: 12px;
-          color: #00E5FF;
+          color: var(--studio-accent-cyan);
           min-width: 42px;
           text-align: center;
         }
 
         .zoom-reset-btn {
           background: none;
-          border: 1px solid #444;
-          color: #888;
+          border: 1px solid var(--studio-border);
+          color: var(--studio-text-muted);
           font-size: 10px;
           font-family: monospace;
           padding: 3px 6px;
@@ -2661,8 +2662,8 @@ const StudioLab = () => {
 
         .vectorine-download-btn {
           background: rgba(0, 229, 255, 0.15);
-          border: 1px solid #00E5FF;
-          color: #00E5FF;
+          border: 1px solid var(--studio-accent-cyan);
+          color: var(--studio-accent-cyan);
           font-size: 11px;
           font-weight: 800;
           padding: 5px 12px;
@@ -2759,8 +2760,8 @@ const StudioLab = () => {
           gap: 8px;
           margin-top: 12px;
           padding: 10px 14px;
-          background: rgba(0, 0, 0, 0.5);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: var(--studio-surface-raised);
+          border: 1px solid var(--studio-border);
           border-radius: 6px;
         }
 
@@ -2773,7 +2774,7 @@ const StudioLab = () => {
         .stat-label {
           font-size: 9px;
           font-family: monospace;
-          color: #777;
+          color: var(--studio-text-muted);
           letter-spacing: 0.05em;
         }
 
@@ -2798,7 +2799,7 @@ const StudioLab = () => {
         .upscale-engine-picker {
           margin-bottom: 1.25rem;
           padding-bottom: 1.25rem;
-          border-bottom: 1px solid #1f1f2e;
+          border-bottom: 1px solid var(--studio-border);
         }
 
         .qwen-dual-upload-grid.single-upload-mode {
@@ -2817,8 +2818,8 @@ const StudioLab = () => {
         }
 
         .upscale-preset-card {
-          background: #09090f;
-          border: 2px solid #1f1f2e;
+          background: var(--studio-surface-raised);
+          border: 2px solid var(--studio-border);
           padding: 0.85rem 1rem;
           text-align: left;
           cursor: pointer;
@@ -2830,13 +2831,13 @@ const StudioLab = () => {
 
         .upscale-preset-card:hover {
           border-color: var(--primary-orange);
-          background: #12121a;
+          background: var(--studio-surface-soft);
           transform: translateY(-1px);
         }
 
         .upscale-preset-card.active {
           border-color: var(--primary-orange);
-          background: #161410;
+          background: var(--studio-surface-active);
           box-shadow: 3px 3px 0 var(--primary-orange);
         }
 
@@ -2853,7 +2854,7 @@ const StudioLab = () => {
         .preset-card-title {
           font-family: var(--font-heading);
           font-size: 0.82rem;
-          color: #fff;
+          color: var(--studio-text);
           letter-spacing: 0.5px;
           flex: 1;
         }
@@ -2868,7 +2869,7 @@ const StudioLab = () => {
         .preset-card-desc {
           margin: 0;
           font-size: 0.76rem;
-          color: #888;
+          color: var(--studio-text-muted);
           line-height: 1.35;
         }
 
@@ -2880,8 +2881,8 @@ const StudioLab = () => {
         }
 
         .engine-card-pill {
-          background: #0d0d14;
-          border: 2px solid #222230;
+          background: var(--studio-surface-raised);
+          border: 2px solid var(--studio-border);
           padding: 0.85rem 1rem;
           text-align: left;
           cursor: pointer;
@@ -2893,12 +2894,12 @@ const StudioLab = () => {
 
         .engine-card-pill:hover {
           border-color: var(--primary-orange);
-          background: #14141e;
+          background: var(--studio-surface-soft);
         }
 
         .engine-card-pill.active {
           border-color: var(--primary-orange);
-          background: #171510;
+          background: var(--studio-surface-active);
           box-shadow: 3px 3px 0 var(--primary-orange);
         }
 
@@ -2915,7 +2916,7 @@ const StudioLab = () => {
         .engine-card-name {
           font-family: var(--font-heading);
           font-size: 0.85rem;
-          color: #fff;
+          color: var(--studio-text);
           letter-spacing: 0.5px;
           flex: 1;
         }
@@ -2933,7 +2934,7 @@ const StudioLab = () => {
         .engine-card-desc {
           margin: 0;
           font-size: 0.78rem;
-          color: #888;
+          color: var(--studio-text-muted);
           line-height: 1.35;
         }
 
@@ -2968,7 +2969,7 @@ const StudioLab = () => {
         .admin-status-text {
           font-family: var(--font-body);
           font-size: 0.85rem;
-          color: #eee;
+          color: var(--text-secondary);
         }
 
         .admin-status-text strong {
@@ -2980,8 +2981,8 @@ const StudioLab = () => {
           display: flex;
           align-items: center;
           gap: 1rem;
-          background: rgba(0, 255, 102, 0.08);
-          border: 1px solid rgba(0, 255, 102, 0.3);
+          background: color-mix(in srgb, var(--studio-accent-green) 8%, transparent);
+          border: 1px solid color-mix(in srgb, var(--studio-accent-green) 35%, transparent);
           padding: 0.6rem 1rem;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -2989,8 +2990,8 @@ const StudioLab = () => {
         }
 
         .guest-reward-strip:hover {
-          background: rgba(0, 255, 102, 0.14);
-          border-color: #00FF66;
+          background: color-mix(in srgb, var(--studio-accent-green) 14%, transparent);
+          border-color: var(--studio-accent-green);
           transform: translateY(-1px);
         }
 
@@ -2998,8 +2999,8 @@ const StudioLab = () => {
           font-family: var(--font-heading);
           font-size: 0.7rem;
           font-weight: 800;
-          color: #000;
-          background: #00FF66;
+          color: var(--studio-surface);
+          background: var(--studio-accent-green);
           padding: 0.2rem 0.5rem;
           letter-spacing: 1px;
         }
@@ -3007,17 +3008,17 @@ const StudioLab = () => {
         .guest-text {
           font-family: var(--font-body);
           font-size: 0.85rem;
-          color: #ccc;
+          color: var(--text-secondary);
         }
 
         .guest-text strong {
-          color: #00FF66;
+          color: var(--studio-accent-green);
         }
 
         .guest-btn {
           background: none;
           border: none;
-          color: #00FF66;
+          color: var(--studio-accent-green);
           font-family: var(--font-heading);
           font-size: 0.85rem;
           font-weight: 700;
@@ -3027,7 +3028,7 @@ const StudioLab = () => {
         }
 
         .active-tool-banner {
-          background: #0b0b10;
+          background: var(--studio-surface);
           border: 3px solid var(--primary-orange);
           box-shadow: 6px 6px 0 var(--primary-orange);
           padding: 1.5rem 2rem;
@@ -3072,7 +3073,7 @@ const StudioLab = () => {
         .tool-banner-title {
           font-family: var(--font-heading);
           font-size: 2rem;
-          color: #FFF;
+          color: var(--studio-text);
           letter-spacing: 2px;
           margin: 0 0 0.4rem 0;
         }
@@ -3219,12 +3220,13 @@ const StudioLab = () => {
 
         .qwen-dual-upload-grid {
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 1.2rem;
           width: 100%;
         }
 
         .qwen-half-dropzone {
+          min-width: 0;
           min-height: 140px;
           display: flex;
           flex-direction: column;
@@ -3243,8 +3245,9 @@ const StudioLab = () => {
           display: flex;
           flex-direction: column;
           gap: 1.2rem;
-          background: #09090C;
-          border: 3px solid #00E5FF;
+          min-width: 0;
+          background: var(--studio-surface);
+          border: 3px solid var(--studio-accent-cyan);
           padding: 1.5rem;
           box-shadow: 6px 6px 0 #000;
         }
@@ -3253,22 +3256,22 @@ const StudioLab = () => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          border-bottom: 2px solid #222;
+          border-bottom: 2px solid var(--studio-border);
           padding-bottom: 0.8rem;
         }
 
         .qwen-badge-label {
           font-family: var(--font-heading);
           font-size: 1.1rem;
-          color: #00E5FF;
+          color: var(--studio-accent-cyan);
           letter-spacing: 1px;
         }
 
         .qwen-free-tag {
           font-family: var(--font-heading);
           font-size: 0.85rem;
-          background: #00FF66;
-          color: #000;
+          background: var(--studio-accent-green);
+          color: var(--studio-surface);
           padding: 0.2rem 0.6rem;
           font-weight: bold;
         }
@@ -3283,8 +3286,8 @@ const StudioLab = () => {
         }
 
         .ref-upload-box:hover {
-          border-color: #00E5FF;
-          background: rgba(0, 229, 255, 0.04);
+          border-color: var(--studio-accent-cyan);
+          background: color-mix(in srgb, var(--studio-accent-cyan) 4%, transparent);
         }
 
         .ref-upload-label { cursor: pointer; display: block; }
@@ -3301,14 +3304,14 @@ const StudioLab = () => {
         .ref-title-text {
           font-family: var(--font-heading);
           font-size: 0.95rem;
-          color: #00E5FF;
+          color: var(--studio-accent-cyan);
           letter-spacing: 1px;
         }
 
         .ref-sub-text {
           font-family: var(--font-body);
           font-size: 0.75rem;
-          color: #888;
+          color: var(--studio-text-muted);
         }
 
         .ref-preview-content {
@@ -3321,7 +3324,7 @@ const StudioLab = () => {
           width: 60px;
           height: 60px;
           object-fit: cover;
-          border: 2px solid #00E5FF;
+          border: 2px solid var(--studio-accent-cyan);
         }
 
         .ref-meta-info {
@@ -3334,7 +3337,7 @@ const StudioLab = () => {
         .ref-name-text {
           font-family: var(--font-heading);
           font-size: 0.85rem;
-          color: #FFF;
+          color: var(--studio-text);
         }
 
         .remove-ref-btn {
@@ -3356,24 +3359,30 @@ const StudioLab = () => {
         .prompt-field-title {
           font-family: var(--font-heading);
           font-size: 0.9rem;
-          color: #00E5FF;
+          color: var(--studio-accent-cyan);
           letter-spacing: 1px;
         }
 
         .qwen-prompt-textarea {
+          display: block;
+          min-width: 0;
+          max-width: 100%;
           width: 100%;
-          background: #000;
-          border: 2px solid #333;
-          color: #FFF;
+          background: var(--studio-field);
+          border: 2px solid var(--studio-border);
+          color: var(--studio-text);
           padding: 0.8rem;
           font-family: var(--font-body);
           font-size: 0.95rem;
           resize: vertical;
           outline: none;
+          white-space: pre-wrap;
+          overflow-wrap: anywhere;
+          overflow-x: hidden;
         }
 
         .qwen-prompt-textarea:focus {
-          border-color: #00E5FF;
+          border-color: var(--studio-accent-cyan);
         }
 
         .generation-mode-indicator {
@@ -3385,14 +3394,14 @@ const StudioLab = () => {
           padding: 0.45rem 0.65rem;
           border: 1px solid rgba(0, 229, 255, 0.28);
           background: rgba(0, 229, 255, 0.06);
-          color: #9ca3af;
+          color: var(--studio-text-muted);
           font-family: monospace;
           font-size: 0.72rem;
           letter-spacing: 0.02em;
         }
 
         .generation-mode-indicator strong {
-          color: #00E5FF;
+          color: var(--studio-accent-cyan);
           font-family: var(--font-heading);
           font-size: 0.72rem;
           letter-spacing: 0.08em;
@@ -3411,7 +3420,7 @@ const StudioLab = () => {
           width: 7px;
           height: 7px;
           border-radius: 50%;
-          background: #00E5FF;
+          background: var(--studio-accent-cyan);
           box-shadow: 0 0 8px rgba(0, 229, 255, 0.8);
         }
 
@@ -3427,7 +3436,7 @@ const StudioLab = () => {
           padding: 0.8rem 1rem;
           border: 1px solid #ff4d6d;
           background: rgba(255, 77, 109, 0.08);
-          color: #f4b6c2;
+          color: var(--studio-text);
           font-family: monospace;
           font-size: 0.78rem;
           line-height: 1.45;
@@ -3449,7 +3458,7 @@ const StudioLab = () => {
         .recipes-group-title {
           font-family: var(--font-heading);
           font-size: 0.8rem;
-          color: #888;
+          color: var(--studio-text-muted);
           letter-spacing: 1px;
         }
 
@@ -3463,18 +3472,19 @@ const StudioLab = () => {
           font-family: var(--font-body);
           font-size: 0.75rem;
           padding: 0.3rem 0.6rem;
-          background: #14141A;
-          color: #AAA;
-          border: 1px solid #333;
+          max-width: 100%;
+          background: var(--studio-surface-raised);
+          color: var(--studio-text-muted);
+          border: 1px solid var(--studio-border);
           cursor: pointer;
           transition: all 0.2s ease;
           text-align: left;
         }
 
         .recipe-pill-item:hover, .recipe-pill-item.active {
-          background: #00E5FF;
-          color: #000;
-          border-color: #00E5FF;
+          background: var(--studio-accent-cyan);
+          color: var(--studio-surface);
+          border-color: var(--studio-accent-cyan);
           font-weight: bold;
         }
 
@@ -3523,12 +3533,13 @@ const StudioLab = () => {
 
         .lab-workbench-grid {
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 3rem;
           margin-bottom: 4rem;
         }
 
         .lab-control-panel {
+          min-width: 0;
           display: flex;
           flex-direction: column;
           gap: 1.5rem;
@@ -3716,8 +3727,8 @@ const StudioLab = () => {
         }
 
         .download-btn {
-          background-color: #00FF66;
-          color: #000000;
+          background-color: var(--studio-accent-green);
+          color: var(--studio-surface);
           font-family: var(--font-heading);
           font-size: 0.95rem;
           font-weight: 900;
@@ -3729,7 +3740,7 @@ const StudioLab = () => {
           justify-content: center;
           gap: 0.5rem;
           padding: 0.9rem 1.2rem;
-          border: 2px solid #00FF66;
+          border: 2px solid var(--studio-accent-green);
           box-shadow: 4px 4px 0 #000;
           transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
           margin-top: 6px;
@@ -3749,6 +3760,7 @@ const StudioLab = () => {
         }
 
         .lab-display-panel {
+          min-width: 0;
           display: flex;
           flex-direction: column;
         }
@@ -3857,13 +3869,13 @@ const StudioLab = () => {
         .cta-content h3 {
           font-family: var(--font-heading);
           font-size: 2rem;
-          color: var(--text-primary);
+          color: var(--white);
           margin-bottom: 0.5rem;
         }
 
         .cta-content p {
           font-family: var(--font-body);
-          color: var(--text-secondary);
+          color: rgba(255, 255, 255, 0.82);
           margin: 0;
         }
 
@@ -3890,7 +3902,7 @@ const StudioLab = () => {
           display: flex;
           align-items: center;
           gap: 1.2rem;
-          background: #080C14;
+          background: var(--studio-surface);
           border: 3px solid var(--primary-orange);
           padding: 1.2rem 1.5rem;
           box-shadow: 6px 6px 0 #000;
@@ -3934,7 +3946,7 @@ const StudioLab = () => {
         .spinner-status-desc {
           font-family: var(--font-body);
           font-size: 0.88rem;
-          color: #A0A0B0;
+          color: var(--studio-text-muted);
         }
 
         .display-loading-overlay {
@@ -4010,7 +4022,7 @@ const StudioLab = () => {
           transform: scale(1.08);
         }
 
-        @media (max-width: 992px) {
+        @media (max-width: 1180px) {
           .lab-workbench-grid {
             grid-template-columns: 1fr;
           }
@@ -4020,6 +4032,33 @@ const StudioLab = () => {
           }
           .lab-title {
             font-size: 2.8rem;
+          }
+        }
+
+        @media (max-width: 700px) {
+          .qwen-prompt-heading {
+            align-items: stretch !important;
+            flex-direction: column;
+            gap: 0.6rem;
+          }
+
+          .prompt-guide-toggle {
+            justify-content: center;
+            width: 100%;
+          }
+
+          .text-priority-toggle-box {
+            align-items: flex-start !important;
+            flex-direction: column;
+          }
+
+          .deluxe-cta-banner {
+            padding: 1.5rem;
+          }
+
+          .cta-upgrade-btn {
+            width: 100%;
+            white-space: normal;
           }
         }
       `}</style>

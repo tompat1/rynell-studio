@@ -166,8 +166,8 @@ const StudioModelSelector = ({
         .unified-studio-selector {
           width: 100%;
           margin-bottom: 2rem;
-          background: #08080c;
-          border: 3px solid #1a1a24;
+          background: var(--studio-surface);
+          border: 3px solid var(--studio-border);
           box-shadow: 6px 6px 0 #000;
           padding: 1.25rem 1.5rem;
           display: flex;
@@ -182,7 +182,7 @@ const StudioModelSelector = ({
           flex-wrap: wrap;
           gap: 0.75rem;
           padding-bottom: 0.75rem;
-          border-bottom: 1px solid #1f1f2e;
+          border-bottom: 1px solid var(--studio-border);
         }
 
         .header-meta-group {
@@ -195,9 +195,9 @@ const StudioModelSelector = ({
           display: inline-flex;
           align-items: center;
           gap: 0.4rem;
-          background: rgba(0, 255, 102, 0.1);
-          border: 1px solid #00FF66;
-          color: #00FF66;
+          background: color-mix(in srgb, var(--studio-accent-green) 10%, transparent);
+          border: 1px solid var(--studio-accent-green);
+          color: var(--studio-accent-green);
           font-family: var(--font-heading);
           font-size: 0.72rem;
           font-weight: 800;
@@ -209,8 +209,8 @@ const StudioModelSelector = ({
           width: 6px;
           height: 6px;
           border-radius: 50%;
-          background: #00FF66;
-          box-shadow: 0 0 8px #00FF66;
+          background: var(--studio-accent-green);
+          box-shadow: 0 0 8px var(--studio-accent-green);
           animation: pulseGlow 1.6s infinite ease-in-out;
         }
 
@@ -222,7 +222,7 @@ const StudioModelSelector = ({
         .engine-name-label {
           font-family: var(--font-heading);
           font-size: 0.95rem;
-          color: var(--text-primary);
+          color: var(--studio-text);
           letter-spacing: 1.5px;
           font-weight: 700;
         }
@@ -230,39 +230,40 @@ const StudioModelSelector = ({
         .quota-strip-summary {
           font-family: monospace;
           font-size: 0.75rem;
-          color: #888;
+          color: var(--studio-text-muted);
           letter-spacing: 0.5px;
         }
 
         .quota-strip-summary strong {
-          color: var(--primary-orange);
+          color: var(--studio-accent-orange);
         }
 
         .quota-text.pro {
-          color: #00E5FF;
+          color: var(--studio-accent-cyan);
           font-weight: 700;
         }
 
         .quota-text.admin {
-          color: #ff3366;
+          color: var(--studio-accent-danger);
           font-weight: 700;
           letter-spacing: 0.5px;
         }
 
         .mode-capsule-bar {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 1rem;
         }
 
         .mode-capsule-btn {
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           gap: 1rem;
           padding: 1.1rem 1.25rem;
-          background: #111118;
-          border: 2px solid #222230;
-          color: #aaa;
+          min-width: 0;
+          background: var(--studio-surface-raised);
+          border: 2px solid var(--studio-border);
+          color: var(--studio-text-muted);
           cursor: pointer;
           text-align: left;
           transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -270,27 +271,27 @@ const StudioModelSelector = ({
 
         .mode-capsule-btn:hover {
           border-color: var(--primary-orange);
-          color: #fff;
+          color: var(--studio-text);
           transform: translateY(-2px);
-          background: #161622;
+          background: var(--studio-surface-soft);
         }
 
         .mode-capsule-btn.active {
-          background: #171510;
+          background: var(--studio-surface-active);
           border: 2px solid var(--primary-orange);
           box-shadow: 4px 4px 0 var(--primary-orange);
-          color: #fff;
+          color: var(--studio-text);
           transform: translateY(-2px);
         }
 
         .mode-capsule-btn.locked {
           opacity: 0.75;
-          border-color: #2b233a;
+          border-color: var(--studio-border);
         }
 
         .mode-capsule-btn.locked:hover {
-          border-color: #ff3366;
-          background: #19121a;
+          border-color: var(--studio-accent-danger);
+          background: color-mix(in srgb, var(--studio-accent-danger) 8%, var(--studio-surface));
         }
 
         .mode-icon-glyph {
@@ -304,12 +305,14 @@ const StudioModelSelector = ({
           gap: 0.25rem;
           overflow: hidden;
           width: 100%;
+          min-width: 0;
         }
 
         .mode-title-row {
           display: flex;
           align-items: center;
           justify-content: space-between;
+          flex-wrap: wrap;
           gap: 0.5rem;
         }
 
@@ -318,10 +321,9 @@ const StudioModelSelector = ({
           font-size: 0.92rem;
           font-weight: 800;
           letter-spacing: 0.5px;
-          color: #fff;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
+          color: var(--studio-text);
+          white-space: normal;
+          overflow-wrap: anywhere;
         }
 
         .mode-status-tag {
@@ -331,51 +333,58 @@ const StudioModelSelector = ({
           padding: 0.15rem 0.45rem;
           letter-spacing: 0.5px;
           flex-shrink: 0;
+          white-space: nowrap;
         }
 
         .mode-status-tag.free {
-          color: #00FF66;
-          background: rgba(0, 255, 102, 0.1);
-          border: 1px solid rgba(0, 255, 102, 0.3);
+          color: var(--studio-accent-green);
+          background: color-mix(in srgb, var(--studio-accent-green) 10%, transparent);
+          border: 1px solid color-mix(in srgb, var(--studio-accent-green) 35%, transparent);
         }
 
         .mode-status-tag.trial {
-          color: var(--primary-orange);
+          color: var(--studio-accent-orange);
           background: rgba(255, 106, 0, 0.12);
           border: 1px solid rgba(255, 106, 0, 0.35);
         }
 
         .mode-status-tag.locked {
-          color: #ff4d6d;
-          background: rgba(255, 77, 109, 0.12);
-          border: 1px solid rgba(255, 77, 109, 0.35);
+          color: var(--studio-accent-danger);
+          background: color-mix(in srgb, var(--studio-accent-danger) 12%, transparent);
+          border: 1px solid color-mix(in srgb, var(--studio-accent-danger) 35%, transparent);
         }
 
         .mode-status-tag.pro {
-          color: #00E5FF;
-          background: rgba(0, 229, 255, 0.12);
-          border: 1px solid rgba(0, 229, 255, 0.3);
+          color: var(--studio-accent-cyan);
+          background: color-mix(in srgb, var(--studio-accent-cyan) 12%, transparent);
+          border: 1px solid color-mix(in srgb, var(--studio-accent-cyan) 35%, transparent);
         }
 
         .mode-status-tag.admin {
-          color: #ff3366;
-          background: rgba(255, 51, 102, 0.16);
-          border: 1px solid rgba(255, 51, 102, 0.4);
-          box-shadow: 0 0 8px rgba(255, 51, 102, 0.2);
+          color: var(--studio-accent-danger);
+          background: color-mix(in srgb, var(--studio-accent-danger) 16%, transparent);
+          border: 1px solid color-mix(in srgb, var(--studio-accent-danger) 40%, transparent);
+          box-shadow: 0 0 8px color-mix(in srgb, var(--studio-accent-danger) 20%, transparent);
         }
 
         .mode-tab-engine {
           font-family: monospace;
           font-size: 0.68rem;
-          color: #777;
+          color: var(--studio-text-muted);
           letter-spacing: 0.5px;
         }
 
         .mode-capsule-btn.active .mode-tab-engine {
-          color: var(--primary-orange);
+          color: var(--studio-accent-orange);
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 1180px) {
+          .mode-capsule-bar {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+
+        @media (max-width: 700px) {
           .mode-capsule-bar {
             grid-template-columns: 1fr;
           }
