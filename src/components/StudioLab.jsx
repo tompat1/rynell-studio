@@ -86,7 +86,7 @@ const StudioLab = () => {
   const [status, setStatus] = useState('IDLE'); // IDLE, UPLOADING, QUEUED, PROCESSING, SUCCESS, ERROR
   const [statusMessage, setStatusMessage] = useState('');
   const [outputUrl, setOutputUrl] = useState(null);
-  const [qwenPrompt, setQwenPrompt] = useState('Remove photobomber and text from background');
+  const [qwenPrompt, setQwenPrompt] = useState('');
   const [refFile, setRefFile] = useState(null);
   const [refPreviewUrl, setRefPreviewUrl] = useState(null);
   const [prioritizeText, setPrioritizeText] = useState(false);
@@ -257,7 +257,7 @@ const StudioLab = () => {
       modelTitle: modelTitle,
       prompt: promptText || 'Studio AI Asset',
       outputUrl: outputAssetUrl,
-      previewUrl: previewSourceUrl || outputAssetUrl
+      previewUrl: previewSourceUrl || null
     };
 
     setHistory((prev) => {
@@ -570,6 +570,12 @@ const StudioLab = () => {
   };
 
   const runSimulatedPipeline = async () => {
+    if (selectedModel === 'qwen_edit' && !previewUrl && !outputUrl) {
+      setStatus('ERROR');
+      setStatusMessage('PROMPT-ONLY GENERATION COULD NOT REACH THE AI GATEWAY. PLEASE TRY AGAIN.');
+      return;
+    }
+
     setStatus('UPLOADING');
     setStatusMessage('UPLOADING FILE TO CLOUDFLARE R2 STORAGE (0 KB EGRESS)...');
 
@@ -592,7 +598,7 @@ const StudioLab = () => {
           deductQuota(selectedModel);
           setStatusMessage(selectedModel === 'logo' ? 'PROCESS COMPLETE: SVG VECTOR READY.' : 'PROCESS COMPLETE: AI STUDIO ASSET READY.');
           if (selectedModel === 'qwen_edit') {
-            const sourceImg = previewUrl || heroClean;
+            const sourceImg = previewUrl || outputUrl;
             const editedUrl = await generateQwenEditedImage(sourceImg, qwenPrompt, refPreviewUrl, null);
             handleSetOutputUrl(editedUrl, 'qwen_edit', qwenPrompt, sourceImg);
           } else if (selectedModel === 'upscale') {
@@ -662,6 +668,12 @@ const StudioLab = () => {
   };
 
   const handleStartProcess = async () => {
+    if (selectedModel === 'qwen_edit' && !qwenPrompt.trim()) {
+      setStatus('ERROR');
+      setStatusMessage('ENTER A PROMPT TO GENERATE OR EDIT AN IMAGE.');
+      return;
+    }
+
     // Free Quota & Try-Before-Buy checks
     if (!isPremiumUser) {
       if (selectedModel === 'qwen_edit' && (usage.imageStudioRendersLeft ?? 5) <= 0) {
@@ -682,8 +694,10 @@ const StudioLab = () => {
       }
     }
 
-    const rawImage = outputUrl || previewUrl || refPreviewUrl || heroClean;
-    if (!previewUrl) {
+    const rawImage = selectedModel === 'qwen_edit'
+      ? (outputUrl || previewUrl || null)
+      : (outputUrl || previewUrl || refPreviewUrl || heroClean);
+    if (!previewUrl && rawImage) {
       setPreviewUrl(rawImage);
     }
 
@@ -797,7 +811,9 @@ const StudioLab = () => {
 
     try {
       setStatus('UPLOADING');
-      setStatusMessage('UPLOADING FILE TO CLOUDFLARE R2 STORAGE (0 KB EGRESS)...');
+      setStatusMessage(rawImage
+        ? 'UPLOADING SOURCE TO CLOUDFLARE AI (0 KB EGRESS)...'
+        : 'SUBMITTING PROMPT TO CLOUDFLARE AI GENERATION...');
 
       // Optimize image payload size to 1024px for edge AI processing
       const activeImage = await compressImageForAI(rawImage, 1024);
@@ -809,9 +825,9 @@ const StudioLab = () => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          imageR2Key: file ? file.name : 'sample-upload.png',
-          imageBase64: activeImage,
-          refImageBase64: refPreviewUrl,
+          imageR2Key: file ? file.name : undefined,
+          imageBase64: activeImage || undefined,
+          refImageBase64: refPreviewUrl || undefined,
           modelType: selectedModel,
           upscaleEngine: selectedModel === 'upscale' ? upscaleEngine : undefined,
           prompt: qwenPrompt,
@@ -832,6 +848,16 @@ const StudioLab = () => {
         deductQuota(selectedModel);
         setStatusMessage(`PROCESS COMPLETE: ${activeModelConfig.title} READY.`);
         handleSetOutputUrl(processData.outputUrl, selectedModel, qwenPrompt, rawImage);
+        return;
+      }
+
+      if (processData.status === 'fallback') {
+        if (rawImage) {
+          runSimulatedPipeline();
+        } else {
+          setStatus('ERROR');
+          setStatusMessage('PROMPT-ONLY GENERATION IS TEMPORARILY UNAVAILABLE. PLEASE TRY AGAIN.');
+        }
         return;
       }
 
@@ -861,7 +887,12 @@ const StudioLab = () => {
             if (statusData.outputUrl) {
               handleSetOutputUrl(statusData.outputUrl, selectedModel, qwenPrompt, rawImage);
             } else {
-              handleSetOutputUrl(rawImage, selectedModel, qwenPrompt, rawImage);
+              if (rawImage) {
+                handleSetOutputUrl(rawImage, selectedModel, qwenPrompt, rawImage);
+              } else {
+                setStatus('ERROR');
+                setStatusMessage('THE AI GATEWAY RETURNED NO IMAGE. PLEASE TRY THE PROMPT AGAIN.');
+              }
             }
           } else if (statusData.status === 'failed') {
             clearInterval(pollInterval);
@@ -1216,9 +1247,8 @@ const StudioLab = () => {
                               onClick={() => {
                                 setSelectedModel(item.modelType);
                                 setQwenPrompt(item.prompt);
-                                if (item.previewUrl) {
-                                  setPreviewUrl(item.previewUrl);
-                                }
+                                setPreviewUrl(item.previewUrl || null);
+                                setFile(null);
                                 setOutputUrl(item.outputUrl);
                                 setStatus('SUCCESS');
                                 document.getElementById('studio-workbench')?.scrollIntoView({ behavior: 'smooth' });
@@ -1940,10 +1970,10 @@ const StudioLab = () => {
             {/* Left Controls & File Upload Area */}
             <div className="lab-control-panel">
 
-              {/* Dual Upload Grid: Main Source Image + Optional Reference Image */}
+              {/* Optional AI inputs; source remains required for upscale-only workflows. */}
               <div className={`qwen-dual-upload-grid ${selectedModel !== 'qwen_edit' ? 'single-upload-mode' : ''}`}>
                 
-                {/* Box 1: Primary Source Image to Edit */}
+                {/* Box 1: Optional source image for AI edits */}
                 <div 
                   className={`dropzone-container qwen-half-dropzone ${previewUrl ? 'has-file' : ''}`}
                   onDragOver={(e) => e.preventDefault()}
@@ -1976,9 +2006,11 @@ const StudioLab = () => {
                         </svg>
                       </div>
                       <h4 className="dropzone-title">
-                        {selectedModel === 'upscale' ? 'SOURCE IMAGE TO 4K UPSCALE' : selectedModel === 'logo' ? 'RASTER IMAGE TO VECTORIZE' : '1. MAIN SOURCE IMAGE'}
+                        {selectedModel === 'upscale' ? 'SOURCE IMAGE TO 4K UPSCALE' : selectedModel === 'logo' ? 'RASTER IMAGE TO VECTORIZE' : 'SOURCE IMAGE (OPTIONAL)'}
                       </h4>
-                      <span className="dropzone-info">DROP IMAGE OR CLICK TO UPLOAD</span>
+                      <span className="dropzone-info">
+                        {selectedModel === 'qwen_edit' ? 'ADD ONE TO EDIT • SKIP FOR PROMPT-ONLY' : 'DROP IMAGE OR CLICK TO UPLOAD'}
+                      </span>
                     </label>
                   )}
                 </div>
@@ -2025,7 +2057,7 @@ const StudioLab = () => {
                               <line x1="12" y1="3" x2="12" y2="15"/>
                             </svg>
                           </div>
-                          <span className="ref-title-text">2. REFERENCE PICTURE (OPTIONAL)</span>
+                          <span className="ref-title-text">STYLE REFERENCE (OPTIONAL)</span>
                           <span className="ref-sub-text">For style transfer, face IP consistency & textures</span>
                         </div>
                       )}
@@ -2114,6 +2146,12 @@ const StudioLab = () => {
                         onChange={(e) => setQwenPrompt(e.target.value)}
                         placeholder={activeModelConfig.placeholder || "Describe what you want the AI to edit or generate..."}
                       />
+
+                      <div className={`generation-mode-indicator ${previewUrl ? 'edit-mode' : 'prompt-mode'}`} aria-live="polite">
+                        <span className="generation-mode-dot" aria-hidden="true"></span>
+                        <strong>{previewUrl ? 'IMAGE EDIT MODE' : 'PROMPT-ONLY MODE'}</strong>
+                        <span>{previewUrl ? 'Your prompt will transform the attached source.' : 'No source image needed — describe the image you want.'}</span>
+                      </div>
 
                       {/* Text / Typography Priority Routing Controls */}
                       {(() => {
@@ -2280,10 +2318,19 @@ const StudioLab = () => {
                   <div className="spinner-ring"></div>
                   <div className="spinner-info">
                     <span className="spinner-status-title">
-                      {status === 'UPLOADING' ? '⚡ UPLOADING TO GPU MATRIX...' : status === 'QUEUED' ? '⏳ GPU ALLOCATED - IN QUEUE' : '⚙️ CLOUDFLARE EDGE GPU EXECUTING...'}
+                      {status === 'UPLOADING'
+                        ? (selectedModel === 'qwen_edit' && !previewUrl ? '✨ SUBMITTING PROMPT...' : '⚡ UPLOADING TO GPU MATRIX...')
+                        : status === 'QUEUED' ? '⏳ GPU ALLOCATED - IN QUEUE' : '⚙️ CLOUDFLARE EDGE GPU EXECUTING...'}
                     </span>
                     <span className="spinner-status-desc">{statusMessage}</span>
                   </div>
+                </div>
+              )}
+
+              {status === 'ERROR' && statusMessage && (
+                <div className="studio-error-message" role="alert">
+                  <strong>GENERATION ERROR</strong>
+                  <span>{statusMessage}</span>
                 </div>
               )}
 
@@ -2293,8 +2340,11 @@ const StudioLab = () => {
                   <button 
                     className="action-btn process-btn" 
                     onClick={handleStartProcess}
+                    disabled={selectedModel === 'qwen_edit' && !qwenPrompt.trim()}
                   >
-                    {!isPremiumUser && selectedModel === 'qwen_edit' && (usage.imageStudioRendersLeft ?? 5) <= 0
+                    {selectedModel === 'qwen_edit' && !qwenPrompt.trim()
+                      ? '✍️ ENTER A PROMPT TO GENERATE'
+                      : !isPremiumUser && selectedModel === 'qwen_edit' && (usage.imageStudioRendersLeft ?? 5) <= 0
                       ? (isRegistered 
                           ? '🔒 ALL FREE RENDERS USED — UPGRADE TO DELUXE' 
                           : '🎁 5 FREE RENDERS USED — REGISTER FREE FOR +10 MORE')
@@ -2396,7 +2446,7 @@ const StudioLab = () => {
                         gap: '8px'
                       }}
                     >
-                      🔄 PROCESS ANOTHER FILE
+                      {selectedModel === 'qwen_edit' ? '🔄 START ANOTHER GENERATION' : '🔄 PROCESS ANOTHER FILE'}
                     </button>
                   )}
                 </div>
@@ -2405,7 +2455,9 @@ const StudioLab = () => {
 
             {/* Right Display Area - Before/After Split Viewer */}
             <div className="lab-display-panel">
-              <h3 className="panel-title">PIXEL-LEVEL MATRIX COMPARISON</h3>
+              <h3 className="panel-title">
+                {selectedModel === 'qwen_edit' && !previewUrl ? 'AI GENERATION OUTPUT' : 'PIXEL-LEVEL MATRIX COMPARISON'}
+              </h3>
 
               {['UPLOADING', 'QUEUED', 'PROCESSING'].includes(status) && (
                 <div className="display-loading-overlay">
@@ -2414,13 +2466,18 @@ const StudioLab = () => {
                 </div>
               )}
 
-              {outputUrl ? (
+              {outputUrl && previewUrl ? (
                 <BeforeAfterSlider 
-                  beforeImage={previewUrl || refPreviewUrl || heroClean}
+                  beforeImage={previewUrl}
                   afterImage={outputUrl}
                   beforeLabel={selectedModel === 'logo' ? 'RASTER SOURCE' : (previewUrl ? 'ORIGINAL SOURCE' : 'INPUT')}
                   afterLabel={selectedModel === 'logo' ? 'VECTOR SVG' : (selectedModel === 'upscale' ? (upscaleEngine === 'pruna' ? '4K PRUNA AI' : '4K REAL-ESRGAN') : 'AI OUTPUT')}
                 />
+              ) : outputUrl ? (
+                <div className="single-preview-wrapper prompt-output-preview">
+                  <img src={outputUrl} alt="AI generated from prompt" className="single-preview-img" />
+                  <div className="preview-overlay-tag">PROMPT-ONLY GENERATION</div>
+                </div>
               ) : previewUrl ? (
                 <div className="single-preview-wrapper">
                   <img src={previewUrl} alt="Source Preview" className="single-preview-img" />
@@ -2441,7 +2498,7 @@ const StudioLab = () => {
                         ? 'Upload a logo or graphic to convert raster pixel blocks into scalable SVG vector curves.'
                         : selectedModel === 'upscale'
                         ? 'Upload an image to super-resolve and enhance details up to 4K using Cloudflare Workers AI.'
-                        : 'Upload an image or enter a prompt to generate and edit visual assets via Cloudflare Workers AI.'}
+                        : 'Write a prompt to generate from scratch. Add a source image only when you want to edit one.'}
                     </p>
                   </div>
                 </div>
@@ -3319,6 +3376,70 @@ const StudioLab = () => {
           border-color: #00E5FF;
         }
 
+        .generation-mode-indicator {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 0.45rem;
+          min-height: 30px;
+          padding: 0.45rem 0.65rem;
+          border: 1px solid rgba(0, 229, 255, 0.28);
+          background: rgba(0, 229, 255, 0.06);
+          color: #9ca3af;
+          font-family: monospace;
+          font-size: 0.72rem;
+          letter-spacing: 0.02em;
+        }
+
+        .generation-mode-indicator strong {
+          color: #00E5FF;
+          font-family: var(--font-heading);
+          font-size: 0.72rem;
+          letter-spacing: 0.08em;
+        }
+
+        .generation-mode-indicator.edit-mode {
+          border-color: rgba(255, 106, 0, 0.4);
+          background: rgba(255, 106, 0, 0.07);
+        }
+
+        .generation-mode-indicator.edit-mode strong {
+          color: var(--primary-orange);
+        }
+
+        .generation-mode-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: #00E5FF;
+          box-shadow: 0 0 8px rgba(0, 229, 255, 0.8);
+        }
+
+        .generation-mode-indicator.edit-mode .generation-mode-dot {
+          background: var(--primary-orange);
+          box-shadow: 0 0 8px rgba(255, 106, 0, 0.8);
+        }
+
+        .studio-error-message {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.65rem;
+          padding: 0.8rem 1rem;
+          border: 1px solid #ff4d6d;
+          background: rgba(255, 77, 109, 0.08);
+          color: #f4b6c2;
+          font-family: monospace;
+          font-size: 0.78rem;
+          line-height: 1.45;
+        }
+
+        .studio-error-message strong {
+          flex: 0 0 auto;
+          color: #ff4d6d;
+          font-family: var(--font-heading);
+          letter-spacing: 0.06em;
+        }
+
         .recipes-group-wrapper {
           display: flex;
           flex-direction: column;
@@ -3698,6 +3819,16 @@ const StudioLab = () => {
           width: 100%;
           height: 100%;
           object-fit: contain;
+        }
+
+        .prompt-output-preview {
+          border-color: #00E5FF;
+          box-shadow: 8px 8px 0 var(--primary-orange);
+        }
+
+        .prompt-output-preview .preview-overlay-tag {
+          color: #00E5FF;
+          border-color: #00E5FF;
         }
 
         .preview-overlay-tag {
