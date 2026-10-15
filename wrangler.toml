@@ -12,12 +12,7 @@ binding = "AI"
 # Cloudflare KV Storage for CMS Content & Real-time Page Copy
 [[kv_namespaces]]
 binding = "CMS_KV"
-id = "rynell_studio_cms_kv"
-preview_id = "rynell_studio_cms_kv_preview"
+id = "241c9c85f40846cfab1d07f2da34f7e4"
+preview_id = "34ba0632631d4702a01e9b8d1cb68a95"
 
-# Cloudflare R2 Storage Bucket for CMS Uploads, Media Assets & Backups
-[[r2_buckets]]
-binding = "R2_BUCKET"
-bucket_name = "rynell-studio-assets"
-preview_bucket_name = "rynell-studio-assets-preview"
 
