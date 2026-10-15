@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import boltSvg from '../assets/lightning_bolt_sticker_vector.svg';
 import { useAudio } from '../contexts/AudioContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,11 +16,12 @@ const Navbar = ({ cartCount, onCartClick, onSearchClick, onAccountClick, onConta
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isMuted, toggleMute } = useAudio();
-  const { user, isRegistered, isAdmin, isPremiumUser } = useAuth();
+  const { user, isRegistered, isAdmin } = useAuth();
 
   const navItems = [
     { name: 'AI LABS', link: '#studio-lab', image: aiLabImg },
     { name: 'CONVERTERS', link: '#converter-tools', image: boltSvg },
+    { name: 'GIF MAKER', link: '#gif-maker', image: aiLabImg },
     { name: 'JSON LAB', link: '#json-lab', image: jsonLabImg },
     { name: 'COLLECTIONS', link: '#collections', image: collImg },
     { name: 'SHOP', link: '#shop', image: shopImg },

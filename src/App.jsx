@@ -17,6 +17,7 @@ import Loader from './components/Loader'
 import ContactDrawer from './components/ContactDrawer'
 import StudioLab from './components/StudioLab'
 import StudioConverter from './components/StudioConverter'
+import AnimatedGifMaker from './components/AnimatedGifMaker'
 import JsonTransformer from './components/JsonTransformer'
 
 function App() {
@@ -118,6 +119,7 @@ function App() {
       <Hero />
       <StudioLab />
       <StudioConverter />
+      <AnimatedGifMaker />
       <JsonTransformer />
       <Collections />
       <Shop addToCart={addToCart} isArchiveOpen={isShopArchiveOpen} setIsArchiveOpen={setIsShopArchiveOpen} />

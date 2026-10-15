@@ -1,17 +1,17 @@
 /**
- * Pure JavaScript GIF89a Encoder
- * Encodes canvas ImageData into valid GIF89a binary blob.
+ * Pure JavaScript GIF89a Multi-Frame Animated GIF Encoder
+ * Encodes canvas frames or ImageData into valid multi-frame GIF89a with Netscape 2.0 loop block.
  */
 
-// Simple median-cut / uniform palette generator (up to 256 colors)
+// Simple median-cut / frequency palette generator (up to 256 colors)
 function createPalette(rgbaData, maxColors = 256) {
   const colorMap = new Map();
-  const step = 4; // Sample every pixel
+  const step = 4; // Sample step for performance
   
   for (let i = 0; i < rgbaData.length; i += step * 4) {
     const a = rgbaData[i + 3];
     if (a < 128) continue; // transparent pixel
-    // Quantize 5 bits per channel for fast grouping
+    // Quantize 5 bits per channel for fast color grouping
     const r = (rgbaData[i] >> 3) << 3;
     const g = (rgbaData[i + 1] >> 3) << 3;
     const b = (rgbaData[i + 2] >> 3) << 3;
@@ -139,81 +139,147 @@ function lzwEncode(minCodeSize, indexedPixels) {
 }
 
 /**
- * Encodes an ImageData object into a GIF89a Blob
+ * Encodes an ImageData object into a single-frame GIF89a Blob
  * @param {ImageData} imageData 
  * @returns {Blob}
  */
 export function encodeImageDataToGif(imageData) {
-  const { width, height, data } = imageData;
-  const palette = createPalette(data, 256);
-  const colorBits = Math.max(2, Math.ceil(Math.log2(palette.length)));
-  const gctSize = 1 << colorBits;
-  
-  // Pad palette array to gctSize
-  while (palette.length < gctSize) {
-    palette.push([0, 0, 0, false]);
+  return encodeFramesToAnimatedGif([{ imageData, delayMs: 100 }], {
+    width: imageData.width,
+    height: imageData.height,
+    loopCount: 0
+  });
+}
+
+/**
+ * Encodes multiple frames into a valid multi-frame Animated GIF89a
+ * @param {Array<{ imageData: ImageData, delayMs?: number, disposal?: number }>} frames
+ * @param {object} options { width, height, loopCount = 0 }
+ * @returns {Blob}
+ */
+export function encodeFramesToAnimatedGif(frames, options = {}) {
+  if (!frames || frames.length === 0) {
+    throw new Error('No frames provided for animated GIF generation.');
   }
 
-  // Index pixels
-  const indexedPixels = new Uint8Array(width * height);
-  for (let i = 0, p = 0; i < data.length; i += 4, p++) {
-    indexedPixels[p] = getNearestColorIndex(data[i], data[i + 1], data[i + 2], data[i + 3], palette);
-  }
+  const width = options.width || frames[0].imageData.width;
+  const height = options.height || frames[0].imageData.height;
+  const loopCount = typeof options.loopCount === 'number' ? options.loopCount : 0;
 
   const bytes = [];
-  
+
   // 1. Header: GIF89a
   bytes.push(0x47, 0x49, 0x46, 0x38, 0x39, 0x61);
 
   // 2. Logical Screen Descriptor
   bytes.push(width & 0xff, (width >> 8) & 0xff);
   bytes.push(height & 0xff, (height >> 8) & 0xff);
-  
-  // Packed field: GCT flag (1), color resolution (7 = 8 bits), sort flag (0), GCT size
-  const packed = 0x80 | 0x70 | (colorBits - 1);
-  bytes.push(packed);
-  bytes.push(0); // Background Color Index (0 is transparent)
+
+  // Create initial Global Palette from first frame
+  const firstFrameData = frames[0].imageData.data;
+  const globalPalette = createPalette(firstFrameData, 256);
+  const colorBits = Math.max(2, Math.ceil(Math.log2(globalPalette.length)));
+  const gctSize = 1 << colorBits;
+  while (globalPalette.length < gctSize) {
+    globalPalette.push([0, 0, 0, false]);
+  }
+
+  // Packed: GCT flag (1), color resolution (7 = 8-bit), sort (0), GCT size
+  const packedGct = 0x80 | 0x70 | (colorBits - 1);
+  bytes.push(packedGct);
+  bytes.push(0); // Background Color Index (0 = transparent)
   bytes.push(0); // Pixel Aspect Ratio
 
   // 3. Global Color Table
   for (let i = 0; i < gctSize; i++) {
-    const col = palette[i] || [0, 0, 0];
+    const col = globalPalette[i] || [0, 0, 0];
     bytes.push(col[0], col[1], col[2]);
   }
 
-  // 4. Graphic Control Extension (for transparency)
-  bytes.push(0x21, 0xf9, 0x04);
-  bytes.push(0x01); // packed: transparent color flag set
-  bytes.push(0x00, 0x00); // delay time (0)
-  bytes.push(0x00); // transparent color index (0)
-  bytes.push(0x00); // block terminator
-
-  // 5. Image Descriptor
-  bytes.push(0x2c); // Image separator
-  bytes.push(0, 0, 0, 0); // Left, Top
-  bytes.push(width & 0xff, (width >> 8) & 0xff);
-  bytes.push(height & 0xff, (height >> 8) & 0xff);
-  bytes.push(0); // Packed fields (no local color table)
-
-  // 6. Image Data (LZW)
-  const minCodeSize = Math.max(2, colorBits);
-  bytes.push(minCodeSize);
-  
-  const lzwBytes = lzwEncode(minCodeSize, indexedPixels);
-  
-  // Write in blocks of max 255 bytes
-  let offset = 0;
-  while (offset < lzwBytes.length) {
-    const blockSize = Math.min(255, lzwBytes.length - offset);
-    bytes.push(blockSize);
-    for (let b = 0; b < blockSize; b++) {
-      bytes.push(lzwBytes[offset + b]);
-    }
-    offset += blockSize;
+  // 4. Netscape 2.0 Application Extension (Looping animation header)
+  if (frames.length > 1) {
+    bytes.push(0x21, 0xff, 0x0b); // Extension code, block size (11 bytes)
+    // 'NETSCAPE2.0'
+    bytes.push(0x4e, 0x45, 0x54, 0x53, 0x43, 0x41, 0x50, 0x45, 0x32, 0x2e, 0x30);
+    bytes.push(0x03, 0x01); // Sub-block size (3 bytes), sub-block ID (1)
+    bytes.push(loopCount & 0xff, (loopCount >> 8) & 0xff); // loop count (0 = infinite)
+    bytes.push(0x00); // Block terminator
   }
-  bytes.push(0x00); // Block terminator
 
-  // 7. Trailer
+  // 5. Append each animation frame
+  for (let f = 0; f < frames.length; f++) {
+    const frame = frames[f];
+    const data = frame.imageData.data;
+    const fWidth = frame.imageData.width;
+    const fHeight = frame.imageData.height;
+
+    // Use local palette per frame for maximum color fidelity
+    const localPalette = f === 0 ? globalPalette : createPalette(data, 256);
+    const fColorBits = Math.max(2, Math.ceil(Math.log2(localPalette.length)));
+    const fPalSize = 1 << fColorBits;
+    while (localPalette.length < fPalSize) {
+      localPalette.push([0, 0, 0, false]);
+    }
+
+    // Delay in centiseconds (1/100 of a second). Minimum 2cs (20ms) for browser stability
+    const delayMs = frame.delayMs !== undefined ? frame.delayMs : 100;
+    const delayCs = Math.max(2, Math.round(delayMs / 10));
+
+    // Disposal method: 2 = restore to background color (avoids ghosting trails)
+    const disposal = frame.disposal !== undefined ? frame.disposal : 2;
+
+    // Graphic Control Extension (8 bytes)
+    bytes.push(0x21, 0xf9, 0x04);
+    // Packed: reserved (0), disposal method (3 bits), user input (0), transparent color flag (1)
+    const gcePacked = (disposal << 2) | 0x01;
+    bytes.push(gcePacked);
+    bytes.push(delayCs & 0xff, (delayCs >> 8) & 0xff); // Delay time
+    bytes.push(0x00); // Transparent color index (0)
+    bytes.push(0x00); // Block terminator
+
+    // Image Descriptor
+    bytes.push(0x2c); // Separator
+    bytes.push(0, 0, 0, 0); // Left = 0, Top = 0
+    bytes.push(fWidth & 0xff, (fWidth >> 8) & 0xff);
+    bytes.push(fHeight & 0xff, (fHeight >> 8) & 0xff);
+
+    // If frame > 0, include Local Color Table
+    if (f > 0) {
+      const lctPacked = 0x80 | (fColorBits - 1); // LCT flag set
+      bytes.push(lctPacked);
+      for (let i = 0; i < fPalSize; i++) {
+        const col = localPalette[i] || [0, 0, 0];
+        bytes.push(col[0], col[1], col[2]);
+      }
+    } else {
+      bytes.push(0x00); // Use Global Color Table
+    }
+
+    // Index pixels with the frame's palette
+    const indexedPixels = new Uint8Array(fWidth * fHeight);
+    for (let i = 0, p = 0; i < data.length; i += 4, p++) {
+      indexedPixels[p] = getNearestColorIndex(data[i], data[i + 1], data[i + 2], data[i + 3], localPalette);
+    }
+
+    // Image Data (LZW)
+    const minCodeSize = Math.max(2, fColorBits);
+    bytes.push(minCodeSize);
+
+    const lzwBytes = lzwEncode(minCodeSize, indexedPixels);
+
+    let offset = 0;
+    while (offset < lzwBytes.length) {
+      const blockSize = Math.min(255, lzwBytes.length - offset);
+      bytes.push(blockSize);
+      for (let b = 0; b < blockSize; b++) {
+        bytes.push(lzwBytes[offset + b]);
+      }
+      offset += blockSize;
+    }
+    bytes.push(0x00); // Block terminator
+  }
+
+  // 6. Trailer: GIF terminator
   bytes.push(0x3b);
 
   return new Blob([new Uint8Array(bytes)], { type: 'image/gif' });
