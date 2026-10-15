@@ -21,6 +21,7 @@ const Navbar = ({ cartCount, onCartClick, onSearchClick, onAccountClick, onConta
   const navItems = [
     { name: 'AI LABS', link: '#studio-lab', image: aiLabImg },
     { name: 'CONVERTERS', link: '#converter-tools', image: boltSvg },
+    { name: 'OPTIMIZER', link: '#image-compressor', image: boltSvg },
     { name: 'GIF MAKER', link: '#gif-maker', image: aiLabImg },
     { name: 'JSON LAB', link: '#json-lab', image: jsonLabImg },
     { name: 'COLLECTIONS', link: '#collections', image: collImg },
