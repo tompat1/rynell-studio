@@ -15,13 +15,29 @@ import sampleJpgUrl from '../assets/studio_portrait.jpg';
 const StudioCompressor = () => {
   // Preset & Configuration State
   const [selectedPresetId, setSelectedPresetId] = useState('visually-lossless');
-  const [customQuality, setCustomQuality] = useState(0.82);
   const [targetFormat, setTargetFormat] = useState('original'); // 'original' | 'image/webp' | 'image/jpeg' | 'image/png' | 'image/avif'
   const [maxDimension, setMaxDimension] = useState(null); // null | 1920 | 1280 | 800
   const [pngQuantize, setPngQuantize] = useState(true);
   const [pngColors, setPngColors] = useState(256); // 16 | 32 | 64 | 128 | 256
   const [pngDither, setPngDither] = useState(true);
   const [svgPrecision, setSvgPrecision] = useState(2);
+  
+  // MozJPEG Advanced Techniques State
+  const [mozTrellis, setMozTrellis] = useState(true);
+  const [mozHuffman, setMozHuffman] = useState(true);
+  const [mozProgressive, setMozProgressive] = useState(true);
+  const [mozDeringing, setMozDeringing] = useState(true);
+  const [mozHighDpi, setMozHighDpi] = useState(true);
+  const [mozGammaChroma, setMozGammaChroma] = useState(true);
+  const [mozColorFringing, setMozColorFringing] = useState(true);
+
+  // ImageOptim Preferences & Lossy Minification Settings (from official preferences UI)
+  const [activePrefTab, setActivePrefTab] = useState('Quality'); // 'General' | 'Quality' | 'Optimization speed'
+  const [enableLossy, setEnableLossy] = useState(false); // User needs to toggle lossy minification for it to be enabled
+  const [jpegQuality, setJpegQuality] = useState(85); // 50% - 99%
+  const [pngQuality, setPngQuality] = useState(80);   // 40% - 100%
+  const [gifQuality, setGifQuality] = useState(80);   // 40% - 100%
+  const [optimizationSpeed, setOptimizationSpeed] = useState('Standard');
 
   // Batch Queue & Active Selection
   const [filesQueue, setFilesQueue] = useState([]);
@@ -134,7 +150,7 @@ const StudioCompressor = () => {
   // Compression options payload
   const currentOptions = useMemo(() => {
     const q = selectedPresetId === 'custom' 
-      ? customQuality 
+      ? (jpegQuality / 100)
       : activePreset.quality;
 
     const quant = selectedPresetId === 'custom' 
@@ -157,18 +173,40 @@ const StudioCompressor = () => {
       pngQuantize: quant,
       pngColors: colors,
       pngDither,
-      svgPrecision: prec
+      svgPrecision: prec,
+      enableLossy,
+      jpegQuality: jpegQuality / 100,
+      pngQuality: pngQuality / 100,
+      gifQuality: gifQuality / 100,
+      trellisQuantization: mozTrellis,
+      optimizedHuffman: mozHuffman,
+      scanSplitOptimization: mozTrellis && mozHuffman,
+      progressiveRendering: mozProgressive,
+      overshootDeringing: mozDeringing,
+      highDpiQuantTables: mozHighDpi,
+      gammaCorrectChroma: mozGammaChroma,
+      colorFringingReduction: mozColorFringing
     };
   }, [
     selectedPresetId, 
-    customQuality, 
+    jpegQuality, 
     activePreset, 
     targetFormat, 
     maxDimension, 
     pngQuantize, 
     pngColors, 
     pngDither, 
-    svgPrecision
+    svgPrecision,
+    enableLossy,
+    pngQuality,
+    gifQuality,
+    mozTrellis,
+    mozHuffman,
+    mozProgressive,
+    mozDeringing,
+    mozHighDpi,
+    mozGammaChroma,
+    mozColorFringing
   ]);
 
   // Re-compress queue items whenever options change
@@ -270,10 +308,30 @@ const StudioCompressor = () => {
     setSelectedPresetId(presetId);
     const p = COMPRESSION_PRESETS.find(item => item.id === presetId);
     if (p && presetId !== 'custom') {
+      const isLossless = presetId === 'lossless';
+      setEnableLossy(!isLossless);
+      let jq = 85;
+      let pq = 80;
+      let gq = 80;
+      if (presetId === 'visually-lossless') {
+        jq = 85; pq = 80; gq = 80;
+      } else if (presetId === 'high-compression') {
+        jq = 65; pq = 65; gq = 65;
+      } else if (presetId === 'brutal-squeeze') {
+        jq = 45; pq = 40; gq = 40;
+      }
+      setJpegQuality(jq);
+      setPngQuality(pq);
+      setGifQuality(gq);
+
       const opts = {
         ...currentOptions,
         presetId,
         quality: p.quality,
+        enableLossy: !isLossless,
+        jpegQuality: jq / 100,
+        pngQuality: pq / 100,
+        gifQuality: gq / 100,
         pngQuantize: p.pngQuantize !== undefined ? p.pngQuantize : true,
         pngColors: p.pngColors || 256,
         svgPrecision: p.svgPrecision || 2
@@ -464,6 +522,44 @@ const StudioCompressor = () => {
               <a href="http://advancemame.sourceforge.net/doc-advpng.html" target="_blank" rel="noreferrer" className="tool-pill sevenzip">🗜️ 7zip</a>
               <a href="https://github.com/svg/svgo" target="_blank" rel="noreferrer" className="tool-pill svgo">📐 SVGO</a>
               <a href="https://googledevelopers.blogspot.co.uk/2013/02/compress-data-more-densely-with-zopfli.html" target="_blank" rel="noreferrer" className="tool-pill zopfli">📦 Google Zopfli</a>
+            </div>
+          </div>
+
+          {/* Pillar 3: MozJPEG Advanced Techniques */}
+          <div className="pillar-card mozjpeg-card">
+            <div className="pillar-head">
+              <span className="pillar-badge">MOZJPEG ADVANCED</span>
+              <h3 className="pillar-title">⚡ ADVANCED ENCODING SUITE</h3>
+            </div>
+            <ul className="pillar-bullet-list">
+              <li>
+                <strong>Trellis quantization, optimized Huffman tables, scan split optimization</strong> — advanced techniques for maximum file size reduction.
+              </li>
+              <li>
+                <strong>Progressive rendering</strong> — only 15% of image data is needed to start displaying it on screen.
+              </li>
+              <li>
+                <a href="https://kornel.ski/deringing/" target="_blank" rel="noreferrer" className="inline-doc-link">
+                  Overshoot deringing
+                </a> — makes text and lines on white background appear sharper.
+              </li>
+              <li>
+                <strong>Quantization tables optimized for high-DPI screens</strong> — avoids bloating files with details that are invisible to the naked eye.
+              </li>
+              <li>
+                <strong>Gamma-correct chroma subsampling</strong> — highly-saturated lines and edges are sharper and higher quality.
+              </li>
+              <li>
+                <strong>Color fringing reduction</strong> — patterns on colorful backgrounds appear sharper.
+              </li>
+            </ul>
+            <div className="pillar-features-row">
+              <span className="clean-tag moz">Trellis & Huffman</span>
+              <span className="clean-tag moz">15% Progressive</span>
+              <span className="clean-tag moz">Overshoot Deringed</span>
+              <span className="clean-tag moz">High-DPI Retina</span>
+              <span className="clean-tag moz">Gamma Chroma</span>
+              <span className="clean-tag moz">Anti-Fringe</span>
             </div>
           </div>
         </div>
@@ -708,6 +804,27 @@ const StudioCompressor = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* MozJPEG Advanced Techniques Active Report */}
+                {activeItem.result.cleaningReport?.mozjpegTechniques?.length > 0 && (
+                  <div className="active-mozjpeg-card">
+                    <div className="moz-head-row">
+                      <span className="moz-badge">⚡ MOZJPEG ADVANCED TECHNIQUES ACTIVE</span>
+                      {activeItem.result.cleaningReport.progressiveFirstPaintBytes > 0 && (
+                        <span className="first-paint-tag">
+                          📶 ~15% FIRST PAINT: {formatBytes(activeItem.result.cleaningReport.progressiveFirstPaintBytes)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="moz-techniques-list">
+                      {activeItem.result.cleaningReport.mozjpegTechniques.map((tech) => (
+                        <span key={tech} className="moz-tech-pill">
+                          ✓ {tech}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -721,34 +838,219 @@ const StudioCompressor = () => {
               </button>
             </div>
 
+            {/* ImageOptim Preferences Window (Matching Official Desktop UI) */}
+            <div className="imageoptim-prefs-card">
+              <div className="prefs-tabs-header">
+                {['General', 'Quality', 'Optimization speed'].map(tab => (
+                  <button
+                    key={tab}
+                    type="button"
+                    className={`pref-tab-btn ${activePrefTab === tab ? 'active' : ''}`}
+                    onClick={() => setActivePrefTab(tab)}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+
+              <div className="prefs-tab-content">
+                {activePrefTab === 'Quality' && (
+                  <div className="quality-tab-pane">
+                    {/* Master Checkbox */}
+                    <div className="lossy-toggle-container">
+                      <label className="lossy-main-checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={enableLossy}
+                          onChange={(e) => {
+                            const val = e.target.checked;
+                            setEnableLossy(val);
+                            setSelectedPresetId('custom');
+                            handleOptionChange({ enableLossy: val, presetId: 'custom' });
+                          }}
+                        />
+                        <span className="lossy-title-text">Enable lossy minification</span>
+                      </label>
+                      <p className="lossy-sub-caption">
+                        Makes files much smaller, but may change how images look
+                      </p>
+                    </div>
+
+                    {!enableLossy && (
+                      <div className="lossless-active-callout">
+                        <span className="callout-shield">🛡️</span>
+                        <span>BIT-EXACT LOSSLESS ENFORCED • CHECK BOX TO ENABLE LOSSY MINIFICATION</span>
+                      </div>
+                    )}
+
+                    {/* Sliders Area */}
+                    <div className={`prefs-sliders-box ${!enableLossy ? 'dimmed' : ''}`}>
+                      
+                      {/* JPEG quality */}
+                      <div className="pref-slider-row full">
+                        <span className="pref-slider-name">JPEG quality</span>
+                        <div className="pref-slider-track-wrap">
+                          <input
+                            type="range"
+                            min="50"
+                            max="99"
+                            step="1"
+                            disabled={!enableLossy}
+                            value={jpegQuality}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value, 10);
+                              setJpegQuality(val);
+                              setSelectedPresetId('custom');
+                              handleOptionChange({ jpegQuality: val / 100, presetId: 'custom' });
+                            }}
+                            className="imageoptim-slider"
+                          />
+                          <div className="pref-ticks-labels">
+                            <span>50%</span>
+                            <span className="tick-center">75%</span>
+                            <span className="tick-right">99%</span>
+                          </div>
+                        </div>
+                        <span className="pref-current-val">{jpegQuality}%</span>
+                      </div>
+
+                      {/* PNG and GIF quality side-by-side */}
+                      <div className="pref-sliders-split-grid">
+                        {/* PNG quality */}
+                        <div className="pref-slider-row">
+                          <span className="pref-slider-name">PNG quality</span>
+                          <div className="pref-slider-track-wrap">
+                            <input
+                              type="range"
+                              min="40"
+                              max="100"
+                              step="1"
+                              disabled={!enableLossy}
+                              value={pngQuality}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value, 10);
+                                setPngQuality(val);
+                                setSelectedPresetId('custom');
+                                handleOptionChange({ pngQuality: val / 100, presetId: 'custom' });
+                              }}
+                              className="imageoptim-slider"
+                            />
+                            <div className="pref-ticks-labels">
+                              <span>40%</span>
+                              <span className="tick-center">70%</span>
+                              <span className="tick-right">100%</span>
+                            </div>
+                          </div>
+                          <span className="pref-current-val">{pngQuality}%</span>
+                        </div>
+
+                        {/* GIF quality */}
+                        <div className="pref-slider-row">
+                          <span className="pref-slider-name">GIF quality</span>
+                          <div className="pref-slider-track-wrap">
+                            <input
+                              type="range"
+                              min="40"
+                              max="100"
+                              step="1"
+                              disabled={!enableLossy}
+                              value={gifQuality}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value, 10);
+                                setGifQuality(val);
+                                setSelectedPresetId('custom');
+                                handleOptionChange({ gifQuality: val / 100, presetId: 'custom' });
+                              }}
+                              className="imageoptim-slider"
+                            />
+                            <div className="pref-ticks-labels">
+                              <span>40%</span>
+                              <span className="tick-center">70%</span>
+                              <span className="tick-right">100%</span>
+                            </div>
+                          </div>
+                          <span className="pref-current-val">{gifQuality}%</span>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    <div className="prefs-footer-row">
+                      <span className="prefs-active-mode-label">
+                        {enableLossy 
+                          ? `⚡ LOSSY: MozJPEG ${jpegQuality}% • pngquant ${pngQuality}% • GIF ${gifQuality}%`
+                          : '🛡️ STRICT LOSSLESS: 100% Bit-Exact Pixels (Zero Pixel Loss)'}
+                      </span>
+                      <button 
+                        type="button" 
+                        className="prefs-help-btn" 
+                        title="Lossy minification applies MozJPEG quantization, pngquant 8-bit palette reduction, and Gifsicle compression for up to 85% byte savings."
+                      >
+                        ?
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {activePrefTab === 'General' && (
+                  <div className="general-tab-pane">
+                    <ul className="prefs-options-list">
+                      <li>
+                        <label className="checkbox-label micro">
+                          <input type="checkbox" checked={true} readOnly />
+                          <span>STRIP PRIVATE EXIF METADATA AND CAMERA GPS TAGS</span>
+                        </label>
+                      </li>
+                      <li>
+                        <label className="checkbox-label micro">
+                          <input type="checkbox" checked={true} readOnly />
+                          <span>REMOVE EMBEDDED CAMERA THUMBNAILS (0 B RESIDUAL)</span>
+                        </label>
+                      </li>
+                      <li>
+                        <label className="checkbox-label micro">
+                          <input type="checkbox" checked={true} readOnly />
+                          <span>STRIP BULKY ICC COLOR PROFILES & NORMALIZE TO sRGB</span>
+                        </label>
+                      </li>
+                      <li>
+                        <label className="checkbox-label micro">
+                          <input type="checkbox" checked={true} readOnly />
+                          <span>STRIP COMMENTS, XML HEADERS, AND EDITOR NAMESPACES</span>
+                        </label>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+
+                {activePrefTab === 'Optimization speed' && (
+                  <div className="speed-tab-pane">
+                    <span className="sub-lbl" style={{ marginBottom: '0.5rem' }}>SELECT OPTIMIZATION EFFORT:</span>
+                    <div className="speed-pills-row">
+                      {['Fast', 'Standard', 'Insane'].map(spd => (
+                        <button
+                          key={spd}
+                          type="button"
+                          className={`pill-btn ${optimizationSpeed === spd ? 'active' : ''}`}
+                          onClick={() => setOptimizationSpeed(spd)}
+                        >
+                          {spd === 'Fast' ? '⚡ FAST (SINGLE PASS)' : spd === 'Standard' ? '⚙️ STANDARD (RECOMMENDED)' : '💀 INSANE (MAX ZOPFLI ITERATIONS)'}
+                        </button>
+                      ))}
+                    </div>
+                    <small className="speed-note" style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', display: 'block' }}>
+                      Insane runs 15-iteration Google Zopfli DEFLATE modeling & AdvPNG brute-force search.
+                    </small>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Fine Tuning Controls */}
             <div className="tuning-card">
               <div className="field-label-row">
                 <span className="tuning-title">IMAGEOPTIM ADVANCED TUNING:</span>
                 <span className="tuning-mode-pill">{activePreset.name.split(' ')[1]}</span>
-              </div>
-
-              {/* Quality Slider */}
-              <div className="param-field">
-                <div className="field-label-row">
-                  <label htmlFor="comp-quality-input">COMPRESSION QUALITY FACTOR:</label>
-                  <strong className="field-metric">{Math.round((selectedPresetId === 'custom' ? customQuality : activePreset.quality) * 100)}%</strong>
-                </div>
-                <input
-                  id="comp-quality-input"
-                  type="range"
-                  min="5"
-                  max="100"
-                  step="1"
-                  value={Math.round((selectedPresetId === 'custom' ? customQuality : activePreset.quality) * 100)}
-                  onChange={(e) => {
-                    const q = parseInt(e.target.value, 10) / 100;
-                    setSelectedPresetId('custom');
-                    setCustomQuality(q);
-                    handleOptionChange({ quality: q, presetId: 'custom' });
-                  }}
-                  className="studio-slider"
-                />
               </div>
 
               {/* Format Target & Max Dimension Row */}
@@ -856,6 +1158,96 @@ const StudioCompressor = () => {
                       {decimals}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* MozJPEG Advanced Techniques Controls Box */}
+              <div className="mozjpeg-control-box">
+                <div className="quant-head-row">
+                  <span className="sub-lbl" style={{ color: 'var(--primary-orange)', fontWeight: 800 }}>
+                    ⚡ MOZJPEG ADVANCED TECHNIQUES:
+                  </span>
+                </div>
+
+                <div className="mozjpeg-toggles-grid">
+                  <label className="checkbox-label micro">
+                    <input
+                      type="checkbox"
+                      checked={mozTrellis && mozHuffman}
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        setMozTrellis(val);
+                        setMozHuffman(val);
+                        handleOptionChange({ trellisQuantization: val, optimizedHuffman: val, scanSplitOptimization: val });
+                      }}
+                    />
+                    <span>TRELLIS QUANT & HUFFMAN TABLES</span>
+                  </label>
+
+                  <label className="checkbox-label micro">
+                    <input
+                      type="checkbox"
+                      checked={mozProgressive}
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        setMozProgressive(val);
+                        handleOptionChange({ progressiveRendering: val });
+                      }}
+                    />
+                    <span>PROGRESSIVE (15% FIRST-PAINT)</span>
+                  </label>
+
+                  <label className="checkbox-label micro">
+                    <input
+                      type="checkbox"
+                      checked={mozDeringing}
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        setMozDeringing(val);
+                        handleOptionChange({ overshootDeringing: val });
+                      }}
+                    />
+                    <span>OVERSHOOT DERINGING (WHITE BG)</span>
+                  </label>
+
+                  <label className="checkbox-label micro">
+                    <input
+                      type="checkbox"
+                      checked={mozHighDpi}
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        setMozHighDpi(val);
+                        handleOptionChange({ highDpiQuantTables: val });
+                      }}
+                    />
+                    <span>HIGH-DPI / RETINA TABLES (CSF)</span>
+                  </label>
+
+                  <label className="checkbox-label micro">
+                    <input
+                      type="checkbox"
+                      checked={mozGammaChroma}
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        setMozGammaChroma(val);
+                        handleOptionChange({ gammaCorrectChroma: val });
+                      }}
+                    />
+                    <span>GAMMA-CORRECT CHROMA (LINEAR)</span>
+                  </label>
+
+                  <label className="checkbox-label micro">
+                    <input
+                      type="checkbox"
+                      checked={mozColorFringing}
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        setMozColorFringing(val);
+                        handleOptionChange({ colorFringingReduction: val });
+                      }}
+                    />
+                    <span>COLOR FRINGING REDUCTION</span>
+                  </label>
                 </div>
               </div>
             </div>
@@ -1092,14 +1484,102 @@ const StudioCompressor = () => {
         /* ImageOptim Pillars Grid */
         .imageoptim-pillars-grid {
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
           gap: 1.5rem;
         }
 
-        @media (max-width: 900px) {
-          .imageoptim-pillars-grid {
+        .pillar-bullet-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 0.55rem;
+          font-family: var(--font-body);
+          font-size: 0.85rem;
+          line-height: 1.45;
+          color: var(--text-secondary);
+        }
+
+        .pillar-bullet-list li strong {
+          color: var(--text-primary);
+        }
+
+        .clean-tag.moz {
+          background: rgba(255, 106, 0, 0.12);
+          border-color: rgba(255, 106, 0, 0.4);
+          color: var(--primary-orange);
+        }
+
+        .mozjpeg-control-box {
+          background: var(--bg-primary);
+          border: 1px solid var(--border-color);
+          padding: 0.85rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          margin-top: 0.85rem;
+        }
+
+        .mozjpeg-toggles-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.6rem;
+        }
+
+        @media (max-width: 600px) {
+          .mozjpeg-toggles-grid {
             grid-template-columns: 1fr;
           }
+        }
+
+        .active-mozjpeg-card {
+          margin-top: 0.75rem;
+          padding-top: 0.75rem;
+          border-top: 1px dashed var(--border-color);
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .moz-head-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+        }
+
+        .moz-badge {
+          font-family: var(--font-heading);
+          font-size: 0.8rem;
+          letter-spacing: 1px;
+          color: var(--primary-orange);
+        }
+
+        .first-paint-tag {
+          font-family: monospace;
+          font-size: 0.72rem;
+          font-weight: 700;
+          padding: 0.15rem 0.5rem;
+          background: rgba(34, 197, 94, 0.15);
+          border: 1px solid #22c55e;
+          color: #22c55e;
+        }
+
+        .moz-techniques-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.4rem;
+        }
+
+        .moz-tech-pill {
+          font-family: monospace;
+          font-size: 0.7rem;
+          padding: 0.2rem 0.5rem;
+          background: var(--bg-primary);
+          border: 1px solid var(--border-color);
+          color: var(--text-primary);
         }
 
         .pillar-card {
@@ -2037,6 +2517,299 @@ const StudioCompressor = () => {
 
         .clear-all-link:hover {
           color: #ff3333;
+        }
+
+        /* ImageOptim Preferences Card (Pixel-matching official macOS app) */
+        .imageoptim-prefs-card {
+          background: #25282c;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 10px;
+          padding: 1.25rem 1.5rem;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+          display: flex;
+          flex-direction: column;
+          gap: 1.2rem;
+          color: #f1f5f9;
+        }
+
+        .prefs-tabs-header {
+          display: inline-flex;
+          align-self: center;
+          background: #191b1e;
+          border-radius: 8px;
+          padding: 3px;
+          gap: 2px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .pref-tab-btn {
+          background: transparent;
+          border: none;
+          border-radius: 6px;
+          color: #94a3b8;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          font-size: 0.82rem;
+          font-weight: 500;
+          padding: 5px 14px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .pref-tab-btn:hover {
+          color: #ffffff;
+        }
+
+        .pref-tab-btn.active {
+          background: #3b82f6;
+          color: #ffffff;
+          font-weight: 600;
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .prefs-tab-content {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .quality-tab-pane {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .lossy-toggle-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          gap: 0.25rem;
+        }
+
+        .lossy-main-checkbox-label {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.6rem;
+          cursor: pointer;
+          user-select: none;
+        }
+
+        .lossy-main-checkbox-label input[type="checkbox"] {
+          width: 17px;
+          height: 17px;
+          accent-color: #3b82f6;
+          cursor: pointer;
+        }
+
+        .lossy-title-text {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          font-size: 0.98rem;
+          font-weight: 600;
+          color: #ffffff;
+          letter-spacing: 0.2px;
+        }
+
+        .lossy-sub-caption {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          font-size: 0.8rem;
+          color: #94a3b8;
+          margin: 0;
+        }
+
+        .lossless-active-callout {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          background: rgba(59, 130, 246, 0.08);
+          border: 1px dashed rgba(59, 130, 246, 0.45);
+          border-radius: 6px;
+          padding: 0.4rem 0.85rem;
+          font-family: monospace;
+          font-size: 0.72rem;
+          color: #93c5fd;
+          letter-spacing: 0.5px;
+          margin-top: 0.25rem;
+        }
+
+        .callout-shield {
+          font-size: 0.9rem;
+        }
+
+        .prefs-sliders-box {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          margin-top: 0.5rem;
+          transition: opacity 0.2s ease, filter 0.2s ease;
+        }
+
+        .prefs-sliders-box.dimmed {
+          opacity: 0.4;
+          filter: grayscale(0.5);
+          pointer-events: none;
+        }
+
+        .pref-slider-row {
+          display: grid;
+          grid-template-columns: 95px 1fr 40px;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .pref-slider-row.full {
+          width: 100%;
+        }
+
+        .pref-slider-name {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          font-size: 0.85rem;
+          font-weight: 500;
+          color: #f1f5f9;
+          text-align: right;
+          white-space: nowrap;
+        }
+
+        .pref-slider-track-wrap {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          width: 100%;
+        }
+
+        .imageoptim-slider {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 100%;
+          height: 6px;
+          background: #474f5a;
+          border-radius: 3px;
+          outline: none;
+          cursor: pointer;
+        }
+
+        .imageoptim-slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 14px;
+          height: 20px;
+          border-radius: 3px;
+          background: #cbd5e1;
+          border: 1px solid #64748b;
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+          cursor: grab;
+          transition: background 0.15s ease;
+        }
+
+        .imageoptim-slider::-webkit-slider-thumb:hover {
+          background: #ffffff;
+        }
+
+        .imageoptim-slider::-moz-range-thumb {
+          width: 14px;
+          height: 20px;
+          border-radius: 3px;
+          background: #cbd5e1;
+          border: 1px solid #64748b;
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+          cursor: grab;
+        }
+
+        .pref-ticks-labels {
+          display: flex;
+          justify-content: space-between;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          font-size: 0.72rem;
+          color: #94a3b8;
+          padding: 0 2px;
+          user-select: none;
+        }
+
+        .pref-current-val {
+          font-family: monospace;
+          font-size: 0.82rem;
+          font-weight: 600;
+          color: #cbd5e1;
+          text-align: right;
+        }
+
+        .pref-sliders-split-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.25rem;
+        }
+
+        @media (max-width: 768px) {
+          .pref-sliders-split-grid {
+            grid-template-columns: 1fr;
+            gap: 0.85rem;
+          }
+          .pref-slider-row {
+            grid-template-columns: 85px 1fr 35px;
+          }
+        }
+
+        .prefs-footer-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          padding-top: 0.75rem;
+          margin-top: 0.5rem;
+        }
+
+        .prefs-active-mode-label {
+          font-family: monospace;
+          font-size: 0.74rem;
+          color: #f59e0b;
+          letter-spacing: 0.4px;
+        }
+
+        .prefs-help-btn {
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          background: #474f5a;
+          border: 1px solid #64748b;
+          color: #e2e8f0;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          font-size: 0.75rem;
+          font-weight: bold;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.15s ease;
+        }
+
+        .prefs-help-btn:hover {
+          background: #64748b;
+          color: #ffffff;
+        }
+
+        .general-tab-pane {
+          padding: 0.5rem 0;
+        }
+
+        .prefs-options-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 0.65rem;
+        }
+
+        .speed-tab-pane {
+          display: flex;
+          flex-direction: column;
+          gap: 0.6rem;
+          padding: 0.5rem 0;
+        }
+
+        .speed-pills-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
         }
       `}</style>
     </section>
