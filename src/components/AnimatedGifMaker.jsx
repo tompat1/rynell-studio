@@ -279,24 +279,22 @@ const AnimatedGifMaker = () => {
         setCurrentFrameIndex(prev => (prev + 1) % frames.length);
         setCurrentTweenStep(0);
       }, delay);
-    } else {
-      if (currentTweenStep === 0) {
-        const currentFrame = frames[currentFrameIndex];
-        const delay = (currentFrame?.delayMs || globalDelayMs) || 200;
+    } else if (currentTweenStep === 0) {
+      const currentFrame = frames[currentFrameIndex];
+      const delay = (currentFrame?.delayMs || globalDelayMs) || 200;
 
-        playTimerRef.current = setTimeout(() => {
-          setCurrentTweenStep(1);
-        }, delay);
-      } else if (currentTweenStep < transitionSteps) {
-        playTimerRef.current = setTimeout(() => {
-          setCurrentTweenStep(prev => prev + 1);
-        }, transitionDelayMs);
-      } else {
-        playTimerRef.current = setTimeout(() => {
-          setCurrentTweenStep(0);
-          setCurrentFrameIndex(prev => (prev + 1) % frames.length);
-        }, transitionDelayMs);
-      }
+      playTimerRef.current = setTimeout(() => {
+        setCurrentTweenStep(1);
+      }, delay);
+    } else if (currentTweenStep < transitionSteps) {
+      playTimerRef.current = setTimeout(() => {
+        setCurrentTweenStep(prev => prev + 1);
+      }, transitionDelayMs);
+    } else {
+      playTimerRef.current = setTimeout(() => {
+        setCurrentTweenStep(0);
+        setCurrentFrameIndex(prev => (prev + 1) % frames.length);
+      }, transitionDelayMs);
     }
 
     return () => {
