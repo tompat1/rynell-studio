@@ -114,8 +114,6 @@ const StudioConverter = () => {
   const handleToolChange = (newToolId) => {
     setSelectedToolId(newToolId);
     setErrorNotice(null);
-    setResultData(null);
-    // If current source file does not match new accept requirements, prompt user
   };
 
   // File handling & validation
@@ -150,7 +148,6 @@ const StudioConverter = () => {
       type: file.type || name.split('.').pop().toUpperCase()
     });
 
-    setResultData(null);
     // Restart 1-hour auto-deletion clock on new upload
     sessionCreatedRef.current = Date.now();
     setExpirySeconds(3600);
@@ -192,13 +189,12 @@ const StudioConverter = () => {
       // Auto-select WebP to SVG
       setSelectedToolId('webp-to-svg');
     }
-    setResultData(null);
     sessionCreatedRef.current = Date.now();
     setExpirySeconds(3600);
   };
 
   // Execute Conversion
-  const handleConvert = async () => {
+  const handleConvert = React.useCallback(async () => {
     if (!sourceUrl) {
       setErrorNotice('Please upload a file or load a sample asset first.');
       return;
@@ -230,7 +226,55 @@ const StudioConverter = () => {
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [sourceUrl, currentTool.id, sourceFile, rasterScale, exportQuality, canvasBg, vectorPreset, vectorColors]);
+
+  // Instant Auto-Conversion on File Load, Tool Selection, or Parameter Tuning
+  useEffect(() => {
+    if (!sourceUrl) return;
+
+    let active = true;
+    const debounceDelay = currentTool.direction === 'raster-to-svg' ? 250 : 50;
+
+    const timer = setTimeout(async () => {
+      setIsProcessing(true);
+      setErrorNotice(null);
+
+      try {
+        const result = await executeConversion({
+          toolId: currentTool.id,
+          file: sourceFile,
+          sourceUrl,
+          options: {
+            scale: rasterScale,
+            quality: exportQuality,
+            bgColor: canvasBg,
+            vectorPreset,
+            vectorColors,
+            vectorDetail: 0.3
+          }
+        });
+
+        if (active) {
+          registerObjectUrl(result.url);
+          setResultData(result);
+        }
+      } catch (err) {
+        if (active) {
+          console.error('Auto-conversion failed:', err);
+          setErrorNotice(err.message || 'Conversion failed. Please verify the input file format.');
+        }
+      } finally {
+        if (active) {
+          setIsProcessing(false);
+        }
+      }
+    }, debounceDelay);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [sourceUrl, sourceFile, currentTool.id, currentTool.direction, rasterScale, exportQuality, canvasBg, vectorPreset, vectorColors]);
 
   // Copy SVG markup
   const handleCopySvgCode = async () => {
@@ -464,7 +508,11 @@ const StudioConverter = () => {
                     onClick={handleConvert}
                     disabled={isProcessing}
                   >
-                    {isProcessing ? '⚡ CONVERTING...' : `▶ RUN CONVERT (${currentTool.inputFormat} ➔ ${currentTool.outputFormat})`}
+                    {isProcessing 
+                      ? `⚡ COMPUTING LIVE ${currentTool.outputFormat.toUpperCase()}...` 
+                      : resultData 
+                        ? `✓ LIVE ${currentTool.outputFormat.toUpperCase()} READY (${resultData.sizeKb} KB)` 
+                        : `▶ RUN CONVERT (${currentTool.inputFormat} ➔ ${currentTool.outputFormat})`}
                   </button>
                 </div>
               )}
@@ -605,7 +653,11 @@ const StudioConverter = () => {
                     onClick={handleConvert}
                     disabled={!sourceUrl || isProcessing}
                   >
-                    {isProcessing ? '⏳ PROCESSING CONVERSION...' : `⚡ CONVERT NOW ➔ ${currentTool.outputFormat}`}
+                    {isProcessing 
+                      ? `⏳ COMPUTING LIVE ${currentTool.outputFormat.toUpperCase()}...` 
+                      : resultData 
+                        ? `⚡ RE-CONVERT ➔ ${currentTool.outputFormat} (${resultData.sizeKb} KB)` 
+                        : `⚡ CONVERT NOW ➔ ${currentTool.outputFormat}`}
                   </button>
                 </div>
               </div>
@@ -675,71 +727,124 @@ const StudioConverter = () => {
                 <BeforeAfterSlider
                   beforeImage={sourceUrl}
                   afterImage={resultData ? resultData.url : sourceUrl}
-                  beforeLabel={`INPUT (${currentTool.inputFormat})`}
-                  afterLabel={resultData ? `RESULT (${currentTool.outputFormat})` : `READY TO CONVERT`}
+                  beforeLabel={`SOURCE // ${currentTool.inputFormat} ${sourceMeta?.sizeKb ? `(${sourceMeta.sizeKb} KB)` : ''}`}
+                  afterLabel={
+                    resultData 
+                      ? `OUTPUT // ${currentTool.outputFormat.toUpperCase()} (${resultData.sizeKb} KB)` 
+                      : (isProcessing 
+                          ? `⚡ COMPUTING ${currentTool.outputFormat.toUpperCase()}...` 
+                          : `OUTPUT // ${currentTool.outputFormat.toUpperCase()}`)
+                  }
                 />
               ) : (
                 <div className="side-by-side-layout">
                   <div className="side-pane">
-                    <div className="side-badge">SOURCE // {currentTool.inputFormat}</div>
+                    <div className="side-badge">
+                      SOURCE // {currentTool.inputFormat} {sourceMeta?.sizeKb ? `(${sourceMeta.sizeKb} KB)` : ''}
+                    </div>
                     <img src={sourceUrl} alt="Source Input" />
                   </div>
                   <div className="side-pane">
-                    <div className="side-badge result">
-                      {resultData ? `CONVERTED // ${currentTool.outputFormat}` : 'PREVIEW PENDING'}
+                    <div className={`side-badge result ${isProcessing ? 'computing-pulse' : ''}`}>
+                      {resultData ? (
+                        <>OUTPUT // {currentTool.outputFormat.toUpperCase()} <span className="size-pill-tag">({resultData.sizeKb} KB)</span></>
+                      ) : isProcessing ? (
+                        <span>⚡ COMPUTING {currentTool.outputFormat.toUpperCase()}...</span>
+                      ) : (
+                        `OUTPUT // ${currentTool.outputFormat.toUpperCase()}`
+                      )}
                     </div>
-                    <img src={resultData ? resultData.url : sourceUrl} alt="Output Result" />
+                    <img 
+                      src={resultData ? resultData.url : sourceUrl} 
+                      alt="Output Result" 
+                      style={{ opacity: isProcessing && !resultData ? 0.7 : 1, transition: 'opacity 0.2s ease' }}
+                    />
+                    {isProcessing && !resultData && (
+                      <div className="preview-loading-overlay">
+                        <span className="loader-bolt">⚡</span>
+                        <span className="loader-text">COMPUTING LIVE {currentTool.outputFormat.toUpperCase()}...</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Results Metadata & Download Actions */}
-            {resultData && (
-              <div className="preview-results-bar">
-                <div className="stats-metric-strip">
-                  <div className="metric-item">
-                    <span className="metric-label">INPUT SIZE</span>
-                    <span className="metric-val">{sourceMeta?.sizeKb || '—'} KB</span>
-                  </div>
-                  <div className="metric-divider">➔</div>
-                  <div className="metric-item">
-                    <span className="metric-label">OUTPUT SIZE</span>
-                    <span className="metric-val highlight">{resultData.sizeKb} KB</span>
-                  </div>
-                  {resultData.width > 0 && (
-                    <div className="metric-item">
-                      <span className="metric-label">DIMENSIONS</span>
-                      <span className="metric-val">{resultData.width} × {resultData.height} PX</span>
-                    </div>
-                  )}
-                  <div className="metric-item">
-                    <span className="metric-label">OUTPUT FORMAT</span>
-                    <span className="metric-val format-tag">.{currentTool.outputExt.toUpperCase()}</span>
-                  </div>
+            {/* Results Metadata & Live Size Strip */}
+            <div className="preview-results-bar">
+              <div className="stats-metric-strip">
+                <div className="metric-item">
+                  <span className="metric-label">INPUT SIZE ({currentTool.inputFormat})</span>
+                  <span className="metric-val">{sourceMeta?.sizeKb || '—'} KB</span>
                 </div>
+                <div className="metric-divider">➔</div>
+                <div className="metric-item output-metric-box">
+                  <span className="metric-label">OUTPUT SIZE ({currentTool.outputFormat})</span>
+                  <span className="metric-val highlight">
+                    {resultData ? (
+                      <>
+                        {resultData.sizeKb} KB
+                        {sourceMeta?.sizeKb && (
+                          <span className={`size-delta-badge ${resultData.sizeKb < sourceMeta.sizeKb ? 'smaller' : 'larger'}`}>
+                            {resultData.sizeKb < sourceMeta.sizeKb
+                              ? ` (${Math.round((1 - resultData.sizeKb / sourceMeta.sizeKb) * 100)}% smaller)`
+                              : ` (+${Math.round((resultData.sizeKb / sourceMeta.sizeKb - 1) * 100)}%)`}
+                          </span>
+                        )}
+                      </>
+                    ) : isProcessing ? (
+                      <span className="computing-val">⚡ COMPUTING...</span>
+                    ) : (
+                      '—'
+                    )}
+                  </span>
+                </div>
+                <div className="metric-item">
+                  <span className="metric-label">DIMENSIONS</span>
+                  <span className="metric-val">
+                    {resultData && resultData.width > 0 
+                      ? `${resultData.width} × ${resultData.height} PX` 
+                      : isProcessing 
+                        ? 'MEASURING...' 
+                        : 'AUTO'}
+                  </span>
+                </div>
+                <div className="metric-item">
+                  <span className="metric-label">OUTPUT FORMAT</span>
+                  <span className="metric-val format-tag">.{currentTool.outputExt.toUpperCase()}</span>
+                </div>
+              </div>
 
-                <div className="results-cta-group">
-                  {resultData.svgText && (
-                    <button 
-                      type="button" 
-                      className="studio-btn-secondary"
-                      onClick={handleCopySvgCode}
-                    >
-                      {copyCodeSuccess ? '✓ COPIED SVG CODE!' : '📋 COPY SVG MARKUP'}
-                    </button>
-                  )}
+              <div className="results-cta-group">
+                {resultData?.svgText && (
+                  <button 
+                    type="button" 
+                    className="studio-btn-secondary"
+                    onClick={handleCopySvgCode}
+                  >
+                    {copyCodeSuccess ? '✓ COPIED SVG CODE!' : '📋 COPY SVG MARKUP'}
+                  </button>
+                )}
 
+                {resultData ? (
                   <a
                     href={resultData.url}
                     download={`RYNELL_STUDIO_${(sourceMeta?.name || 'CONVERTED').replace(/\.[^/.]+$/, "")}.${currentTool.outputExt}`}
                     className="studio-btn-primary download-action"
                   >
-                    📥 DOWNLOAD .{currentTool.outputExt.toUpperCase()} ASSET
+                    📥 DOWNLOAD .{currentTool.outputExt.toUpperCase()} ({resultData.sizeKb} KB)
                   </a>
-                </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="studio-btn-primary download-action disabled"
+                    disabled
+                  >
+                    {isProcessing ? `⚡ GENERATING .${currentTool.outputExt.toUpperCase()}...` : `PREPARING .${currentTool.outputExt.toUpperCase()}`}
+                  </button>
+                )}
               </div>
-            )}
+            </div>
 
           </div>
         )}
@@ -1504,6 +1609,92 @@ const StudioConverter = () => {
         .side-badge.result {
           background: var(--primary-orange);
           border-color: #000;
+        }
+
+        .side-badge.result.computing-pulse {
+          animation: badge-pulse 0.9s infinite alternate;
+          background: #333;
+          border-color: var(--primary-orange);
+          color: var(--primary-orange);
+        }
+
+        .size-pill-tag {
+          font-family: monospace;
+          font-weight: 700;
+          color: #fff;
+          margin-left: 0.35rem;
+          background: rgba(0, 0, 0, 0.4);
+          padding: 0.1rem 0.4rem;
+          border-radius: 2px;
+        }
+
+        .preview-loading-overlay {
+          position: absolute;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.65);
+          backdrop-filter: blur(2px);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 0.6rem;
+          font-family: var(--font-heading);
+          color: var(--primary-orange);
+          letter-spacing: 1.5px;
+          z-index: 6;
+        }
+
+        .loader-bolt {
+          font-size: 2.2rem;
+          animation: bolt-glow 0.8s infinite alternate ease-in-out;
+        }
+
+        .loader-text {
+          font-size: 0.9rem;
+          letter-spacing: 1px;
+          color: #fff;
+          text-shadow: 0 0 8px rgba(255, 106, 0, 0.8);
+        }
+
+        @keyframes bolt-glow {
+          from { transform: scale(0.9); opacity: 0.7; }
+          to { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 10px var(--primary-orange)); }
+        }
+
+        @keyframes badge-pulse {
+          from { opacity: 0.75; }
+          to { opacity: 1; }
+        }
+
+        .size-delta-badge {
+          font-family: monospace;
+          font-size: 0.85rem;
+          font-weight: 700;
+          margin-left: 0.5rem;
+        }
+
+        .size-delta-badge.smaller {
+          color: #4cd964;
+        }
+
+        .size-delta-badge.larger {
+          color: #ff9500;
+        }
+
+        .computing-val {
+          color: var(--primary-orange);
+          font-family: var(--font-heading);
+          letter-spacing: 1px;
+          animation: badge-pulse 0.9s infinite alternate;
+        }
+
+        .download-action.disabled {
+          background: #222;
+          color: #777;
+          border-color: #444;
+          box-shadow: none;
+          cursor: not-allowed;
+          opacity: 0.75;
         }
 
         /* Results Action Strip */

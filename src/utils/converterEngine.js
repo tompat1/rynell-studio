@@ -4,11 +4,11 @@
  * and compressed SVGZ.
  */
 
-import { traceRasterToSVG } from './vectorize';
-import { encodeImageDataToGif } from './gifEncoder';
-import { encodeToJxlBlob } from './jxlEncoder';
-import { encodeCanvasToApng } from './apngEncoder';
-import { decompressSvgz, compressSvgToSvgz } from './svgzHandler';
+import { traceRasterToSVG } from './vectorize.js';
+import { encodeImageDataToGif } from './gifEncoder.js';
+import { encodeToJxlBlob } from './jxlEncoder.js';
+import { encodeCanvasToApng } from './apngEncoder.js';
+import { decompressSvgz, compressSvgToSvgz } from './svgzHandler.js';
 
 export const MAX_FILE_SIZE_BYTES = 200 * 1024 * 1024; // 200MB
 export const AUTO_DELETE_DELAY_MS = 60 * 60 * 1000; // 1 hour
@@ -204,7 +204,9 @@ export const CONVERTER_TOOLS = [
 function loadImage(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    if (!src.startsWith('blob:') && !src.startsWith('data:')) {
+      img.crossOrigin = 'anonymous';
+    }
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error('Failed to load image for conversion.'));
     img.src = src;
@@ -212,13 +214,74 @@ function loadImage(src) {
 }
 
 /**
- * Convert SVG text or data URL to HTML Canvas
+ * Convert SVG text or data URL to HTML Canvas with viewBox normalization
  */
-async function renderSvgToCanvas(svgSrc, { scale = 2, bgColor = 'transparent' } = {}) {
-  const img = await loadImage(svgSrc);
+async function renderSvgToCanvas(svgSrc, { scale = 2, bgColor = 'transparent', file = null } = {}) {
+  let targetUrl = svgSrc;
+
+  // Pre-normalize SVG markup to guarantee width, height, and xmlns are set
+  try {
+    let svgString = null;
+    if (file && (file.name.toLowerCase().endsWith('.svg') || file.type.includes('svg'))) {
+      svgString = await file.text();
+    } else if (svgSrc && typeof svgSrc === 'string') {
+      const resp = await fetch(svgSrc);
+      svgString = await resp.text();
+    }
+
+    if (svgString && svgString.includes('<svg')) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(svgString, 'image/svg+xml');
+      const svgEl = doc.querySelector('svg');
+      if (svgEl) {
+        if (!svgEl.getAttribute('xmlns')) {
+          svgEl.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        }
+        const rawW = svgEl.getAttribute('width');
+        const rawH = svgEl.getAttribute('height');
+        const isPercentW = rawW && rawW.includes('%');
+        const isPercentH = rawH && rawH.includes('%');
+        let w = isPercentW ? 0 : parseFloat(rawW);
+        let h = isPercentH ? 0 : parseFloat(rawH);
+        const viewBox = svgEl.getAttribute('viewBox');
+        if ((!w || !h || isNaN(w) || isNaN(h)) && viewBox) {
+          const parts = viewBox.trim().split(/[\s,]+/);
+          if (parts.length === 4) {
+            w = parseFloat(parts[2]);
+            h = parseFloat(parts[3]);
+            if (w > 0 && h > 0) {
+              svgEl.setAttribute('width', String(w));
+              svgEl.setAttribute('height', String(h));
+            }
+          }
+        }
+        if (!w || !h || isNaN(w) || isNaN(h)) {
+          svgEl.setAttribute('width', '800');
+          svgEl.setAttribute('height', '800');
+        }
+        const serialized = new XMLSerializer().serializeToString(doc);
+        const safeSvgBlob = new Blob([serialized], { type: 'image/svg+xml;charset=utf-8' });
+        targetUrl = URL.createObjectURL(safeSvgBlob);
+      }
+    }
+  } catch (err) {
+    console.warn('SVG normalization notice:', err);
+  }
+
+  let img;
+  try {
+    img = await loadImage(targetUrl);
+  } finally {
+    if (targetUrl !== svgSrc && targetUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(targetUrl);
+    }
+  }
+
   const canvas = document.createElement('canvas');
-  const w = (img.naturalWidth || img.width || 800) * scale;
-  const h = (img.naturalHeight || img.height || 800) * scale;
+  const baseW = img.naturalWidth || img.width || 800;
+  const baseH = img.naturalHeight || img.height || 800;
+  const w = Math.round(baseW * scale);
+  const h = Math.round(baseH * scale);
   
   canvas.width = Math.max(1, Math.min(w, 8192));
   canvas.height = Math.max(1, Math.min(h, 8192));
@@ -320,7 +383,7 @@ export async function executeConversion({
   // Branch D: SVG to Raster (PNG, JPG, WebP, AVIF, APNG, JXL, GIF)
   else {
     const fillBg = tool.outputFormat === 'JPG' ? (bgColor === 'transparent' ? '#ffffff' : bgColor) : bgColor;
-    const { canvas, width: cW, height: cH } = await renderSvgToCanvas(sourceUrl, { scale, bgColor: fillBg });
+    const { canvas, width: cW, height: cH } = await renderSvgToCanvas(sourceUrl, { scale, bgColor: fillBg, file });
     width = cW;
     height = cH;
 
@@ -349,9 +412,29 @@ export async function executeConversion({
       });
       resultUrl = URL.createObjectURL(resultBlob);
     } else {
-      // Standard PNG, JPG, WebP
+      // Standard PNG, JPG, WebP with reliable fallback
       resultBlob = await new Promise((resolve) => {
-        canvas.toBlob((blob) => resolve(blob), tool.outputMime, quality);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            try {
+              const dataUrl = canvas.toDataURL(tool.outputMime, quality);
+              const arr = dataUrl.split(',');
+              const mime = arr[0].match(/:(.*?);/)?.[1] || tool.outputMime;
+              const bstr = atob(arr[1]);
+              let n = bstr.length;
+              const u8arr = new Uint8Array(n);
+              while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+              }
+              resolve(new Blob([u8arr], { type: mime }));
+            } catch (fallbackErr) {
+              console.warn('Canvas toBlob fallback triggered:', fallbackErr);
+              canvas.toBlob((pBlob) => resolve(pBlob), 'image/png');
+            }
+          }
+        }, tool.outputMime, quality);
       });
       resultUrl = URL.createObjectURL(resultBlob);
     }
