@@ -1,6 +1,12 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 
-const BeforeAfterSlider = ({ beforeImage, afterImage, beforeLabel = "ORIGINAL", afterLabel = "RESULT" }) => {
+const BeforeAfterSlider = ({ 
+  beforeImage, 
+  afterImage, 
+  beforeLabel = "ORIGINAL", 
+  afterLabel = "RESULT",
+  bgGrid = "checker"
+}) => {
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef(null);
@@ -31,14 +37,16 @@ const BeforeAfterSlider = ({ beforeImage, afterImage, beforeLabel = "ORIGINAL", 
     setIsDragging(false);
     try {
       e.currentTarget.releasePointerCapture(e.pointerId);
-    } catch (_) {}
+    } catch {
+      // Ignore release pointer capture errors
+    }
   };
 
   return (
     <div className="slider-wrapper">
       <div 
         ref={containerRef}
-        className="slider-container"
+        className={`slider-container bg-${bgGrid}`}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -91,9 +99,30 @@ const BeforeAfterSlider = ({ beforeImage, afterImage, beforeLabel = "ORIGINAL", 
           overflow: hidden;
           border: 4px solid var(--text-primary);
           box-shadow: 8px 8px 0 var(--primary-orange);
-          background-color: #050505;
           cursor: ew-resize;
           touch-action: none;
+          transition: background-color 0.2s ease;
+        }
+
+        .slider-container.bg-checker {
+          background-color: #14151b;
+          background-image: 
+            linear-gradient(45deg, #242735 25%, transparent 25%), 
+            linear-gradient(-45deg, #242735 25%, transparent 25%), 
+            linear-gradient(45deg, transparent 75%, #242735 75%), 
+            linear-gradient(-45deg, transparent 75%, #242735 75%);
+          background-size: 26px 26px;
+          background-position: 0 0, 0 13px, 13px -13px, -13px 0px;
+        }
+
+        .slider-container.bg-dark {
+          background-color: #080808;
+          background-image: none;
+        }
+
+        .slider-container.bg-light {
+          background-color: #f5f5f7;
+          background-image: none;
         }
 
         .img-layer {

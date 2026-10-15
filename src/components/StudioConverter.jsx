@@ -8,6 +8,12 @@ import {
 import sampleSvgUrl from '../assets/lightning_bolt_sticker_vector.svg';
 import sampleRasterUrl from '../assets/merch/bolt_sticker_merch_neutral_01.webp';
 
+const TRANSPARENT_FORMATS = ['SVG', 'PNG', 'WEBP', 'AVIF', 'APNG', 'GIF', 'SVGZ', 'JXL'];
+const checkIsTransparentFormat = (fmt) => {
+  if (!fmt) return false;
+  return TRANSPARENT_FORMATS.includes(String(fmt).toUpperCase());
+};
+
 const StudioConverter = () => {
   const [selectedToolId, setSelectedToolId] = useState('svg-to-png');
   const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'svg-to' | 'to-svg' | 'special'
@@ -44,6 +50,14 @@ const StudioConverter = () => {
   const currentTool = useMemo(() => {
     return CONVERTER_TOOLS.find(t => t.id === selectedToolId) || CONVERTER_TOOLS[0];
   }, [selectedToolId]);
+
+  // Derive effective preview background: if canvasBg is transparent, always show checkered grid
+  const effectiveBgGrid = useMemo(() => {
+    if (canvasBg === 'transparent') {
+      return 'checker';
+    }
+    return previewBgGrid;
+  }, [canvasBg, previewBgGrid]);
 
   // Track & auto-cleanup URLs
   const registerObjectUrl = (url) => {
@@ -114,6 +128,14 @@ const StudioConverter = () => {
   const handleToolChange = (newToolId) => {
     setSelectedToolId(newToolId);
     setErrorNotice(null);
+    const targetTool = CONVERTER_TOOLS.find(t => t.id === newToolId);
+    if (targetTool && targetTool.outputFormat === 'JPG') {
+      setCanvasBg('#ffffff');
+      setPreviewBgGrid('light');
+    } else if (targetTool && checkIsTransparentFormat(targetTool.outputFormat)) {
+      setCanvasBg('transparent');
+      setPreviewBgGrid('checker');
+    }
   };
 
   // File handling & validation
@@ -132,6 +154,11 @@ const StudioConverter = () => {
     const name = file.name.toLowerCase();
     const isSvg = name.endsWith('.svg') || file.type.includes('svg');
     const isSvgz = name.endsWith('.svgz');
+    const isPng = name.endsWith('.png') || file.type.includes('png');
+    const isWebp = name.endsWith('.webp') || file.type.includes('webp');
+    const isAvif = name.endsWith('.avif') || file.type.includes('avif');
+    const isGif = name.endsWith('.gif') || file.type.includes('gif');
+    const isApng = name.endsWith('.apng');
 
     if (currentTool.inputFormat === 'SVG' && !isSvg && !isSvgz) {
       setErrorNotice(`Selected tool requires SVG input (Uploaded: ${file.name}). Please drop an SVG or switch to ${file.name.split('.').pop().toUpperCase()} to SVG.`);
@@ -147,6 +174,13 @@ const StudioConverter = () => {
       sizeBytes: file.size,
       type: file.type || name.split('.').pop().toUpperCase()
     });
+
+    // Auto-activate checkered background for transparent file-types
+    const hasTransparency = isSvg || isSvgz || isPng || isWebp || isAvif || isGif || isApng;
+    if (hasTransparency && currentTool.outputFormat !== 'JPG') {
+      setCanvasBg('transparent');
+      setPreviewBgGrid('checker');
+    }
 
     // Restart 1-hour auto-deletion clock on new upload
     sessionCreatedRef.current = Date.now();
@@ -177,6 +211,8 @@ const StudioConverter = () => {
       if (currentTool.direction === 'raster-to-svg') {
         setSelectedToolId('svg-to-png');
       }
+      setCanvasBg('transparent');
+      setPreviewBgGrid('checker');
     } else {
       setSourceFile(null);
       setSourceUrl(sampleRasterUrl);
@@ -188,6 +224,8 @@ const StudioConverter = () => {
       });
       // Auto-select WebP to SVG
       setSelectedToolId('webp-to-svg');
+      setCanvasBg('transparent');
+      setPreviewBgGrid('checker');
     }
     sessionCreatedRef.current = Date.now();
     setExpirySeconds(3600);
@@ -572,7 +610,10 @@ const StudioConverter = () => {
                         <button
                           type="button"
                           className={`bg-btn ${canvasBg === 'transparent' ? 'active' : ''}`}
-                          onClick={() => setCanvasBg('transparent')}
+                          onClick={() => {
+                            setCanvasBg('transparent');
+                            setPreviewBgGrid('checker');
+                          }}
                           disabled={currentTool.outputFormat === 'JPG'}
                         >
                           TRANSPARENT
@@ -580,14 +621,20 @@ const StudioConverter = () => {
                         <button
                           type="button"
                           className={`bg-btn ${canvasBg === '#ffffff' ? 'active' : ''}`}
-                          onClick={() => setCanvasBg('#ffffff')}
+                          onClick={() => {
+                            setCanvasBg('#ffffff');
+                            setPreviewBgGrid('light');
+                          }}
                         >
                           SOLID WHITE
                         </button>
                         <button
                           type="button"
                           className={`bg-btn ${canvasBg === '#000000' ? 'active' : ''}`}
-                          onClick={() => setCanvasBg('#000000')}
+                          onClick={() => {
+                            setCanvasBg('#000000');
+                            setPreviewBgGrid('dark');
+                          }}
                         >
                           SOLID BLACK
                         </button>
@@ -681,22 +728,33 @@ const StudioConverter = () => {
                 <div className="bg-toggle-group">
                   <span className="toggle-lbl">BG:</span>
                   <button 
-                    className={`bg-toggle-btn ${previewBgGrid === 'checker' ? 'active' : ''}`}
-                    onClick={() => setPreviewBgGrid('checker')}
+                    className={`bg-toggle-btn ${effectiveBgGrid === 'checker' ? 'active' : ''}`}
+                    onClick={() => {
+                      setPreviewBgGrid('checker');
+                      if (currentTool.outputFormat !== 'JPG') {
+                        setCanvasBg('transparent');
+                      }
+                    }}
                     title="Checkered grid (transparency)"
                   >
                     🏁
                   </button>
                   <button 
-                    className={`bg-toggle-btn ${previewBgGrid === 'dark' ? 'active' : ''}`}
-                    onClick={() => setPreviewBgGrid('dark')}
+                    className={`bg-toggle-btn ${effectiveBgGrid === 'dark' ? 'active' : ''}`}
+                    onClick={() => {
+                      setPreviewBgGrid('dark');
+                      setCanvasBg('#000000');
+                    }}
                     title="Dark background"
                   >
                     ⬛
                   </button>
                   <button 
-                    className={`bg-toggle-btn ${previewBgGrid === 'light' ? 'active' : ''}`}
-                    onClick={() => setPreviewBgGrid('light')}
+                    className={`bg-toggle-btn ${effectiveBgGrid === 'light' ? 'active' : ''}`}
+                    onClick={() => {
+                      setPreviewBgGrid('light');
+                      setCanvasBg('#ffffff');
+                    }}
                     title="Light background"
                   >
                     ⬜
@@ -722,7 +780,7 @@ const StudioConverter = () => {
             </div>
 
             {/* Interactive Preview Canvas Area */}
-            <div className={`preview-viewport bg-${previewBgGrid}`}>
+            <div className={`preview-viewport bg-${effectiveBgGrid}`}>
               {viewMode === 'slider' ? (
                 <BeforeAfterSlider
                   beforeImage={sourceUrl}
@@ -735,16 +793,17 @@ const StudioConverter = () => {
                           ? `⚡ COMPUTING ${currentTool.outputFormat.toUpperCase()}...` 
                           : `OUTPUT // ${currentTool.outputFormat.toUpperCase()}`)
                   }
+                  bgGrid={effectiveBgGrid}
                 />
               ) : (
                 <div className="side-by-side-layout">
-                  <div className="side-pane">
+                  <div className={`side-pane bg-${effectiveBgGrid}`}>
                     <div className="side-badge">
                       SOURCE // {currentTool.inputFormat} {sourceMeta?.sizeKb ? `(${sourceMeta.sizeKb} KB)` : ''}
                     </div>
                     <img src={sourceUrl} alt="Source Input" />
                   </div>
-                  <div className="side-pane">
+                  <div className={`side-pane bg-${effectiveBgGrid}`}>
                     <div className={`side-badge result ${isProcessing ? 'computing-pulse' : ''}`}>
                       {resultData ? (
                         <>OUTPUT // {currentTool.outputFormat.toUpperCase()} <span className="size-pill-tag">({resultData.sizeKb} KB)</span></>
@@ -1548,14 +1607,14 @@ const StudioConverter = () => {
         }
 
         .preview-viewport.bg-checker {
+          background-color: #101116;
           background-image: 
-            linear-gradient(45deg, rgba(128,128,128,0.15) 25%, transparent 25%), 
-            linear-gradient(-45deg, rgba(128,128,128,0.15) 25%, transparent 25%), 
-            linear-gradient(45deg, transparent 75%, rgba(128,128,128,0.15) 75%), 
-            linear-gradient(-45deg, transparent 75%, rgba(128,128,128,0.15) 75%);
-          background-size: 20px 20px;
-          background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-          background-color: #111;
+            linear-gradient(45deg, #1e202b 25%, transparent 25%), 
+            linear-gradient(-45deg, #1e202b 25%, transparent 25%), 
+            linear-gradient(45deg, transparent 75%, #1e202b 75%), 
+            linear-gradient(-45deg, transparent 75%, #1e202b 75%);
+          background-size: 26px 26px;
+          background-position: 0 0, 0 13px, 13px -13px, -13px 0px;
         }
 
         .preview-viewport.bg-dark {
@@ -1576,7 +1635,6 @@ const StudioConverter = () => {
 
         .side-pane {
           position: relative;
-          background: #000;
           border: 3px solid var(--border-color);
           box-shadow: 4px 4px 0 #000;
           display: flex;
@@ -1584,6 +1642,28 @@ const StudioConverter = () => {
           justify-content: center;
           min-height: 360px;
           overflow: hidden;
+          transition: background-color 0.2s ease;
+        }
+
+        .side-pane.bg-checker {
+          background-color: #14151b;
+          background-image: 
+            linear-gradient(45deg, #242735 25%, transparent 25%), 
+            linear-gradient(-45deg, #242735 25%, transparent 25%), 
+            linear-gradient(45deg, transparent 75%, #242735 75%), 
+            linear-gradient(-45deg, transparent 75%, #242735 75%);
+          background-size: 26px 26px;
+          background-position: 0 0, 0 13px, 13px -13px, -13px 0px;
+        }
+
+        .side-pane.bg-dark {
+          background-color: #080808;
+          background-image: none;
+        }
+
+        .side-pane.bg-light {
+          background-color: #f5f5f7;
+          background-image: none;
         }
 
         .side-pane img {
