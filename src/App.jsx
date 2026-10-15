@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import Services from './components/Services'
@@ -16,8 +16,8 @@ import CheckoutDrawer from './components/CheckoutDrawer'
 import Loader from './components/Loader'
 import ContactDrawer from './components/ContactDrawer'
 import StudioLab from './components/StudioLab'
+import StudioConverter from './components/StudioConverter'
 import JsonTransformer from './components/JsonTransformer'
-import { AudioProvider } from './contexts/AudioContext'
 
 function App() {
   const [cart, setCart] = useState([])
@@ -117,6 +117,7 @@ function App() {
       />
       <Hero />
       <StudioLab />
+      <StudioConverter />
       <JsonTransformer />
       <Collections />
       <Shop addToCart={addToCart} isArchiveOpen={isShopArchiveOpen} setIsArchiveOpen={setIsShopArchiveOpen} />

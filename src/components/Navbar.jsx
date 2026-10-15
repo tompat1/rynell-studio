@@ -20,6 +20,7 @@ const Navbar = ({ cartCount, onCartClick, onSearchClick, onAccountClick, onConta
 
   const navItems = [
     { name: 'AI LABS', link: '#studio-lab', image: aiLabImg },
+    { name: 'CONVERTERS', link: '#converter-tools', image: boltSvg },
     { name: 'JSON LAB', link: '#json-lab', image: jsonLabImg },
     { name: 'COLLECTIONS', link: '#collections', image: collImg },
     { name: 'SHOP', link: '#shop', image: shopImg },

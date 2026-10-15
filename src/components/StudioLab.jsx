@@ -1359,6 +1359,10 @@ const StudioLab = () => {
                   >
                     📥 DOWNLOAD SVG
                   </button>
+
+                  <a href="#converter-tools" className="vectorine-nav-converter-badge">
+                    🔄 CONVERTER MATRIX ➔
+                  </a>
                 </div>
 
                 {/* Viewport Canvas Container */}
@@ -2669,6 +2673,28 @@ const StudioLab = () => {
           padding: 5px 12px;
           border-radius: 4px;
           cursor: pointer;
+        }
+
+        .vectorine-nav-converter-badge {
+          background: rgba(255, 106, 0, 0.18);
+          border: 1px solid var(--primary-orange);
+          color: var(--primary-orange);
+          font-family: var(--font-heading);
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 0.5px;
+          padding: 5px 12px;
+          border-radius: 4px;
+          text-decoration: none;
+          transition: all 0.15s ease;
+          display: inline-flex;
+          align-items: center;
+        }
+
+        .vectorine-nav-converter-badge:hover {
+          background: var(--primary-orange);
+          color: #fff;
+          transform: translateY(-1px);
         }
 
         .vectorine-canvas-viewport {
