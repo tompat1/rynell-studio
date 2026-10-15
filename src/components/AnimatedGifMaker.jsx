@@ -17,11 +17,18 @@ const AnimatedGifMaker = () => {
   const [canvasBg, setCanvasBg] = useState('transparent'); // 'transparent' | 'black' | 'white' | 'orange'
   const [isPingPong, setIsPingPong] = useState(false);
 
+  // Transitions state
+  const [transitionType, setTransitionType] = useState('none'); // 'none' | 'crossfade' | 'slide-left' | 'slide-right' | 'slide-up' | 'fade-black' | 'zoom' | 'wipe-left'
+  const [transitionSteps, setTransitionSteps] = useState(2); // 1 | 2 | 3 | 4
+  const [transitionDelayMs, setTransitionDelayMs] = useState(70); // 40 | 70 | 100 | 140
+
   // Live Animation Player State
   const [isPlaying, setIsPlaying] = useState(true);
   const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
+  const [currentTweenStep, setCurrentTweenStep] = useState(0); // 0 = main frame, >0 = tween step
   const playerCanvasRef = useRef(null);
   const playTimerRef = useRef(null);
+  const imageCacheRef = useRef(new Map());
 
   // Encoding & Results state
   const [isGenerating, setIsGenerating] = useState(false);
@@ -64,6 +71,7 @@ const AnimatedGifMaker = () => {
     setOutputGifUrl(null);
     setOutputStats(null);
     setCurrentFrameIndex(0);
+    setCurrentTweenStep(0);
     setErrorNotice(null);
   }, [cleanupUrls]);
 
@@ -116,6 +124,7 @@ const AnimatedGifMaker = () => {
     setFrames(loadedFrames);
     setGlobalDelayMs(demo.delayMs);
     setCurrentFrameIndex(0);
+    setCurrentTweenStep(0);
   }, []);
 
   // Parse incoming files (supports bulk images and ZIP/TAR archives)
@@ -233,21 +242,76 @@ const AnimatedGifMaker = () => {
     });
   };
 
-  // Live Canvas Animation Playback Loop
+  // Get image from cache or instantiate
+  const getImage = useCallback((url) => {
+    if (!url) return null;
+    if (imageCacheRef.current.has(url)) {
+      return imageCacheRef.current.get(url);
+    }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = url;
+    imageCacheRef.current.set(url, img);
+    return img;
+  }, []);
+
+  // Preload frame images into memory cache
+  useEffect(() => {
+    frames.forEach(f => {
+      if (f.url && !imageCacheRef.current.has(f.url)) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = f.url;
+        imageCacheRef.current.set(f.url, img);
+      }
+    });
+  }, [frames]);
+
+  // Live Canvas Animation Playback Loop with Transition Tweens
   useEffect(() => {
     if (!isPlaying || frames.length === 0) return;
 
-    const currentFrame = frames[currentFrameIndex];
-    const delay = (currentFrame?.delayMs || globalDelayMs) || 200;
+    if (transitionType === 'none' || frames.length <= 1) {
+      const currentFrame = frames[currentFrameIndex];
+      const delay = (currentFrame?.delayMs || globalDelayMs) || 200;
 
-    playTimerRef.current = setTimeout(() => {
-      setCurrentFrameIndex(prev => (prev + 1) % frames.length);
-    }, delay);
+      playTimerRef.current = setTimeout(() => {
+        setCurrentFrameIndex(prev => (prev + 1) % frames.length);
+        setCurrentTweenStep(0);
+      }, delay);
+    } else {
+      if (currentTweenStep === 0) {
+        const currentFrame = frames[currentFrameIndex];
+        const delay = (currentFrame?.delayMs || globalDelayMs) || 200;
+
+        playTimerRef.current = setTimeout(() => {
+          setCurrentTweenStep(1);
+        }, delay);
+      } else if (currentTweenStep < transitionSteps) {
+        playTimerRef.current = setTimeout(() => {
+          setCurrentTweenStep(prev => prev + 1);
+        }, transitionDelayMs);
+      } else {
+        playTimerRef.current = setTimeout(() => {
+          setCurrentTweenStep(0);
+          setCurrentFrameIndex(prev => (prev + 1) % frames.length);
+        }, transitionDelayMs);
+      }
+    }
 
     return () => {
       if (playTimerRef.current) clearTimeout(playTimerRef.current);
     };
-  }, [isPlaying, currentFrameIndex, frames, globalDelayMs]);
+  }, [
+    isPlaying,
+    currentFrameIndex,
+    currentTweenStep,
+    frames,
+    globalDelayMs,
+    transitionType,
+    transitionSteps,
+    transitionDelayMs
+  ]);
 
   // Determine output canvas dimensions
   const computedDimensions = useMemo(() => {
@@ -256,8 +320,54 @@ const AnimatedGifMaker = () => {
     return { width: 640, height: 640 };
   }, [canvasSizeMode, customWidth, customHeight]);
 
-  // Helper to draw an image onto canvas with aspect ratio rules
-  const drawImageToCanvas = useCallback((ctx, img, targetW, targetH, fit, bg) => {
+  // Helper to draw an image onto canvas with aspect ratio rules and optional transform
+  const drawFrameHelper = useCallback((ctx, img, targetW, targetH, fit, transform = 'none') => {
+    if (!img) return;
+    const imgW = img.naturalWidth || img.width || targetW;
+    const imgH = img.naturalHeight || img.height || targetH;
+
+    const scale = fit === 'cover'
+      ? Math.max(targetW / imgW, targetH / imgH)
+      : fit === 'stretch'
+      ? 1
+      : Math.min(targetW / imgW, targetH / imgH);
+
+    const dw = fit === 'stretch' ? targetW : imgW * scale;
+    const dh = fit === 'stretch' ? targetH : imgH * scale;
+    const dx = (targetW - dw) / 2;
+    const dy = (targetH - dh) / 2;
+
+    ctx.save();
+    if (transform && transform !== 'none') {
+      ctx.translate(targetW / 2, targetH / 2);
+      if (transform.includes('scale(')) {
+        const match = transform.match(/scale\(([^)]+)\)/);
+        if (match) {
+          const s = parseFloat(match[1]);
+          if (!isNaN(s)) ctx.scale(s, s);
+        }
+      }
+      if (transform.includes('rotate(')) {
+        const match = transform.match(/rotate\(([^)]+)\)/);
+        if (match) {
+          const deg = parseFloat(match[1]);
+          if (!isNaN(deg)) ctx.rotate((deg * Math.PI) / 180);
+        }
+      }
+      if (transform.includes('skewX(')) {
+        const match = transform.match(/skewX\(([^)]+)\)/);
+        if (match) {
+          const deg = parseFloat(match[1]);
+          if (!isNaN(deg)) ctx.transform(1, 0, Math.tan((deg * Math.PI) / 180), 1, 0, 0);
+        }
+      }
+      ctx.translate(-targetW / 2, -targetH / 2);
+    }
+    ctx.drawImage(img, dx, dy, dw, dh);
+    ctx.restore();
+  }, []);
+
+  const drawImageToCanvas = useCallback((ctx, img, targetW, targetH, fit, bg, transform = 'none') => {
     ctx.clearRect(0, 0, targetW, targetH);
 
     if (bg && bg !== 'transparent') {
@@ -265,27 +375,104 @@ const AnimatedGifMaker = () => {
       ctx.fillRect(0, 0, targetW, targetH);
     }
 
-    const imgW = img.naturalWidth || img.width || targetW;
-    const imgH = img.naturalHeight || img.height || targetH;
+    drawFrameHelper(ctx, img, targetW, targetH, fit, transform);
+  }, [drawFrameHelper]);
 
-    if (fit === 'stretch') {
-      ctx.drawImage(img, 0, 0, targetW, targetH);
-      return;
+  const drawTransitionToCanvas = useCallback((ctx, imgA, imgB, t, type, targetW, targetH, fit, bg, transformA = 'none', transformB = 'none') => {
+    ctx.clearRect(0, 0, targetW, targetH);
+
+    if (bg && bg !== 'transparent') {
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, targetW, targetH);
     }
 
-    const scale = fit === 'cover'
-      ? Math.max(targetW / imgW, targetH / imgH)
-      : Math.min(targetW / imgW, targetH / imgH);
+    if (type === 'crossfade') {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, 1 - t);
+      drawFrameHelper(ctx, imgA, targetW, targetH, fit, transformA);
+      ctx.restore();
 
-    const dw = imgW * scale;
-    const dh = imgH * scale;
-    const dx = (targetW - dw) / 2;
-    const dy = (targetH - dh) / 2;
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, t);
+      drawFrameHelper(ctx, imgB, targetW, targetH, fit, transformB);
+      ctx.restore();
+    } else if (type === 'slide-left') {
+      ctx.save();
+      ctx.translate(-t * targetW, 0);
+      drawFrameHelper(ctx, imgA, targetW, targetH, fit, transformA);
+      ctx.restore();
 
-    ctx.drawImage(img, dx, dy, dw, dh);
-  }, []);
+      ctx.save();
+      ctx.translate((1 - t) * targetW, 0);
+      drawFrameHelper(ctx, imgB, targetW, targetH, fit, transformB);
+      ctx.restore();
+    } else if (type === 'slide-right') {
+      ctx.save();
+      ctx.translate(t * targetW, 0);
+      drawFrameHelper(ctx, imgA, targetW, targetH, fit, transformA);
+      ctx.restore();
 
-  // Update live preview canvas when currentFrameIndex changes
+      ctx.save();
+      ctx.translate(-(1 - t) * targetW, 0);
+      drawFrameHelper(ctx, imgB, targetW, targetH, fit, transformB);
+      ctx.restore();
+    } else if (type === 'slide-up') {
+      ctx.save();
+      ctx.translate(0, -t * targetH);
+      drawFrameHelper(ctx, imgA, targetW, targetH, fit, transformA);
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(0, (1 - t) * targetH);
+      drawFrameHelper(ctx, imgB, targetW, targetH, fit, transformB);
+      ctx.restore();
+    } else if (type === 'fade-black') {
+      if (t < 0.5) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, 1 - (t * 2));
+        drawFrameHelper(ctx, imgA, targetW, targetH, fit, transformA);
+        ctx.restore();
+      } else {
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, (t - 0.5) * 2);
+        drawFrameHelper(ctx, imgB, targetW, targetH, fit, transformB);
+        ctx.restore();
+      }
+    } else if (type === 'zoom') {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, 1 - t);
+      const scaleA = 1 + t * 0.18;
+      ctx.translate(targetW / 2, targetH / 2);
+      ctx.scale(scaleA, scaleA);
+      ctx.translate(-targetW / 2, -targetH / 2);
+      drawFrameHelper(ctx, imgA, targetW, targetH, fit, transformA);
+      ctx.restore();
+
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, t);
+      const scaleB = 0.82 + t * 0.18;
+      ctx.translate(targetW / 2, targetH / 2);
+      ctx.scale(scaleB, scaleB);
+      ctx.translate(-targetW / 2, -targetH / 2);
+      drawFrameHelper(ctx, imgB, targetW, targetH, fit, transformB);
+      ctx.restore();
+    } else if (type === 'wipe-left') {
+      ctx.save();
+      drawFrameHelper(ctx, imgA, targetW, targetH, fit, transformA);
+      ctx.restore();
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, targetW * t, targetH);
+      ctx.clip();
+      drawFrameHelper(ctx, imgB, targetW, targetH, fit, transformB);
+      ctx.restore();
+    } else {
+      drawFrameHelper(ctx, imgA, targetW, targetH, fit, transformA);
+    }
+  }, [drawFrameHelper]);
+
+  // Update live preview canvas when currentFrameIndex or currentTweenStep changes
   useEffect(() => {
     if (!playerCanvasRef.current || frames.length === 0) return;
     const activeFrame = frames[currentFrameIndex];
@@ -295,15 +482,69 @@ const AnimatedGifMaker = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      drawImageToCanvas(ctx, img, canvas.width, canvas.height, fitMode, BG_COLOR_MAP[canvasBg] || 'transparent');
-    };
-    img.src = activeFrame.url;
-  }, [currentFrameIndex, frames, fitMode, canvasBg, drawImageToCanvas]);
+    const targetW = canvas.width;
+    const targetH = canvas.height;
+    const bg = BG_COLOR_MAP[canvasBg] || 'transparent';
 
-  // Generate Animated GIF
+    const imgA = getImage(activeFrame.url);
+    const nextIdx = (currentFrameIndex + 1) % frames.length;
+    const nextFrame = frames[nextIdx];
+    const imgB = nextFrame ? getImage(nextFrame.url) : null;
+
+    const render = () => {
+      if (transitionType === 'none' || currentTweenStep === 0 || !imgB || frames.length <= 1) {
+        drawImageToCanvas(
+          ctx,
+          imgA,
+          targetW,
+          targetH,
+          fitMode,
+          bg,
+          activeFrame.transform || 'none'
+        );
+      } else {
+        const t = currentTweenStep / (transitionSteps + 1);
+        drawTransitionToCanvas(
+          ctx,
+          imgA,
+          imgB,
+          t,
+          transitionType,
+          targetW,
+          targetH,
+          fitMode,
+          bg,
+          activeFrame.transform || 'none',
+          nextFrame.transform || 'none'
+        );
+      }
+    };
+
+    if (imgA && imgA.complete && (!imgB || imgB.complete)) {
+      render();
+    } else {
+      let isSubscribed = true;
+      const onDone = () => {
+        if (isSubscribed) render();
+      };
+      if (imgA && !imgA.complete) imgA.onload = onDone;
+      if (imgB && !imgB.complete) imgB.onload = onDone;
+      return () => { isSubscribed = false; };
+    }
+  }, [
+    currentFrameIndex,
+    currentTweenStep,
+    frames,
+    fitMode,
+    canvasBg,
+    transitionType,
+    transitionSteps,
+    drawImageToCanvas,
+    drawTransitionToCanvas,
+    getImage
+  ]);
+
+  // Generate Animated GIF with transitions support
   const handleGenerateGif = async () => {
     if (frames.length === 0) {
       setErrorNotice('Please add at least one image or animation frame.');
@@ -317,6 +558,7 @@ const AnimatedGifMaker = () => {
     try {
       const targetW = computedDimensions.width;
       const targetH = computedDimensions.height;
+      const bg = BG_COLOR_MAP[canvasBg] || 'transparent';
 
       // Prepare sequence (support Ping-Pong loop if enabled)
       let sequenceFrames = [...frames];
@@ -325,32 +567,68 @@ const AnimatedGifMaker = () => {
         sequenceFrames = [...frames, ...reverseSlice];
       }
 
+      // Preload all unique images
+      const loadedImageMap = new Map();
+      for (const f of sequenceFrames) {
+        if (!loadedImageMap.has(f.url)) {
+          const img = await new Promise((resolve, reject) => {
+            const image = new Image();
+            image.crossOrigin = 'anonymous';
+            image.onload = () => resolve(image);
+            image.onerror = () => reject(new Error(`Failed to load frame ${f.name}`));
+            image.src = f.url;
+          });
+          loadedImageMap.set(f.url, img);
+        }
+      }
+
       const encodedFrames = [];
       const canvas = document.createElement('canvas');
       canvas.width = targetW;
       canvas.height = targetH;
       const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
-      for (let i = 0; i < sequenceFrames.length; i++) {
-        setGenerationProgress(Math.round(((i + 1) / sequenceFrames.length) * 85));
+      const totalItems = sequenceFrames.length;
+
+      for (let i = 0; i < totalItems; i++) {
+        setGenerationProgress(Math.round(((i + 1) / totalItems) * 85));
         const f = sequenceFrames[i];
+        const nextF = sequenceFrames[(i + 1) % totalItems];
+        const imgA = loadedImageMap.get(f.url);
+        const imgB = loadedImageMap.get(nextF.url);
 
-        const img = await new Promise((resolve, reject) => {
-          const image = new Image();
-          image.crossOrigin = 'anonymous';
-          image.onload = () => resolve(image);
-          image.onerror = () => reject(new Error(`Failed to load frame ${f.name}`));
-          image.src = f.url;
-        });
-
-        drawImageToCanvas(ctx, img, targetW, targetH, fitMode, BG_COLOR_MAP[canvasBg] || 'transparent');
-        const imgData = ctx.getImageData(0, 0, targetW, targetH);
-
+        // 1. Draw main frame
+        drawImageToCanvas(ctx, imgA, targetW, targetH, fitMode, bg, f.transform || 'none');
         encodedFrames.push({
-          imageData: imgData,
+          imageData: ctx.getImageData(0, 0, targetW, targetH),
           delayMs: f.delayMs || globalDelayMs,
           disposal: 2
         });
+
+        // 2. Draw transition tweens if enabled
+        if (transitionType !== 'none' && totalItems > 1 && imgB) {
+          for (let step = 1; step <= transitionSteps; step++) {
+            const t = step / (transitionSteps + 1);
+            drawTransitionToCanvas(
+              ctx,
+              imgA,
+              imgB,
+              t,
+              transitionType,
+              targetW,
+              targetH,
+              fitMode,
+              bg,
+              f.transform || 'none',
+              nextF.transform || 'none'
+            );
+            encodedFrames.push({
+              imageData: ctx.getImageData(0, 0, targetW, targetH),
+              delayMs: transitionDelayMs,
+              disposal: 2
+            });
+          }
+        }
       }
 
       setGenerationProgress(92);
@@ -367,7 +645,7 @@ const AnimatedGifMaker = () => {
       setOutputStats({
         sizeBytes: gifBlob.size,
         sizeKb: Math.round((gifBlob.size / 1024) * 10) / 10,
-        frameCount: sequenceFrames.length,
+        frameCount: encodedFrames.length,
         width: targetW,
         height: targetH,
         fps: Math.round(1000 / (globalDelayMs || 200))
@@ -463,6 +741,7 @@ const AnimatedGifMaker = () => {
               <span className="pane-title">LIVE PREVIEW PLAYER</span>
               <span className="frame-counter-pill">
                 FRAME {frames.length > 0 ? currentFrameIndex + 1 : 0} OF {frames.length}
+                {currentTweenStep > 0 && ` ➔ TRANSITION (${Math.round((currentTweenStep / (transitionSteps + 1)) * 100)}%)`}
               </span>
             </div>
 
@@ -498,6 +777,7 @@ const AnimatedGifMaker = () => {
                   className="ctrl-btn step-btn"
                   onClick={() => {
                     setIsPlaying(false);
+                    setCurrentTweenStep(0);
                     setCurrentFrameIndex(prev => (prev - 1 + frames.length) % Math.max(1, frames.length));
                   }}
                   title="Previous Frame"
@@ -509,6 +789,7 @@ const AnimatedGifMaker = () => {
                   className="ctrl-btn step-btn"
                   onClick={() => {
                     setIsPlaying(false);
+                    setCurrentTweenStep(0);
                     setCurrentFrameIndex(prev => (prev + 1) % Math.max(1, frames.length));
                   }}
                   title="Next Frame"
@@ -527,6 +808,7 @@ const AnimatedGifMaker = () => {
                     value={currentFrameIndex}
                     onChange={(e) => {
                       setIsPlaying(false);
+                      setCurrentTweenStep(0);
                       setCurrentFrameIndex(parseInt(e.target.value, 10));
                     }}
                     className="scrubber-range"
@@ -661,6 +943,88 @@ const AnimatedGifMaker = () => {
                 </div>
               </div>
 
+              {/* Frame Transitions (Tweens between images) */}
+              <div className="param-field transition-control-group">
+                <div className="field-label-row">
+                  <label className="field-label">TRANSITION BETWEEN IMAGES:</label>
+                  <span className="transition-mode-badge">{transitionType.toUpperCase()}</span>
+                </div>
+
+                <div className="transition-pills-grid">
+                  {[
+                    { id: 'none', label: 'CUT (NONE)' },
+                    { id: 'crossfade', label: 'CROSS-FADE' },
+                    { id: 'slide-left', label: 'SLIDE LEFT' },
+                    { id: 'slide-right', label: 'SLIDE RIGHT' },
+                    { id: 'slide-up', label: 'SLIDE UP' },
+                    { id: 'fade-black', label: 'DIP TO BLACK' },
+                    { id: 'zoom', label: 'ZOOM PULSE' },
+                    { id: 'wipe-left', label: 'BAR WIPE' }
+                  ].map(t => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      className={`pill-btn small transition-btn ${transitionType === t.id ? 'active' : ''}`}
+                      onClick={() => {
+                        setTransitionType(t.id);
+                        setCurrentTweenStep(0);
+                      }}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+
+                {transitionType !== 'none' && (
+                  <div className="transition-subcontrols">
+                    <div className="subcontrol-row">
+                      <span className="subcontrol-label">SMOOTHNESS (TWEEN FRAMES):</span>
+                      <div className="btn-group-row">
+                        {[
+                          { val: 1, label: '1 TWEEN (SNAPPY)' },
+                          { val: 2, label: '2 TWEENS (SMOOTH)' },
+                          { val: 3, label: '3 TWEENS (FLUID)' },
+                          { val: 4, label: '4 TWEENS (ULTRA)' }
+                        ].map(s => (
+                          <button
+                            key={s.val}
+                            type="button"
+                            className={`pill-btn micro ${transitionSteps === s.val ? 'active' : ''}`}
+                            onClick={() => {
+                              setTransitionSteps(s.val);
+                              setCurrentTweenStep(0);
+                            }}
+                          >
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="subcontrol-row">
+                      <span className="subcontrol-label">TRANSITION SPEED:</span>
+                      <div className="btn-group-row">
+                        {[
+                          { ms: 40, label: '40MS (FAST)' },
+                          { ms: 70, label: '70MS (NORMAL)' },
+                          { ms: 100, label: '100MS (CINEMATIC)' },
+                          { ms: 140, label: '140MS (SLOW)' }
+                        ].map(speed => (
+                          <button
+                            key={speed.ms}
+                            type="button"
+                            className={`pill-btn micro ${transitionDelayMs === speed.ms ? 'active' : ''}`}
+                            onClick={() => setTransitionDelayMs(speed.ms)}
+                          >
+                            {speed.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Loop & Ping Pong */}
               <div className="param-field">
                 <div className="checkbox-options-row">
@@ -691,7 +1055,9 @@ const AnimatedGifMaker = () => {
                   onClick={handleGenerateGif}
                   disabled={isGenerating || frames.length === 0}
                 >
-                  {isGenerating ? `⏳ COMPOSING GIF (${generationProgress}%)...` : `⚡ GENERATE ANIMATED GIF (${frames.length} FRAMES)`}
+                  {isGenerating 
+                    ? `⏳ COMPOSING GIF (${generationProgress}%)...` 
+                    : `⚡ GENERATE ANIMATED GIF (${transitionType !== 'none' && frames.length > 1 ? frames.length * (transitionSteps + 1) : frames.length} FRAMES${transitionType !== 'none' ? ` // ${transitionType.toUpperCase()}` : ''})`}
                 </button>
               </div>
 
@@ -755,6 +1121,7 @@ const AnimatedGifMaker = () => {
                       className={`frame-card ${isActive ? 'active-frame' : ''}`}
                       onClick={() => {
                         setIsPlaying(false);
+                        setCurrentTweenStep(0);
                         setCurrentFrameIndex(index);
                       }}
                     >
@@ -1269,6 +1636,87 @@ const AnimatedGifMaker = () => {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 1rem;
+        }
+
+        /* Transitions UI */
+        .transition-control-group {
+          background: rgba(255, 106, 0, 0.05);
+          border: 2px dashed rgba(255, 106, 0, 0.4);
+          padding: 0.9rem;
+          margin: 0.25rem 0;
+        }
+
+        .transition-mode-badge {
+          font-family: monospace;
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: var(--primary-orange);
+          background: rgba(255, 106, 0, 0.15);
+          border: 1px solid rgba(255, 106, 0, 0.45);
+          padding: 0.15rem 0.5rem;
+          letter-spacing: 0.5px;
+        }
+
+        .transition-pills-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 0.4rem;
+        }
+
+        @media (max-width: 600px) {
+          .transition-pills-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        .transition-btn {
+          text-align: center;
+          font-weight: 600;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .transition-btn.active {
+          background: var(--primary-orange) !important;
+          color: #fff !important;
+          border-color: #000 !important;
+          box-shadow: 2px 2px 0 #000;
+        }
+
+        .transition-subcontrols {
+          display: flex;
+          flex-direction: column;
+          gap: 0.65rem;
+          margin-top: 0.65rem;
+          padding-top: 0.65rem;
+          border-top: 1px dashed var(--border-color);
+        }
+
+        .subcontrol-row {
+          display: flex;
+          flex-direction: column;
+          gap: 0.3rem;
+        }
+
+        .subcontrol-label {
+          font-family: var(--font-heading);
+          font-size: 0.75rem;
+          letter-spacing: 0.8px;
+          color: var(--text-secondary);
+        }
+
+        .pill-btn.micro {
+          font-size: 0.72rem;
+          padding: 0.25rem 0.5rem;
+          font-family: monospace;
+        }
+
+        .pill-btn.micro.active {
+          background: var(--primary-orange);
+          color: #fff;
+          border-color: #000;
+          box-shadow: 2px 2px 0 #000;
         }
 
         .checkbox-options-row {

@@ -14,7 +14,10 @@ import camp02 from '../assets/campaigns/campaign_02.webp';
 import camp03 from '../assets/campaigns/campaign_03.webp';
 import camp04 from '../assets/campaigns/campaign_04.webp';
 
-import boltSvg from '../assets/lightning_bolt_sticker_vector.svg';
+import pulseBolt01 from '../assets/pulse_bolt_frame1.svg';
+import pulseBolt02 from '../assets/pulse_bolt_frame2.svg';
+import pulseBolt03 from '../assets/pulse_bolt_frame3.svg';
+import pulseBolt04 from '../assets/pulse_bolt_frame4.svg';
 
 export const BG_COLOR_MAP = {
   transparent: 'transparent',
@@ -53,13 +56,13 @@ export const DEMO_SEQUENCES = [
   {
     id: 'rotating_bolt',
     title: '⚡ PULSE VECTOR BOLT (4 FRAMES)',
-    desc: 'Studio lightning icon oscillating with rotational dynamics.',
-    delayMs: 150,
+    desc: 'Studio lightning icon oscillating with rotational dynamics, shockwaves and hyper-voltage pulse.',
+    delayMs: 140,
     frames: [
-      { name: 'bolt_norm.svg', url: boltSvg, delayMs: 150, transform: 'none' },
-      { name: 'bolt_skew_left.svg', url: boltSvg, delayMs: 150, transform: 'skewX(-15deg)' },
-      { name: 'bolt_scale_up.svg', url: boltSvg, delayMs: 150, transform: 'scale(1.1)' },
-      { name: 'bolt_skew_right.svg', url: boltSvg, delayMs: 150, transform: 'skewX(15deg)' }
+      { name: 'pulse_bolt_01_norm.svg', url: pulseBolt01, delayMs: 140, transform: 'scale(0.95)' },
+      { name: 'pulse_bolt_02_surge.svg', url: pulseBolt02, delayMs: 140, transform: 'rotate(-4deg) scale(1.08)' },
+      { name: 'pulse_bolt_03_overdrive.svg', url: pulseBolt03, delayMs: 140, transform: 'rotate(4deg) scale(1.22)' },
+      { name: 'pulse_bolt_04_afterglow.svg', url: pulseBolt04, delayMs: 140, transform: 'rotate(-1deg) scale(1.02)' }
     ]
   }
 ];
