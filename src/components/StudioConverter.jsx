@@ -389,7 +389,8 @@ const StudioConverter = () => {
           <div className="converter-error-banner" role="alert">
             <span className="alert-badge">ALERT</span>
             <span className="alert-text">{errorNotice}</span>
-            <button className="alert-close-btn" onClick={() => setErrorNotice(null)}>✕</button>
+            <button type="button" className="alert-retry-btn" onClick={handleConvert}>↻ RETRY</button>
+            <button type="button" className="alert-close-btn" onClick={() => setErrorNotice(null)}>✕</button>
           </div>
         )}
 
@@ -540,18 +541,10 @@ const StudioConverter = () => {
                   <button type="button" className="action-link-btn clear-btn" onClick={handleReset}>
                     ✕ REMOVE FILE
                   </button>
-                  <button 
-                    type="button" 
-                    className="action-convert-btn" 
-                    onClick={handleConvert}
-                    disabled={isProcessing}
-                  >
-                    {isProcessing 
-                      ? `⚡ COMPUTING LIVE ${currentTool.outputFormat.toUpperCase()}...` 
-                      : resultData 
-                        ? `✓ LIVE ${currentTool.outputFormat.toUpperCase()} READY (${resultData.sizeKb} KB)` 
-                        : `▶ RUN CONVERT (${currentTool.inputFormat} ➔ ${currentTool.outputFormat})`}
-                  </button>
+                  <div className="engine-status-pill">
+                    <span className="live-pulse-dot">●</span>
+                    <span>AUTO-CONVERT LIVE</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -691,22 +684,6 @@ const StudioConverter = () => {
                     </p>
                   </div>
                 )}
-
-                {/* Instant Trigger Button */}
-                <div className="settings-action-row">
-                  <button 
-                    type="button" 
-                    className="studio-cta-convert"
-                    onClick={handleConvert}
-                    disabled={!sourceUrl || isProcessing}
-                  >
-                    {isProcessing 
-                      ? `⏳ COMPUTING LIVE ${currentTool.outputFormat.toUpperCase()}...` 
-                      : resultData 
-                        ? `⚡ RE-CONVERT ➔ ${currentTool.outputFormat} (${resultData.sizeKb} KB)` 
-                        : `⚡ CONVERT NOW ➔ ${currentTool.outputFormat}`}
-                  </button>
-                </div>
               </div>
             </div>
 
@@ -1024,6 +1001,22 @@ const StudioConverter = () => {
           font-family: var(--font-body);
           font-size: 0.9rem;
           font-weight: 600;
+        }
+
+        .alert-retry-btn {
+          font-family: var(--font-heading);
+          font-size: 0.8rem;
+          letter-spacing: 1px;
+          background: #ff3b30;
+          color: #fff;
+          border: 1px solid #fff;
+          padding: 0.25rem 0.65rem;
+          cursor: pointer;
+          transition: transform 0.1s ease;
+        }
+
+        .alert-retry-btn:hover {
+          transform: scale(1.05);
         }
 
         .alert-close-btn {
@@ -1356,6 +1349,8 @@ const StudioConverter = () => {
 
         .dropzone-footer-actions {
           display: flex;
+          align-items: center;
+          justify-content: space-between;
           gap: 1rem;
         }
 
@@ -1366,27 +1361,33 @@ const StudioConverter = () => {
           background: none;
           border: 2px solid var(--border-color);
           color: var(--text-secondary);
-          padding: 0.6rem 1rem;
+          padding: 0.5rem 1rem;
           cursor: pointer;
+          transition: all 0.15s ease;
         }
 
-        .action-convert-btn {
-          flex: 1;
-          font-family: var(--font-heading);
-          font-size: 1.1rem;
-          letter-spacing: 1.5px;
-          background: var(--primary-orange);
-          color: #fff;
-          border: 3px solid #000;
-          box-shadow: 4px 4px 0 #000;
-          padding: 0.75rem 1.25rem;
-          cursor: pointer;
-          transition: transform 0.15s ease;
+        .action-link-btn:hover {
+          border-color: #ff3b30;
+          color: #ff3b30;
+          background: rgba(255, 59, 48, 0.1);
         }
 
-        .action-convert-btn:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 6px 6px 0 #000;
+        .engine-status-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-family: monospace;
+          font-size: 0.78rem;
+          letter-spacing: 0.5px;
+          color: var(--primary-orange);
+          background: rgba(255, 106, 0, 0.08);
+          border: 1px solid rgba(255, 106, 0, 0.3);
+          padding: 0.4rem 0.8rem;
+        }
+
+        .live-pulse-dot {
+          color: #4cd964;
+          animation: badge-pulse 1s infinite alternate;
         }
 
         /* Settings Panel */
@@ -1470,36 +1471,6 @@ const StudioConverter = () => {
           font-size: 0.85rem;
           color: var(--text-secondary);
           line-height: 1.5;
-        }
-
-        .settings-action-row {
-          margin-top: auto;
-          padding-top: 1rem;
-        }
-
-        .studio-cta-convert {
-          width: 100%;
-          font-family: var(--font-heading);
-          font-size: 1.25rem;
-          letter-spacing: 2px;
-          background: var(--primary-orange);
-          color: #fff;
-          border: 3px solid #000;
-          box-shadow: 4px 4px 0 #000;
-          padding: 0.9rem;
-          cursor: pointer;
-          text-transform: uppercase;
-          transition: transform 0.15s ease;
-        }
-
-        .studio-cta-convert:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 6px 6px 0 #000;
-        }
-
-        .studio-cta-convert:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
         }
 
         /* STUDIO PREVIEW ENGINE CARD */
