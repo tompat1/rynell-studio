@@ -9,11 +9,12 @@
 import { Buffer } from 'node:buffer';
 
 export interface Env {
-  R2_BUCKET: R2Bucket;
-  RUNPOD_API_KEY: string;
-  TURNSTILE_SECRET_KEY: string;
-  PUBLIC_R2_URL: string; // e.g. "https://storage.rynell.org"
-  AI: any; // Cloudflare Workers AI Binding
+  R2_BUCKET?: R2Bucket;
+  CMS_KV?: KVNamespace;
+  RUNPOD_API_KEY?: string;
+  TURNSTILE_SECRET_KEY?: string;
+  PUBLIC_R2_URL?: string; // e.g. "https://storage.rynell.org"
+  AI?: any; // Cloudflare Workers AI Binding
 }
 
 const ALLOWED_ORIGINS = [
@@ -22,7 +23,11 @@ const ALLOWED_ORIGINS = [
   'https://rynell.org',
   'https://rynell-ai-gateway.thomasrynell.workers.dev',
   'http://localhost:5173',
-  'http://localhost:3000'
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174'
 ];
 
 function getCorsHeaders(request: Request): HeadersInit {
@@ -50,9 +55,244 @@ export default {
     // Health Check Endpoint
     if (url.pathname === '/api/health') {
       return new Response(
-        JSON.stringify({ status: 'OK', service: 'Rynell AI Gateway', aiAvailable: !!env.AI }),
+        JSON.stringify({ 
+          status: 'OK', 
+          service: 'Rynell AI Gateway & CMS Storage', 
+          aiAvailable: !!env.AI,
+          kvAvailable: !!env.CMS_KV,
+          r2Available: !!env.R2_BUCKET
+        }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // =========================================================================
+    // CLOUDFLARE CMS STORAGE ENDPOINTS (KV & R2)
+    // =========================================================================
+
+    // 1. GET /api/cms/content - Retrieve published CMS content from Cloudflare Edge
+    if (url.pathname === '/api/cms/content' && request.method === 'GET') {
+      try {
+        let content: any = null;
+        let source = 'none';
+        let updatedAt: string | null = null;
+
+        // Try Cloudflare KV first
+        if (env.CMS_KV) {
+          const rawKv = await env.CMS_KV.get('cms_content', 'text');
+          if (rawKv) {
+            try {
+              content = JSON.parse(rawKv);
+              source = 'cloudflare_kv';
+            } catch (_) {}
+          }
+        }
+
+        // Fallback to Cloudflare R2 if not in KV
+        if (!content && env.R2_BUCKET) {
+          const r2Obj = await env.R2_BUCKET.get('cms/content.json');
+          if (r2Obj) {
+            const rawR2 = await r2Obj.text();
+            try {
+              content = JSON.parse(rawR2);
+              source = 'cloudflare_r2';
+              updatedAt = r2Obj.uploaded ? r2Obj.uploaded.toISOString() : null;
+            } catch (_) {}
+          }
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            source,
+            content,
+            updatedAt: updatedAt || new Date().toISOString(),
+            storageStatus: {
+              kvBound: !!env.CMS_KV,
+              r2Bound: !!env.R2_BUCKET
+            }
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (err: any) {
+        return new Response(
+          JSON.stringify({ success: false, error: err.message || 'Failed to read CMS content' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // 2. POST /api/cms/content - Save & publish CMS content to Cloudflare KV and R2
+    if (url.pathname === '/api/cms/content' && request.method === 'POST') {
+      try {
+        const body = (await request.json().catch(() => ({}))) as {
+          content?: Record<string, any>;
+          updatedBy?: string;
+          note?: string;
+        };
+
+        if (!body.content || typeof body.content !== 'object') {
+          return new Response(
+            JSON.stringify({ success: false, message: 'Invalid payload: "content" object required.' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const now = new Date().toISOString();
+        const payloadString = JSON.stringify(body.content, null, 2);
+        const metadata = {
+          updatedBy: body.updatedBy || 'admin@rynell.org',
+          updatedAt: now,
+          note: body.note || 'CMS update via Admin Panel'
+        };
+
+        // Write to Cloudflare KV
+        if (env.CMS_KV) {
+          await env.CMS_KV.put('cms_content', JSON.stringify(body.content));
+          await env.CMS_KV.put(`cms_revision_${Date.now()}`, JSON.stringify({
+            content: body.content,
+            metadata
+          }), {
+            expirationTtl: 60 * 60 * 24 * 90 // 90 days retention
+          });
+        }
+
+        // Mirror to Cloudflare R2 bucket for backup & versioning
+        if (env.R2_BUCKET) {
+          await env.R2_BUCKET.put('cms/content.json', payloadString, {
+            httpMetadata: { contentType: 'application/json' },
+            customMetadata: metadata
+          });
+
+          // Snapshot backup in R2
+          await env.R2_BUCKET.put(`cms/backups/content_${Date.now()}.json`, payloadString, {
+            httpMetadata: { contentType: 'application/json' },
+            customMetadata: metadata
+          });
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: 'Content successfully synced to Cloudflare Edge Storage (KV & R2).',
+            savedAt: now,
+            storage: {
+              kv: !!env.CMS_KV,
+              r2: !!env.R2_BUCKET
+            }
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (err: any) {
+        return new Response(
+          JSON.stringify({ success: false, error: err.message || 'Failed to save CMS content' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // 3. GET /api/cms/history - Retrieve list of past revisions
+    if (url.pathname === '/api/cms/history' && request.method === 'GET') {
+      try {
+        const revisions: any[] = [];
+
+        if (env.CMS_KV) {
+          const list = await env.CMS_KV.list({ prefix: 'cms_revision_' });
+          for (const key of list.keys.slice(-10)) {
+            const raw = await env.CMS_KV.get(key.name, 'json');
+            if (raw) revisions.push({ key: key.name, ...(raw as any).metadata });
+          }
+        }
+
+        return new Response(
+          JSON.stringify({ success: true, revisions: revisions.reverse() }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (err: any) {
+        return new Response(
+          JSON.stringify({ success: false, error: err.message }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // 4. POST /api/cms/upload - Upload CMS Media / Assets to Cloudflare R2
+    if (url.pathname === '/api/cms/upload' && request.method === 'POST') {
+      try {
+        if (!env.R2_BUCKET) {
+          return new Response(
+            JSON.stringify({ success: false, message: 'Cloudflare R2 Bucket is not configured.' }),
+            { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const body = (await request.json().catch(() => ({}))) as {
+          fileName?: string;
+          contentType?: string;
+          imageBase64?: string;
+          folder?: string;
+        };
+
+        if (!body.imageBase64) {
+          return new Response(
+            JSON.stringify({ success: false, message: 'imageBase64 required.' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const cleanBase64 = body.imageBase64.replace(/^data:[^;]+;base64,/, '');
+        const buffer = Buffer.from(cleanBase64, 'base64');
+        const folder = (body.folder || 'cms/uploads').replace(/\/+$/, '');
+        const cleanName = (body.fileName || `media_${Date.now()}`).replace(/[^a-zA-Z0-9._-]/g, '_');
+        const key = `${folder}/${Date.now()}_${cleanName}`;
+        const contentType = body.contentType || 'image/png';
+
+        await env.R2_BUCKET.put(key, buffer, {
+          httpMetadata: { contentType, cacheControl: 'public, max-age=31536000, immutable' }
+        });
+
+        const publicBase = env.PUBLIC_R2_URL || 'https://storage.rynell.org';
+        const publicUrl = `${publicBase}/${key}`;
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            key,
+            url: publicUrl,
+            sizeBytes: buffer.byteLength,
+            contentType
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (err: any) {
+        return new Response(
+          JSON.stringify({ success: false, error: err.message || 'Upload failed' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // 5. GET /api/cms/assets/* - Public / CDN proxy for R2 assets
+    if (url.pathname.startsWith('/api/cms/assets/') && request.method === 'GET') {
+      try {
+        if (!env.R2_BUCKET) {
+          return new Response('R2 not available', { status: 503, headers: corsHeaders });
+        }
+        const assetKey = url.pathname.replace('/api/cms/assets/', '');
+        const object = await env.R2_BUCKET.get(assetKey);
+        if (!object) {
+          return new Response('Asset not found', { status: 404, headers: corsHeaders });
+        }
+
+        const headers = new Headers(corsHeaders);
+        object.writeHttpMetadata(headers);
+        headers.set('etag', object.httpEtag);
+        headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+
+        return new Response(object.body, { headers });
+      } catch (err: any) {
+        return new Response(err.message, { status: 500, headers: corsHeaders });
+      }
     }
 
     // Endpoint: Password Reset Email Dispatch API

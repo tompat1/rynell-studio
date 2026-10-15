@@ -1,30 +1,34 @@
 import React from 'react';
+import { useCms } from '../contexts/CmsContext';
 
 const Footer = () => {
+  const { t, openCms, isCmsAdmin } = useCms();
+
   return (
     <footer className="global-footer">
       <div className="footer-container">
         
         {/* Left Side: Brand & Tagline */}
         <div className="footer-brand">
-          <h2 className="footer-logo">RYNELL STUDIO</h2>
+          <h2 className="footer-logo">{t('footer.logoText', 'RYNELL STUDIO')}</h2>
           <p className="footer-tagline">
-            Bold identity, campaign visuals and AI-powered assets &mdash;<br />
-            built with <span style={{ color: 'var(--primary-orange)', fontWeight: 'bold' }}>human taste.</span>
+            {t('footer.taglinePrefix', 'Bold identity, campaign visuals and AI-powered assets —')}<br />
+            built with <span style={{ color: 'var(--primary-orange)', fontWeight: 'bold' }}>{t('footer.taglineEmphasis', 'human taste.')}</span>
           </p>
         </div>
 
         {/* Center: Quick Links */}
         <div className="footer-links-grid">
           <div className="footer-column">
-            <h4>EXPLORE</h4>
+            <h4>{t('footer.exploreTitle', 'EXPLORE')}</h4>
             <a href="#services">Services</a>
-            <a href="#work">Work</a>
-            <a href="#studio">Studio</a>
+            <a href="#studio-lab">Studio Lab</a>
+            <a href="#converter-tools">Converters</a>
+            <a href="#image-compressor">Compressor</a>
             <a href="#collections">Collections</a>
           </div>
           <div className="footer-column">
-            <h4>CONNECT</h4>
+            <h4>{t('footer.connectTitle', 'CONNECT')}</h4>
             <a href="#shop">Shop</a>
             <a href="#about">About</a>
             <a href="#ads">Ads</a>
@@ -34,14 +38,11 @@ const Footer = () => {
 
         {/* Right Side: Social & Contact */}
         <div className="footer-social">
-          <h4>SAY HELLO</h4>
-          <a href="#" onClick={(e) => {
+          <h4>{t('footer.sayHelloTitle', 'SAY HELLO')}</h4>
+          <a href={`mailto:${t('footer.contactEmail', 'hello@rynell.org')}`} onClick={(e) => {
             e.preventDefault();
-            // Trigger contact drawer via a global event or something if we didn't pass it, 
-            // but we can pass onContactClick down through App.jsx to Footer.jsx
-            // Let's assume we dispatch an event since Footer is deep or just pass it in App.jsx
-            document.querySelector('.cta-button').click();
-          }} className="contact-email">hello@rynell.org</a>
+            document.querySelector('.cta-button')?.click();
+          }} className="contact-email">{t('footer.contactEmail', 'hello@rynell.org')}</a>
           <div className="social-icons">
             {/* Instagram */}
             <a href="#" className="social-icon">
@@ -72,10 +73,26 @@ const Footer = () => {
       </div>
 
       <div className="footer-bottom">
-        <p>&copy; {new Date().getFullYear()} Rynell Studio. All rights reserved.</p>
+        <p>{t('footer.copyright', `© ${new Date().getFullYear()} Rynell Studio. All rights reserved.`)}</p>
         <div className="footer-legal">
-          <a href="#privacy">Privacy Policy</a>
-          <a href="#terms">Terms of Service</a>
+          <a href="#privacy">{t('footer.privacyText', 'Privacy Policy')}</a>
+          <a href="#terms">{t('footer.termsText', 'Terms of Service')}</a>
+          <button 
+            type="button" 
+            onClick={() => openCms('nav')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: isCmsAdmin ? '#fbbf24' : 'rgba(255, 255, 255, 0.4)',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-heading)',
+              fontSize: '0.85rem',
+              letterSpacing: '1px',
+              padding: 0
+            }}
+          >
+            {isCmsAdmin ? '👑 ADMIN CMS' : 'ADMIN LOGIN'}
+          </button>
         </div>
       </div>
 

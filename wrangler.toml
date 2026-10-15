@@ -9,8 +9,15 @@ PUBLIC_R2_URL = "https://storage.rynell.org"
 [ai]
 binding = "AI"
 
-# Uncomment after enabling R2 in Cloudflare Dashboard:
-# [[r2_buckets]]
-# binding = "R2_BUCKET"
-# bucket_name = "rynell-studio-assets"
+# Cloudflare KV Storage for CMS Content & Real-time Page Copy
+[[kv_namespaces]]
+binding = "CMS_KV"
+id = "rynell_studio_cms_kv"
+preview_id = "rynell_studio_cms_kv_preview"
+
+# Cloudflare R2 Storage Bucket for CMS Uploads, Media Assets & Backups
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "rynell-studio-assets"
+preview_bucket_name = "rynell-studio-assets-preview"
 

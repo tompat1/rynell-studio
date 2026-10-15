@@ -4,6 +4,7 @@ import BeforeAfterSlider from './BeforeAfterSlider';
 import PricingTable from './PricingTable';
 import heroClean from '../assets/hero_page_rynell_studio_clean.webp';
 import { useAuth } from '../contexts/AuthContext';
+import { useCms } from '../contexts/CmsContext';
 import { traceRasterToSVG } from '../utils/vectorize';
 
 export const UPSCALE_PRESETS = [
@@ -35,6 +36,7 @@ export const UPSCALE_PRESETS = [
 
 const StudioLab = () => {
   const { user, isRegistered, isAdmin, isPremiumUser, openRegister } = useAuth();
+  const { t, isLiveEditMode, handleLiveEditClick } = useCms();
   const [selectedModel, setSelectedModel] = useState('qwen_edit');
   const activeModelConfig = MODELS.find(m => m.id === selectedModel) || FREE_MODELS[0];
   const [upscaleEngine, setUpscaleEngine] = useState('pruna'); // 'pruna' | 'esrgan'
@@ -992,17 +994,28 @@ const StudioLab = () => {
 
   return (
     <section id="studio-lab" className="studio-lab-section">
-      <div className="section-label">AI LABS & VECTORINE</div>
+      <div 
+        className={`section-label ${isLiveEditMode ? 'cms-editable-target' : ''}`}
+        onClick={(e) => handleLiveEditClick(e, 'studioTools.lab.sectionLabel')}
+      >
+        {t('studioTools.lab.sectionLabel', 'AI LABS & VECTORINE')}
+      </div>
 
       <div className="container">
         {/* Section Header */}
         <div className="lab-header">
           <div className="headline-badge">NEW FUNCTIONALITY</div>
-          <h2 className="lab-title">
-            RYNELL <span className="text-orange">AI STUDIO</span> & <span className="text-blue">VECTORINE</span>
+          <h2 
+            className={`lab-title ${isLiveEditMode ? 'cms-editable-target' : ''}`}
+            onClick={(e) => handleLiveEditClick(e, 'studioTools.lab.title')}
+          >
+            {t('studioTools.lab.title', 'RYNELL AI CREATIVE SUITE')}
           </h2>
-          <p className="lab-subtitle">
-            Cloudflare Workers AI edge generation and RunPod GPU Vector Tracing.
+          <p 
+            className={`lab-subtitle ${isLiveEditMode ? 'cms-editable-target' : ''}`}
+            onClick={(e) => handleLiveEditClick(e, 'studioTools.lab.subDescription')}
+          >
+            {t('studioTools.lab.subDescription', 'Cloudflare Workers AI edge generation and RunPod GPU Vector Tracing.')}
           </p>
 
           {isAdmin && (

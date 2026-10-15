@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useCms } from '../contexts/CmsContext';
 const merchModules = import.meta.glob('../assets/merch/*.{png,jpg,jpeg,webp,avif}', { eager: true, import: 'default' });
 
 const predefinedMerch = {
@@ -103,17 +104,33 @@ const ShopItem = ({ item, addToCart }) => {
 };
 
 const Shop = ({ addToCart, isArchiveOpen, setIsArchiveOpen }) => {
+  const { t, isLiveEditMode, isCmsAdmin, openCms } = useCms();
+
+  const handleCmsClick = () => {
+    if (isLiveEditMode && isCmsAdmin) {
+      openCms('shop');
+    }
+  };
+
   return (
     <section id="shop" style={{ position: 'relative' }}>
-      <div className="section-label">SHOP</div>
+      <div 
+        className={`section-label ${isLiveEditMode && isCmsAdmin ? 'cms-editable-target' : ''}`}
+        onClick={handleCmsClick}
+      >
+        {t('shop.sectionLabel', 'SHOP')}
+      </div>
       <div className="section-container">
         <div className="content-wrapper">
-        <div className="shop-header">
+        <div 
+          className={`shop-header ${isLiveEditMode && isCmsAdmin ? 'cms-editable-target' : ''}`}
+          onClick={handleCmsClick}
+        >
           <div className="title-group">
-            <h2 className="section-title">LATEST DROPS</h2>
-            <p className="section-description">Physical artifacts of our visual philosophy. Limited run apparel and accessories designed for the modern dystopia.</p>
+            <h2 className="section-title">{t('shop.title', 'LATEST DROPS')}</h2>
+            <p className="section-description">{t('shop.description', 'Physical artifacts of our visual philosophy. Limited run apparel and accessories designed for the modern dystopia.')}</p>
           </div>
-          <button className="view-all-btn" onClick={() => setIsArchiveOpen(true)}>VIEW ALL MERCH</button>
+          <button className="view-all-btn" onClick={() => setIsArchiveOpen(true)}>{t('shop.viewAllButton', 'VIEW ALL MERCH')}</button>
         </div>
         
         <div className="shop-grid">
@@ -126,7 +143,7 @@ const Shop = ({ addToCart, isArchiveOpen, setIsArchiveOpen }) => {
       {typeof document !== 'undefined' && createPortal(
         <div className={`shop-archive-overlay ${isArchiveOpen ? 'open' : ''}`}>
           <div className="archive-header">
-            <h2 className="archive-title">FULL CATALOG</h2>
+            <h2 className="archive-title">{t('shop.archiveTitle', 'FULL CATALOG')}</h2>
             <button className="archive-close" onClick={() => setIsArchiveOpen(false)}>
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>

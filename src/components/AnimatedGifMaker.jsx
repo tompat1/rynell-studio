@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useCms } from '../contexts/CmsContext';
 import { encodeFramesToAnimatedGif } from '../utils/gifEncoder';
 import { extractArchive } from '../utils/archiveExtractor';
 import { BG_COLOR_MAP, DEMO_SEQUENCES, getDefaultFrames } from '../utils/gifSequencePresets';
@@ -6,6 +7,7 @@ import { BG_COLOR_MAP, DEMO_SEQUENCES, getDefaultFrames } from '../utils/gifSequ
 const MAX_FILE_SIZE_BYTES = 200 * 1024 * 1024; // 200MB
 
 const AnimatedGifMaker = () => {
+  const { t, isLiveEditMode, isCmsAdmin, openCms } = useCms();
   // Frame sequence state
   const [frames, setFrames] = useState(getDefaultFrames);
   const [globalDelayMs, setGlobalDelayMs] = useState(250);
@@ -663,13 +665,18 @@ const AnimatedGifMaker = () => {
       <div className="gif-maker-container">
         
         {/* Section Header */}
-        <div className="gif-header-row">
-          <div className="section-label">ANIMATED GIF MAKER // STUDIO TIMELINE</div>
+        <div 
+          className={`gif-header-row ${isLiveEditMode && isCmsAdmin ? 'cms-editable-target' : ''}`}
+          onClick={() => isLiveEditMode && isCmsAdmin && openCms('studioTools')}
+        >
+          <div className="section-label">
+            {t('studioTools.gifMaker.sectionLabel', 'ANIMATED GIF MAKER // STUDIO TIMELINE')}
+          </div>
           <h2 className="gif-main-title comic-text">
-            STUDIO ANIMATED GIF MAKER & COMPOSER
+            {t('studioTools.gifMaker.title', 'STUDIO ANIMATED GIF MAKER & COMPOSER')}
           </h2>
           <p className="gif-sub-desc">
-            Ultra-responsive multi-file animation suite. Assemble multiple photos, vector SVGs, PNGs, and archive bundles into studio-grade animated GIFs with frame-accurate delays, live canvas scrubbing, and instant 1-click export.
+            {t('studioTools.gifMaker.subDescription', 'Ultra-responsive multi-file animation suite. Assemble multiple photos, vector SVGs, PNGs, and archive bundles into studio-grade animated GIFs with frame-accurate delays, live canvas scrubbing, and instant 1-click export.')}
           </p>
         </div>
 

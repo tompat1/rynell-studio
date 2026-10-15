@@ -1,20 +1,43 @@
 import React from 'react';
 import { useAudio } from '../contexts/AudioContext';
+import { useCms } from '../contexts/CmsContext';
 import studioPortrait from '../assets/studio_portrait.jpg';
 
 const About = () => {
   const { playTTS, stopAudio, isPlaying, isSynthesizing } = useAudio();
-  const manifestoText = "Rynell Studio is a multi-disciplinary creative force specializing in aggressive, high-impact visual design. From conceptual branding to explosive campaign visuals and AI-driven asset generation, we deliver work that doesn't just look good—it hits hard. We operate at the bleeding edge of visual culture, blending raw human creativity with state-of-the-art AI tooling to deliver uncompromising aesthetics.";
+  const { t, isLiveEditMode, isCmsAdmin, openCms } = useCms();
+
+  const manifestoHeadline = t('about.manifestoHeadline', "WE DON'T FOLLOW TRENDS.");
+  const manifestoHighlight = t('about.manifestoHighlight', 'WE BUILD THEM.');
+  const studioTitle = t('about.studioTitle', 'THE STUDIO');
+  const manifestoText = t(
+    'about.studioManifestoText',
+    "Rynell Studio is a multi-disciplinary creative force specializing in aggressive, high-impact visual design. From conceptual branding to explosive campaign visuals and AI-driven asset generation, we deliver work that doesn't just look good—it hits hard. We operate at the bleeding edge of visual culture, blending raw human creativity with state-of-the-art AI tooling to deliver uncompromising aesthetics."
+  );
+
+  const handleCmsClick = () => {
+    if (isLiveEditMode && isCmsAdmin) {
+      openCms('about');
+    }
+  };
 
   return (
     <section id="about" className="section-container" style={{ position: 'relative' }}>
-      <div className="section-label">ABOUT</div>
+      <div 
+        className={`section-label ${isLiveEditMode && isCmsAdmin ? 'cms-editable-target' : ''}`}
+        onClick={handleCmsClick}
+      >
+        {t('about.sectionLabel', 'ABOUT')}
+      </div>
       
       {/* Manifesto Section */}
-      <div className="about-content">
+      <div 
+        className={`about-content ${isLiveEditMode && isCmsAdmin ? 'cms-editable-target' : ''}`}
+        onClick={handleCmsClick}
+      >
         <h2 className="about-manifesto">
-          WE DON'T FOLLOW TRENDS.<br/>
-          <span className="highlight">WE BUILD THEM.</span>
+          {manifestoHeadline}<br/>
+          <span className="highlight">{manifestoHighlight}</span>
         </h2>
       </div>
 
@@ -22,7 +45,7 @@ const About = () => {
       <div className="content-wrapper studio-split">
         <div className="studio-text">
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '2rem' }}>
-            <h2 className="section-title" style={{ margin: 0 }}>THE STUDIO</h2>
+            <h2 className="section-title" style={{ margin: 0 }}>{studioTitle}</h2>
             <button 
               className={`read-to-me-btn ${isPlaying ? 'playing' : ''} ${isSynthesizing ? 'loading' : ''}`}
               onClick={() => isPlaying ? stopAudio() : playTTS(manifestoText)}
@@ -37,14 +60,12 @@ const About = () => {
               ) : isPlaying ? (
                 "⏹ STOP"
               ) : (
-                "▶ READ IT TO ME"
+                `▶ ${t('about.readToMeButton', 'READ IT TO ME')}`
               )}
             </button>
           </div>
           <p className="studio-manifesto-text">
-            Rynell Studio is a multi-disciplinary creative force specializing in aggressive, high-impact visual design. 
-            From conceptual branding to explosive campaign visuals and AI-driven asset generation, we deliver work that 
-            doesn't just look good—it hits hard. We operate at the bleeding edge of visual culture, blending raw human creativity with state-of-the-art AI tooling to deliver uncompromising aesthetics.
+            {manifestoText}
           </p>
         </div>
         <div className="studio-image-wrapper">

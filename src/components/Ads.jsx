@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useCms } from '../contexts/CmsContext';
 const campaignModules = import.meta.glob('../assets/campaigns/*.{png,jpg,jpeg,webp,avif}', { eager: true, import: 'default' });
 
 const predefinedTitles = {
@@ -20,6 +21,7 @@ const campaignData = Object.entries(campaignModules).map(([path, url], index) =>
 });
 
 const Ads = () => {
+  const { t, isLiveEditMode, isCmsAdmin, openCms } = useCms();
   const scrollRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -75,12 +77,26 @@ const Ads = () => {
     scrollRef.current.scrollLeft = initialScrollLeft - walk;
   };
 
+  const handleCmsClick = () => {
+    if (isLiveEditMode && isCmsAdmin) {
+      openCms('ads');
+    }
+  };
+
   return (
     <section id="ads" className="ads-section" style={{ position: 'relative' }}>
-      <div className="section-label">CAMPAIGN</div>
-      <div className="ads-header">
-        <h2 className="section-title">ADS</h2>
-        <p className="section-description">Visual campaigns that break through the noise. Bold imagery, aggressive typography, and uncompromising art direction.</p>
+      <div 
+        className={`section-label ${isLiveEditMode && isCmsAdmin ? 'cms-editable-target' : ''}`}
+        onClick={handleCmsClick}
+      >
+        {t('ads.sectionLabel', 'CAMPAIGN')}
+      </div>
+      <div 
+        className={`ads-header ${isLiveEditMode && isCmsAdmin ? 'cms-editable-target' : ''}`}
+        onClick={handleCmsClick}
+      >
+        <h2 className="section-title">{t('ads.title', 'ADS')}</h2>
+        <p className="section-description">{t('ads.description', 'Visual campaigns that break through the noise. Bold imagery, aggressive typography, and uncompromising art direction.')}</p>
       </div>
       <div 
         className={`ads-carousel ${isDragging ? 'active' : ''}`}

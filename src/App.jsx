@@ -20,6 +20,8 @@ import StudioConverter from './components/StudioConverter'
 import StudioCompressor from './components/StudioCompressor'
 import AnimatedGifMaker from './components/AnimatedGifMaker'
 import JsonTransformer from './components/JsonTransformer'
+import AdminCmsDrawer from './components/AdminCmsDrawer'
+import AdminFloatingBar from './components/AdminFloatingBar'
 
 function App() {
   const [cart, setCart] = useState([])
@@ -149,6 +151,8 @@ function App() {
         setItem={setActiveDetailView} 
         openShopArchive={() => setIsShopArchiveOpen(true)}
       />
+      <AdminCmsDrawer />
+      <AdminFloatingBar />
     </div>
   )
 }

@@ -2,11 +2,27 @@ import "react";
 import heroImgDark from "../assets/hero_page_rynell_studio_clean.webp";
 import heroImgLight from "../assets/hero_page_rynell_studio_clean_light.webp";
 import boltSvg from "../assets/lightning_bolt_sticker_vector.svg";
+import { useCms } from "../contexts/CmsContext";
 
 const Hero = () => {
+  const { t, isLiveEditMode, isCmsAdmin, openCms } = useCms();
+
+  const handleCmsClick = (e) => {
+    if (isLiveEditMode && isCmsAdmin) {
+      e.stopPropagation();
+      openCms('hero');
+    }
+  };
+
   return (
     <section id="hero" className="hero-section" style={{ position: 'relative' }}>
-      <div className="section-label">INTRO</div>
+      <div 
+        className={`section-label ${isLiveEditMode && isCmsAdmin ? 'cms-editable-target' : ''}`}
+        onClick={handleCmsClick}
+        title={isLiveEditMode && isCmsAdmin ? "Click to edit in CMS" : undefined}
+      >
+        {t('hero.sectionLabel', 'INTRO')}
+      </div>
       {/* Big and Bold Background Image */}
       <div className="hero-bg-container">
         <img
@@ -32,21 +48,27 @@ const Hero = () => {
       {/* Content Container overlaying the background */}
       <div className="hero-content">
         {/* Left Text Side - On Top of Background */}
-        <div className="hero-text-container">
-          <h1 className="hero-title">Rynell Studio</h1>
-          <h2 className="hero-subtitle">Campaign System</h2>
+        <div 
+          className={`hero-text-container ${isLiveEditMode && isCmsAdmin ? 'cms-editable-target' : ''}`}
+          onClick={handleCmsClick}
+          title={isLiveEditMode && isCmsAdmin ? "Click to edit Hero copy in CMS" : undefined}
+        >
+          <h1 className="hero-title">{t('hero.title', 'Rynell Studio')}</h1>
+          <h2 className="hero-subtitle">{t('hero.subtitle', 'Campaign System')}</h2>
 
           <div className="hero-divider"></div>
 
           <p className="hero-description">
-            Visuals that connect. Campaigns that perform.
+            {t('hero.description', 'Visuals that connect. Campaigns that perform.')}
           </p>
 
           <div className="hero-bottom-lockup">
             <img src={boltSvg} alt="Bolt Accent" className="hero-bolt-icon" />
             <p className="hero-bottom-text">
-              Creative Strategy.<br />
-              <strong className="hero-bottom-emphasis">Bold Execution.</strong>
+              {t('hero.bottomLine1', 'Creative Strategy.')}<br />
+              <strong className="hero-bottom-emphasis">
+                {t('hero.bottomEmphasis', 'Bold Execution.')}
+              </strong>
             </p>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAudio } from '../contexts/AudioContext';
+import { useCms } from '../contexts/CmsContext';
 import servicesBgDark from '../assets/design_that_hits_clean.webp';
 import servicesBgLight from '../assets/design_that_hits_clean_light.webp';
 import imgBranding from '../assets/services/service_branding.png';
@@ -74,6 +75,13 @@ export const servicesData = [
 const Services = () => {
   const [activeService, setActiveService] = useState(null);
   const { playTTS, stopAudio, isPlaying, isSynthesizing } = useAudio();
+  const { t, isLiveEditMode, isCmsAdmin, openCms } = useCms();
+
+  const handleCmsClick = () => {
+    if (isLiveEditMode && isCmsAdmin) {
+      openCms('services');
+    }
+  };
 
   useEffect(() => {
     if (activeService) document.body.classList.add('drawer-open');
@@ -95,7 +103,12 @@ const Services = () => {
 
   return (
     <section id="services" className="services-section" style={{ position: 'relative' }}>
-      <div className="section-label">SERVICES</div>
+      <div 
+        className={`section-label ${isLiveEditMode && isCmsAdmin ? 'cms-editable-target' : ''}`}
+        onClick={handleCmsClick}
+      >
+        {t('services.sectionLabel', 'SERVICES')}
+      </div>
       
       {/* Explosive Pop-Art Background Image */}
       <div className="services-bg-container">
@@ -121,20 +134,23 @@ const Services = () => {
       <div className="services-content-wrapper">
         
         {/* Left Text Side - Floating over the explosive background */}
-        <div className="services-text-container">
+        <div 
+          className={`services-text-container ${isLiveEditMode && isCmsAdmin ? 'cms-editable-target' : ''}`}
+          onClick={handleCmsClick}
+        >
           
           {/* DESIGN THAT HITS lockup */}
           <div className="headline-lockup">
             <h2 className="design-text">
-              DESIGN
+              {t('services.headlineDesign', 'DESIGN')}
             </h2>
             <div className="that-hits-wrapper">
               <span className="that-text">
-                THAT
+                {t('services.headlineThat', 'THAT')}
               </span>
               <div className="hits-container">
                 <span className="hits-text" style={{ color: 'var(--text-primary)' }}>
-                  HITS
+                  {t('services.headlineHits', 'HITS')}
                 </span>
                 {/* Marker Brush Underline */}
                 <svg className="hits-underline" viewBox="0 0 100 25" preserveAspectRatio="none">
@@ -146,9 +162,13 @@ const Services = () => {
 
           <div className="paragraph-container">
             <p className="paragraph-text">
-              <strong style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Bold identity, campaign visuals</strong><br/>
-              and AI-powered assets &mdash;<br/>
-              built with <strong style={{ fontWeight: 600, color: 'var(--primary-orange)' }}>human taste.</strong>
+              <strong style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                {t('services.paragraphBold', 'Bold identity, campaign visuals')}
+              </strong><br/>
+              {t('services.paragraphNormal', 'and AI-powered assets —')}<br/>
+              built with <strong style={{ fontWeight: 600, color: 'var(--primary-orange)' }}>
+                {t('services.paragraphAccent', 'human taste.')}
+              </strong>
             </p>
           </div>
 

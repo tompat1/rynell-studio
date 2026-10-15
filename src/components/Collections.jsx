@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useCms } from '../contexts/CmsContext';
 const collectionModules = import.meta.glob('../assets/collection/*.{png,jpg,jpeg,webp,avif}', { eager: true, import: 'default' });
 const collectionImages = Object.values(collectionModules);
 
 const Collections = () => {
+  const { t, isLiveEditMode, isCmsAdmin, openCms } = useCms();
   const scrollRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -60,10 +62,18 @@ const Collections = () => {
 
   return (
     <section id="collections" className="collections-section" style={{ position: 'relative' }}>
-      <div className="section-label">COLLECTIONS</div>
-      <div className="collections-header">
-        <h2 className="section-title">COLLECTIONS</h2>
-        <p className="section-description">Curated aesthetic archives. A rotating selection of our latest visual experiments and structural explorations.</p>
+      <div 
+        className={`section-label ${isLiveEditMode && isCmsAdmin ? 'cms-editable-target' : ''}`}
+        onClick={() => isLiveEditMode && isCmsAdmin && openCms('collections')}
+      >
+        {t('collections.sectionLabel', 'COLLECTIONS')}
+      </div>
+      <div 
+        className={`collections-header ${isLiveEditMode && isCmsAdmin ? 'cms-editable-target' : ''}`}
+        onClick={() => isLiveEditMode && isCmsAdmin && openCms('collections')}
+      >
+        <h2 className="section-title">{t('collections.title', 'COLLECTIONS')}</h2>
+        <p className="section-description">{t('collections.description', 'Curated aesthetic archives. A rotating selection of our latest visual experiments and structural explorations.')}</p>
       </div>
       
       <div 

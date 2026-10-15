@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import boltSvg from '../assets/lightning_bolt_sticker_vector.svg';
 import { useAudio } from '../contexts/AudioContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useCms } from '../contexts/CmsContext';
 
 // Images for Mobile Menu
 import adImg from '../assets/campaigns/campaign_02.webp';
@@ -17,19 +18,27 @@ const Navbar = ({ cartCount, onCartClick, onSearchClick, onAccountClick, onConta
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isMuted, toggleMute } = useAudio();
   const { user, isRegistered, isAdmin } = useAuth();
+  const { content, openCms, isCmsAdmin, removeNavItem, isLiveEditMode } = useCms();
 
-  const navItems = [
-    { name: 'AI LABS', link: '#studio-lab', image: aiLabImg },
-    { name: 'CONVERTERS', link: '#converter-tools', image: boltSvg },
-    { name: 'OPTIMIZER', link: '#image-compressor', image: boltSvg },
-    { name: 'GIF MAKER', link: '#gif-maker', image: aiLabImg },
-    { name: 'JSON LAB', link: '#json-lab', image: jsonLabImg },
-    { name: 'COLLECTIONS', link: '#collections', image: collImg },
-    { name: 'SHOP', link: '#shop', image: shopImg },
-    { name: 'ADS', link: '#ads', image: adImg },
-    { name: 'ABOUT', link: '#about', image: aboutImg },
-    { name: 'JOURNAL', link: '#journal', image: journalImg }
-  ];
+  const imageMap = {
+    'AI LABS': aiLabImg,
+    'CONVERTERS': boltSvg,
+    'OPTIMIZER': boltSvg,
+    'GIF MAKER': aiLabImg,
+    'JSON LAB': jsonLabImg,
+    'COLLECTIONS': collImg,
+    'SHOP': shopImg,
+    'ADS': adImg,
+    'ABOUT': aboutImg,
+    'JOURNAL': journalImg
+  };
+
+  const navItems = (content?.navItems || [])
+    .filter((item) => item.visible !== false)
+    .map((item) => ({
+      ...item,
+      image: imageMap[item.name] || boltSvg
+    }));
 
   useEffect(() => {
     const handleScroll = () => {
@@ -57,12 +66,46 @@ const Navbar = ({ cartCount, onCartClick, onSearchClick, onAccountClick, onConta
           </div>
 
           {/* Desktop Links */}
-          <div className="navbar-links-desktop">
+          <div className={`navbar-links-desktop ${isLiveEditMode ? 'live-edit-active' : ''}`}>
             {navItems.map((item) => (
-              <a key={item.name} href={item.link || `#${item.name.toLowerCase()}`} className="nav-link">
-                {item.name}
-              </a>
+              <div key={item.id || item.name} className="nav-link-wrapper">
+                <a href={item.link || `#${item.name.toLowerCase()}`} className="nav-link">
+                  {item.name}
+                </a>
+                {isLiveEditMode && (
+                  <button
+                    type="button"
+                    className="nav-inline-remove-btn"
+                    title={`Remove "${item.name}" from top menu`}
+                    aria-label={`Remove ${item.name}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (window.confirm(`Remove "${item.name}" from top navigation menu?`)) {
+                        removeNavItem(item.id || item.name);
+                      }
+                    }}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             ))}
+
+            {isLiveEditMode && (
+              <button
+                type="button"
+                className="nav-inline-add-btn"
+                title="Add new item to top menu"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  openCms('nav');
+                }}
+              >
+                + ADD ITEM
+              </button>
+            )}
           </div>
 
           {/* Right Side: Icons, CTA & Mobile Toggle */}
@@ -136,6 +179,17 @@ const Navbar = ({ cartCount, onCartClick, onSearchClick, onAccountClick, onConta
                 {isRegistered && <span className={`nav-account-dot ${isAdmin ? 'admin' : ''}`} />}
               </button>
 
+              {isCmsAdmin && (
+                <button
+                  className="icon-btn cms-header-btn"
+                  onClick={() => openCms('nav')}
+                  aria-label="Admin CMS"
+                  title="👑 Open Admin CMS: Edit Top-Nav & Page Copy"
+                >
+                  <span className="cms-btn-icon">🛠️</span>
+                </button>
+              )}
+
               <button className="icon-btn cart-icon-btn" aria-label="Cart" onClick={onCartClick}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="9" cy="21" r="1"></circle>
@@ -183,28 +237,60 @@ const Navbar = ({ cartCount, onCartClick, onSearchClick, onAccountClick, onConta
         
         <div className="mobile-menu-links">
           {navItems.map((item) => (
-            <a 
-              key={item.name} 
-              href={item.link || `#${item.name.toLowerCase()}`} 
-              className="mobile-nav-link-wrapper"
-              onClick={(e) => {
-                const target = document.querySelector(item.link || `#${item.name.toLowerCase()}`);
-                if (target) {
-                  e.preventDefault();
-                  const parsedOffset = parseFloat(getComputedStyle(target).scrollMarginTop);
-                  const offset = Number.isFinite(parsedOffset) ? parsedOffset : 80;
-                  const top = target.getBoundingClientRect().top + window.scrollY - offset;
-                  window.scrollTo({ top, behavior: 'auto' });
-                }
+            <div key={item.id || item.name} className="mobile-nav-item-wrapper">
+              <a 
+                href={item.link || `#${item.name.toLowerCase()}`} 
+                className="mobile-nav-link-wrapper"
+                onClick={(e) => {
+                  const target = document.querySelector(item.link || `#${item.name.toLowerCase()}`);
+                  if (target) {
+                    e.preventDefault();
+                    const parsedOffset = parseFloat(getComputedStyle(target).scrollMarginTop);
+                    const offset = Number.isFinite(parsedOffset) ? parsedOffset : 80;
+                    const top = target.getBoundingClientRect().top + window.scrollY - offset;
+                    window.scrollTo({ top, behavior: 'auto' });
+                  }
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                <div className="mobile-nav-image-placeholder">
+                  <img src={item.image} alt={item.name} />
+                </div>
+                <span className="mobile-nav-link-text">{item.name}</span>
+              </a>
+              {isLiveEditMode && (
+                <button
+                  type="button"
+                  className="mobile-nav-remove-btn"
+                  title={`Remove "${item.name}"`}
+                  aria-label={`Remove ${item.name}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (window.confirm(`Remove "${item.name}" from top menu?`)) {
+                      removeNavItem(item.id || item.name);
+                    }
+                  }}
+                >
+                  ✕ REMOVE
+                </button>
+              )}
+            </div>
+          ))}
+
+          {isLiveEditMode && (
+            <button 
+              type="button"
+              className="mobile-nav-add-btn"
+              onClick={() => {
                 setIsMobileMenuOpen(false);
+                openCms('nav');
               }}
             >
-              <div className="mobile-nav-image-placeholder">
-                <img src={item.image} alt={item.name} />
-              </div>
-              <span className="mobile-nav-link-text">{item.name}</span>
-            </a>
-          ))}
+              + ADD NEW MENU ITEM
+            </button>
+          )}
+
           <button onClick={() => { setIsMobileMenuOpen(false); onContactClick(); }} className="mobile-cta-button" style={{ border: 'none', cursor: 'pointer' }}>LET'S TALK</button>
         </div>
 
@@ -308,6 +394,68 @@ const Navbar = ({ cartCount, onCartClick, onSearchClick, onAccountClick, onConta
 
         .nav-link:hover::after {
           width: 100%;
+        }
+
+        .navbar-links-desktop.live-edit-active {
+          gap: 1.2rem;
+          padding: 4px 10px;
+          border: 1px dashed rgba(255, 106, 0, 0.5);
+          background: rgba(255, 106, 0, 0.08);
+          border-radius: 4px;
+        }
+
+        .nav-link-wrapper {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+        }
+
+        .nav-inline-remove-btn {
+          position: absolute;
+          top: -8px;
+          right: -10px;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #ef4444;
+          color: #ffffff;
+          border: 1px solid #000;
+          font-size: 11px;
+          font-weight: 900;
+          line-height: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6);
+          transition: transform 0.15s ease, background 0.15s ease;
+          z-index: 10;
+        }
+
+        .nav-inline-remove-btn:hover {
+          transform: scale(1.25);
+          background: #b91c1c;
+        }
+
+        .nav-inline-add-btn {
+          font-family: var(--font-heading);
+          font-size: 0.72rem;
+          letter-spacing: 1px;
+          font-weight: 700;
+          background: var(--primary-orange);
+          border: 1px solid #000;
+          color: #000;
+          padding: 3px 8px;
+          cursor: pointer;
+          box-shadow: 2px 2px 0 #000;
+          transition: all 0.2s ease;
+          white-space: nowrap;
+        }
+
+        .nav-inline-add-btn:hover {
+          background: #fff;
+          color: #000;
+          transform: translateY(-1px);
         }
 
         .navbar-actions {
@@ -510,6 +658,51 @@ const Navbar = ({ cartCount, onCartClick, onSearchClick, onAccountClick, onConta
 
         .mobile-nav-link-wrapper:hover .mobile-nav-image-placeholder img {
           filter: grayscale(0%);
+        }
+
+        .mobile-nav-item-wrapper {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+          gap: 0.75rem;
+        }
+
+        .mobile-nav-remove-btn {
+          font-family: var(--font-heading);
+          font-size: 0.8rem;
+          letter-spacing: 1px;
+          font-weight: 700;
+          background: #ef4444;
+          color: #ffffff;
+          border: 1px solid #000;
+          padding: 6px 12px;
+          cursor: pointer;
+          box-shadow: 2px 2px 0 #000;
+          white-space: nowrap;
+          transform: skewX(-5deg);
+        }
+
+        .mobile-nav-remove-btn:hover {
+          background: #dc2626;
+        }
+
+        .mobile-nav-add-btn {
+          font-family: var(--font-heading);
+          font-size: 1.1rem;
+          letter-spacing: 2px;
+          font-weight: 700;
+          background: var(--primary-orange);
+          color: #000;
+          border: 2px solid #000;
+          padding: 0.85rem 1.5rem;
+          margin: 1rem 0;
+          cursor: pointer;
+          box-shadow: 4px 4px 0 #000;
+          transform: skewX(-10deg);
+          width: 100%;
+          max-width: 400px;
+          text-align: center;
         }
 
         .mobile-cta-button {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import BeforeAfterSlider from './BeforeAfterSlider';
+import { useCms } from '../contexts/CmsContext';
 import { 
   CONVERTER_TOOLS, 
   executeConversion, 
@@ -15,6 +16,7 @@ const checkIsTransparentFormat = (fmt) => {
 };
 
 const StudioConverter = () => {
+  const { t, isLiveEditMode, handleLiveEditClick } = useCms();
   const [selectedToolId, setSelectedToolId] = useState('svg-to-png');
   const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'svg-to' | 'to-svg' | 'special'
   
@@ -346,12 +348,23 @@ const StudioConverter = () => {
         
         {/* Comic Section Header */}
         <div className="section-header-row">
-          <div className="section-label">STUDIO CONVERTER // IMAGE MATRIX</div>
-          <h2 className="converter-main-title comic-text">
-            IMAGE & VECTOR CONVERTER MATRIX
+          <div 
+            className={`section-label ${isLiveEditMode ? 'cms-editable-target' : ''}`}
+            onClick={(e) => handleLiveEditClick(e, 'studioTools.converter.sectionLabel')}
+          >
+            {t('studioTools.converter.sectionLabel', 'STUDIO CONVERTER // IMAGE MATRIX')}
+          </div>
+          <h2 
+            className={`converter-main-title comic-text ${isLiveEditMode ? 'cms-editable-target' : ''}`}
+            onClick={(e) => handleLiveEditClick(e, 'studioTools.converter.title')}
+          >
+            {t('studioTools.converter.title', 'IMAGE & VECTOR CONVERTER MATRIX')}
           </h2>
-          <p className="converter-sub-desc">
-            Ultra-fast in-browser graphics conversion engine. Render SVG vector blueprints into high-resolution rasters, or trace photos, PNGs, and WebPs into crisp, scalable SVG vector curves with dual-view before & after inspection.
+          <p 
+            className={`converter-sub-desc ${isLiveEditMode ? 'cms-editable-target' : ''}`}
+            onClick={(e) => handleLiveEditClick(e, 'studioTools.converter.subDescription')}
+          >
+            {t('studioTools.converter.subDescription', 'Ultra-fast in-browser graphics conversion engine. Render SVG vector blueprints into high-resolution rasters, or trace photos, PNGs, and WebPs into crisp, scalable SVG vector curves with dual-view before & after inspection.')}
           </p>
         </div>
 

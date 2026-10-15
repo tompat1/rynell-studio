@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAudio } from '../contexts/AudioContext';
+import { useCms } from '../contexts/CmsContext';
 import aiFashionImg from '../assets/journal/ai_fashion.png';
 import neonNightsImg from '../assets/journal/neon_nights.png';
 import typographyImg from '../assets/journal/brutalist_typography.png';
@@ -86,16 +87,32 @@ const Journal = () => {
     }
   };
 
+  const { t, isLiveEditMode, isCmsAdmin, openCms } = useCms();
+
+  const handleCmsClick = () => {
+    if (isLiveEditMode && isCmsAdmin) {
+      openCms('journal');
+    }
+  };
+
   return (
     <section id="journal" className="section-container" style={{ position: 'relative' }}>
-      <div className="section-label">JOURNAL</div>
+      <div 
+        className={`section-label ${isLiveEditMode && isCmsAdmin ? 'cms-editable-target' : ''}`}
+        onClick={handleCmsClick}
+      >
+        {t('journal.sectionLabel', 'JOURNAL')}
+      </div>
       <div className="content-wrapper">
-        <div className="journal-header">
+        <div 
+          className={`journal-header ${isLiveEditMode && isCmsAdmin ? 'cms-editable-target' : ''}`}
+          onClick={handleCmsClick}
+        >
           <div className="title-group">
-            <h2 className="section-title">LATEST DISPATCHES</h2>
-            <p className="section-description">Transmissions from the bleeding edge of design culture. Thoughts on AI, brutalist architecture, and the future of merch.</p>
+            <h2 className="section-title">{t('journal.title', 'LATEST DISPATCHES')}</h2>
+            <p className="section-description">{t('journal.description', 'Transmissions from the bleeding edge of design culture. Thoughts on AI, brutalist architecture, and the future of merch.')}</p>
           </div>
-          <button className="view-all-btn" onClick={() => setIsArchiveOpen(true)}>ALL ARTICLES</button>
+          <button className="view-all-btn" onClick={() => setIsArchiveOpen(true)}>{t('journal.viewAllButton', 'ALL ARTICLES')}</button>
         </div>
         
         <div className="journal-list">

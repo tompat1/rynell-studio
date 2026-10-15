@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import BeforeAfterSlider from './BeforeAfterSlider';
+import { useCms } from '../contexts/CmsContext';
 import { 
   COMPRESSION_PRESETS, 
   optimizeImageFile, 
@@ -13,6 +14,7 @@ import samplePngUrl from '../assets/services/service_branding.png';
 import sampleJpgUrl from '../assets/studio_portrait.jpg';
 
 const StudioCompressor = () => {
+  const { t, isLiveEditMode, isCmsAdmin, openCms } = useCms();
   // Preset & Configuration State
   const [selectedPresetId, setSelectedPresetId] = useState('visually-lossless');
   const [targetFormat, setTargetFormat] = useState('original'); // 'original' | 'image/webp' | 'image/jpeg' | 'image/png' | 'image/avif'
@@ -462,13 +464,18 @@ const StudioCompressor = () => {
       <div className="compressor-container">
         
         {/* Section Header */}
-        <div className="compressor-header-row">
-          <div className="section-label">IMAGE COMPRESSOR & OPTIMIZER // POWERED LIKE IMAGEOPTIM</div>
+        <div 
+          className={`compressor-header-row ${isLiveEditMode && isCmsAdmin ? 'cms-editable-target' : ''}`}
+          onClick={() => isLiveEditMode && isCmsAdmin && openCms('studioTools')}
+        >
+          <div className="section-label">
+            {t('studioTools.compressor.sectionLabel', 'IMAGE COMPRESSOR & OPTIMIZER // POWERED LIKE IMAGEOPTIM')}
+          </div>
           <h2 className="compressor-main-title comic-text">
-            IMAGEOPTIM PRO: VECTOR & RASTER COMPRESSOR
+            {t('studioTools.compressor.title', 'IMAGEOPTIM PRO: VECTOR & RASTER COMPRESSOR')}
           </h2>
           <p className="compressor-sub-desc">
-            Industrial-grade image compression suite inspired by ImageOptim. Lossless metadata stripping, MozJPEG quantization, pngquant 8-bit palette reduction, and SVGO vector minification with instant live before/after diffing.
+            {t('studioTools.compressor.subDescription', 'Industrial-grade image compression suite inspired by ImageOptim. Lossless metadata stripping, MozJPEG quantization, pngquant 8-bit palette reduction, and SVGO vector minification with instant live before/after diffing.')}
           </p>
         </div>
 
@@ -884,7 +891,7 @@ const StudioCompressor = () => {
                     )}
 
                     {/* Sliders Area */}
-                    <div className={`prefs-sliders-box ${!enableLossy ? 'dimmed' : ''}`}>
+                    <div className={`prefs-sliders-box ${enableLossy ? '' : 'dimmed'}`}>
                       
                       {/* JPEG quality */}
                       <div className="pref-slider-row full">

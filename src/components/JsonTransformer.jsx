@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useCms } from '../contexts/CmsContext';
 
 const SAMPLE_JSON = JSON.stringify([
   {
@@ -36,6 +37,7 @@ const escapeCsvValue = (value, separator) => {
 };
 
 const JsonTransformer = () => {
+  const { t, isLiveEditMode, handleLiveEditClick } = useCms();
   const [jsonInput, setJsonInput] = useState(SAMPLE_JSON);
   const [separator, setSeparator] = useState(',');
   const [flattenNested, setFlattenNested] = useState(true);
@@ -84,13 +86,28 @@ const JsonTransformer = () => {
 
   return (
     <section id="json-lab" className="json-lab-section">
-      <div className="section-label">JSON LAB</div>
+      <div 
+        className={`section-label ${isLiveEditMode ? 'cms-editable-target' : ''}`}
+        onClick={(e) => handleLiveEditClick(e, 'studioTools.jsonLab.sectionLabel')}
+      >
+        {t('studioTools.jsonLab.sectionLabel', 'JSON LAB')}
+      </div>
       <div className="container">
         <div className="json-lab-header">
           <div>
             <div className="headline-badge">BROWSER-ONLY DATA TOOL</div>
-            <h2 className="json-lab-title">JSON <span className="text-orange">IN.</span> CSV <span className="text-blue">OUT.</span></h2>
-            <p className="json-lab-subtitle">Shape structured data into a clean spreadsheet export. Nothing leaves this browser.</p>
+            <h2 
+              className={`json-lab-title ${isLiveEditMode ? 'cms-editable-target' : ''}`}
+              onClick={(e) => handleLiveEditClick(e, 'studioTools.jsonLab.title')}
+            >
+              {t('studioTools.jsonLab.title', 'JSON IN. CSV OUT.')}
+            </h2>
+            <p 
+              className={`json-lab-subtitle ${isLiveEditMode ? 'cms-editable-target' : ''}`}
+              onClick={(e) => handleLiveEditClick(e, 'studioTools.jsonLab.subDescription')}
+            >
+              {t('studioTools.jsonLab.subDescription', 'Shape structured data into a clean spreadsheet export. Nothing leaves this browser.')}
+            </p>
           </div>
           <div className="json-lab-stamp">LOCAL<br />TRANSFORM</div>
         </div>
