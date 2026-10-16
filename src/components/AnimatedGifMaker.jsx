@@ -15,6 +15,7 @@ const AnimatedGifMaker = () => {
   const [canvasSizeMode, setCanvasSizeMode] = useState('first'); // 'first' | 'max' | 'square' | 'custom'
   const [customWidth, setCustomWidth] = useState(600);
   const [customHeight, setCustomHeight] = useState(600);
+  const [firstFrameDim, setFirstFrameDim] = useState({ width: 640, height: 640 });
   const [fitMode, setFitMode] = useState('contain'); // 'contain' | 'cover' | 'stretch'
   const [canvasBg, setCanvasBg] = useState('transparent'); // 'transparent' | 'black' | 'white' | 'orange'
   const [isPingPong, setIsPingPong] = useState(false);
@@ -313,12 +314,29 @@ const AnimatedGifMaker = () => {
     transitionDelayMs
   ]);
 
-  // Determine output canvas dimensions
+  // Automatically detect natural source dimensions from the first frame
+  useEffect(() => {
+    if (frames.length > 0 && frames[0]?.url) {
+      const img = new Image();
+      img.onload = () => {
+        if (img.naturalWidth && img.naturalHeight) {
+          setFirstFrameDim({ width: img.naturalWidth, height: img.naturalHeight });
+        }
+      };
+      img.src = frames[0].url;
+    }
+  }, [frames]);
+
+  // Determine output canvas dimensions with safe fallback
   const computedDimensions = useMemo(() => {
     if (canvasSizeMode === 'square') return { width: 600, height: 600 };
-    if (canvasSizeMode === 'custom') return { width: customWidth, height: customHeight };
-    return { width: 640, height: 640 };
-  }, [canvasSizeMode, customWidth, customHeight]);
+    if (canvasSizeMode === 'custom') {
+      const w = Math.min(4096, Math.max(1, parseInt(customWidth, 10) || 600));
+      const h = Math.min(4096, Math.max(1, parseInt(customHeight, 10) || 600));
+      return { width: w, height: h };
+    }
+    return firstFrameDim;
+  }, [canvasSizeMode, customWidth, customHeight, firstFrameDim]);
 
   // Helper to draw an image onto canvas with aspect ratio rules and optional transform
   const drawFrameHelper = useCallback((ctx, img, targetW, targetH, fit, transform = 'none') => {
@@ -873,14 +891,14 @@ const AnimatedGifMaker = () => {
                     className={`pill-btn ${canvasSizeMode === 'first' ? 'active' : ''}`}
                     onClick={() => setCanvasSizeMode('first')}
                   >
-                    FIT SOURCE (640x640)
+                    FIT SOURCE ({firstFrameDim.width}×{firstFrameDim.height})
                   </button>
                   <button
                     type="button"
                     className={`pill-btn ${canvasSizeMode === 'square' ? 'active' : ''}`}
                     onClick={() => setCanvasSizeMode('square')}
                   >
-                    SQUARE 600x600
+                    SQUARE 600×600
                   </button>
                   <button
                     type="button"
@@ -892,23 +910,76 @@ const AnimatedGifMaker = () => {
                 </div>
 
                 {canvasSizeMode === 'custom' && (
-                  <div className="custom-size-row">
-                    <input
-                      type="number"
-                      value={customWidth}
-                      onChange={(e) => setCustomWidth(Math.max(100, parseInt(e.target.value, 10) || 600))}
-                      placeholder="Width"
-                      className="size-input"
-                    />
-                    <span>×</span>
-                    <input
-                      type="number"
-                      value={customHeight}
-                      onChange={(e) => setCustomHeight(Math.max(100, parseInt(e.target.value, 10) || 600))}
-                      placeholder="Height"
-                      className="size-input"
-                    />
-                    <span>PX</span>
+                  <div className="custom-size-container">
+                    <div className="custom-size-row">
+                      <div className="size-input-wrapper">
+                        <label className="size-sublabel">WIDTH</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="4096"
+                          value={customWidth}
+                          onChange={(e) => setCustomWidth(e.target.value)}
+                          onBlur={() => {
+                            const num = parseInt(customWidth, 10);
+                            if (!num || isNaN(num) || num < 1) {
+                              setCustomWidth(600);
+                            } else {
+                              setCustomWidth(Math.min(4096, Math.max(1, num)));
+                            }
+                          }}
+                          placeholder="Width"
+                          className="size-input"
+                        />
+                      </div>
+                      <span className="size-times">×</span>
+                      <div className="size-input-wrapper">
+                        <label className="size-sublabel">HEIGHT</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="4096"
+                          value={customHeight}
+                          onChange={(e) => setCustomHeight(e.target.value)}
+                          onBlur={() => {
+                            const num = parseInt(customHeight, 10);
+                            if (!num || isNaN(num) || num < 1) {
+                              setCustomHeight(600);
+                            } else {
+                              setCustomHeight(Math.min(4096, Math.max(1, num)));
+                            }
+                          }}
+                          placeholder="Height"
+                          className="size-input"
+                        />
+                      </div>
+                      <span className="size-unit">PX</span>
+                    </div>
+
+                    <div className="custom-presets-row">
+                      {[
+                        { label: '320×320', w: 320, h: 320 },
+                        { label: '480×480', w: 480, h: 480 },
+                        { label: '500×500', w: 500, h: 500 },
+                        { label: '640×640', w: 640, h: 640 },
+                        { label: '800×800', w: 800, h: 800 },
+                        { label: '1080×1080', w: 1080, h: 1080 },
+                        { label: '1280×720 (16:9)', w: 1280, h: 720 },
+                        { label: '720×1280 (9:16)', w: 720, h: 1280 }
+                      ].map(p => (
+                        <button
+                          key={p.label}
+                          type="button"
+                          className={`size-preset-pill ${Number(customWidth) === p.w && Number(customHeight) === p.h ? 'active' : ''}`}
+                          onClick={() => {
+                            setCustomWidth(p.w);
+                            setCustomHeight(p.h);
+                          }}
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1619,22 +1690,97 @@ const AnimatedGifMaker = () => {
           border-color: var(--text-primary);
         }
 
+        .custom-size-container {
+          display: flex;
+          flex-direction: column;
+          gap: 0.6rem;
+          margin-top: 0.5rem;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          padding: 0.65rem 0.8rem;
+        }
+
         .custom-size-row {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: 0.6rem;
           font-family: monospace;
           font-size: 0.85rem;
-          margin-top: 0.4rem;
+        }
+
+        .size-input-wrapper {
+          display: flex;
+          flex-direction: column;
+          gap: 0.2rem;
+        }
+
+        .size-sublabel {
+          font-family: var(--font-heading);
+          font-size: 0.62rem;
+          letter-spacing: 1px;
+          color: #94a3b8;
+        }
+
+        .size-times {
+          font-weight: 700;
+          color: #64748b;
+          margin-top: 0.85rem;
+        }
+
+        .size-unit {
+          font-family: var(--font-heading);
+          font-size: 0.75rem;
+          letter-spacing: 1px;
+          color: #94a3b8;
+          margin-top: 0.85rem;
         }
 
         .size-input {
-          width: 90px;
-          padding: 0.35rem 0.5rem;
+          width: 95px;
+          padding: 0.4rem 0.6rem;
           background: var(--bg-primary);
           border: 2px solid var(--border-color);
           color: var(--text-primary);
           font-family: monospace;
+          font-size: 0.9rem;
+          font-weight: 700;
+          outline: none;
+          transition: border-color 0.2s;
+        }
+
+        .size-input:focus {
+          border-color: var(--primary-orange);
+        }
+
+        .custom-presets-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.35rem;
+          margin-top: 0.25rem;
+        }
+
+        .size-preset-pill {
+          font-family: monospace;
+          font-size: 0.68rem;
+          padding: 0.25rem 0.5rem;
+          background: #0f172a;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          color: #94a3b8;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .size-preset-pill:hover {
+          background: #1e293b;
+          color: #fff;
+          border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .size-preset-pill.active {
+          background: rgba(255, 106, 0, 0.15);
+          color: var(--primary-orange);
+          border-color: var(--primary-orange);
+          font-weight: 700;
         }
 
         .param-grid-2 {
