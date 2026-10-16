@@ -62,6 +62,8 @@ const AnimatedGifMaker = () => {
   const [outputGifUrl, setOutputGifUrl] = useState(null);
   const [outputGifBlob, setOutputGifBlob] = useState(null);
   const [outputStats, setOutputStats] = useState(null);
+  const [readyTime, setReadyTime] = useState(null);
+  const resultsRef = useRef(null);
   const [errorNotice, setErrorNotice] = useState(null);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizationNotice, setOptimizationNotice] = useState(null);
@@ -701,7 +703,13 @@ const AnimatedGifMaker = () => {
         fps: Math.round(1000 / (globalDelayMs || 200))
       });
 
+      const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      setReadyTime(nowStr);
       setGenerationProgress(100);
+
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 250);
     } catch (err) {
       console.error('GIF Generation failed:', err);
       setErrorNotice(err.message || 'Failed to encode animated GIF. Please verify image inputs.');
@@ -767,6 +775,9 @@ const AnimatedGifMaker = () => {
         savedPercent: savedPercent > 0 ? savedPercent : null,
         activePresetLabel: options.label || `${targetColors} Colors`
       }));
+
+      const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      setReadyTime(nowStr);
 
       setOptimizationNotice(
         savedPercent > 0 
@@ -858,8 +869,163 @@ const AnimatedGifMaker = () => {
           </div>
         </div>
 
-        {/* Workbench: Live Player (Left) & Parameters (Right) */}
-        <div className="gif-workbench-grid">
+        {/* STEP 1: Frame Sequence Timeline & File Dropzone */}
+        <div className="timeline-strip-container">
+          <div className="timeline-strip-head">
+            <div className="step-header-left">
+              <div className="step-giant-badge step-1">
+                <span className="step-giant-tag">STEP</span>
+                <span className="step-giant-num">1</span>
+              </div>
+              <div className="head-text">
+                <span className="timeline-badge">FRAME SEQUENCE TIMELINE</span>
+                <h3 className="timeline-title">ARRANGE & FINE-TUNE INDIVIDUAL FRAMES</h3>
+              </div>
+            </div>
+
+            <div className="timeline-quick-actions">
+              <button type="button" className="action-pill-btn" onClick={handleReverseFrames}>
+                ⇄ REVERSE ORDER
+              </button>
+              <button 
+                type="button" 
+                className="action-pill-btn add-btn"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                + ADD MORE IMAGES / ARCHIVE
+              </button>
+            </div>
+          </div>
+
+          {/* Hidden File Input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*,.gif,.jpg,.jpeg,.png,.apng,.webp,.avif,.heic,.heif,.mng,.jp2,.jxl,.bmp,.pdf,.anim,.cdxl,.fli,.flc,.bpg,.ase,.aseprite,.svg,.zip,.7z,.tar,.rar"
+            style={{ display: 'none' }}
+            onChange={(e) => e.target.files && processIncomingFiles(e.target.files)}
+          />
+
+          {/* Dropzone Container */}
+          <div
+            className={`multi-dropzone ${isDragging ? 'drag-over' : ''}`}
+            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+          >
+            {frames.length === 0 ? (
+              <div className="dropzone-empty-hero" onClick={() => fileInputRef.current?.click()}>
+                <span className="drop-icon">📦</span>
+                <span className="drop-text">DROP MULTIPLE IMAGES OR ZIP/TAR ARCHIVE HERE</span>
+                <span className="drop-sub">Select multiple files, animated sequences, or archives up to 200MB</span>
+              </div>
+            ) : (
+              <div className="timeline-cards-row">
+                {frames.map((frame, index) => {
+                  const isActive = currentFrameIndex === index;
+                  return (
+                    <div 
+                      key={frame.id}
+                      className={`frame-card ${isActive ? 'active-frame' : ''}`}
+                      onClick={() => {
+                        setIsPlaying(false);
+                        setCurrentTweenStep(0);
+                        setCurrentFrameIndex(index);
+                      }}
+                    >
+                      <div className="frame-card-top">
+                        <span className="frame-idx-badge">#{index + 1}</span>
+                        <div className="frame-card-mini-actions">
+                          <button
+                            type="button"
+                            className="mini-btn"
+                            disabled={index === 0}
+                            onClick={(e) => { e.stopPropagation(); handleMoveFrame(index, -1); }}
+                            title="Move Left"
+                          >
+                            ◀
+                          </button>
+                          <button
+                            type="button"
+                            className="mini-btn"
+                            disabled={index === frames.length - 1}
+                            onClick={(e) => { e.stopPropagation(); handleMoveFrame(index, 1); }}
+                            title="Move Right"
+                          >
+                            ▶
+                          </button>
+                          <button
+                            type="button"
+                            className="mini-btn"
+                            onClick={(e) => { e.stopPropagation(); handleDuplicateFrame(index); }}
+                            title="Duplicate Frame"
+                          >
+                            📋
+                          </button>
+                          <button
+                            type="button"
+                            className="mini-btn del"
+                            onClick={(e) => { e.stopPropagation(); handleDeleteFrame(index); }}
+                            title="Delete Frame"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="frame-thumb-viewport">
+                        <img src={frame.url} alt={frame.name} draggable="false" />
+                      </div>
+
+                      <div className="frame-card-foot" onClick={(e) => e.stopPropagation()}>
+                        <label className="frame-delay-label">DELAY:</label>
+                        <input
+                          type="number"
+                          value={frame.delayMs || globalDelayMs}
+                          onChange={(e) => handleFrameDelayChange(index, e.target.value)}
+                          className="frame-delay-input"
+                          step="10"
+                          min="10"
+                        />
+                        <span className="ms-unit">MS</span>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Add Card Tile */}
+                <div className="add-frame-tile" onClick={() => fileInputRef.current?.click()}>
+                  <span className="add-glyph">+</span>
+                  <span className="add-txt">ADD FILES</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* STEP 2: Interactive Workbench (Live Player Left, Settings Right) */}
+        <div className="workbench-section-container">
+          <div className="workbench-section-head">
+            <div className="step-header-left">
+              <div className="step-giant-badge step-2">
+                <span className="step-giant-tag">STEP</span>
+                <span className="step-giant-num">2</span>
+              </div>
+              <div className="head-text">
+                <span className="timeline-badge">INTERACTIVE WORKBENCH</span>
+                <h3 className="timeline-title">LIVE PREVIEW PLAYER & ANIMATION CONTROLS</h3>
+              </div>
+            </div>
+
+            <div className="workbench-quick-actions">
+              <button type="button" className="clear-all-link" onClick={handleClearAll}>
+                🗑️ CLEAR ALL
+              </button>
+            </div>
+          </div>
+
+          <div className="gif-workbench-grid">
           
           {/* Column 1: Live Interactive Canvas Player */}
           <div className="workbench-pane player-pane">
@@ -1271,142 +1437,29 @@ const AnimatedGifMaker = () => {
           </div>
 
         </div>
-
-        {/* Frame Timeline Strip & File Dropzone */}
-        <div className="timeline-strip-container">
-          <div className="timeline-strip-head">
-            <div className="head-text">
-              <span className="timeline-badge">FRAME SEQUENCE TIMELINE</span>
-              <h3 className="timeline-title">ARRANGE & FINE-TUNE INDIVIDUAL FRAMES</h3>
-            </div>
-
-            <div className="timeline-quick-actions">
-              <button type="button" className="action-pill-btn" onClick={handleReverseFrames}>
-                ⇄ REVERSE ORDER
-              </button>
-              <button 
-                type="button" 
-                className="action-pill-btn add-btn"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                + ADD MORE IMAGES / ARCHIVE
-              </button>
-            </div>
-          </div>
-
-          {/* Hidden File Input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept="image/*,.gif,.jpg,.jpeg,.png,.apng,.webp,.avif,.heic,.heif,.mng,.jp2,.jxl,.bmp,.pdf,.anim,.cdxl,.fli,.flc,.bpg,.ase,.aseprite,.svg,.zip,.7z,.tar,.rar"
-            style={{ display: 'none' }}
-            onChange={(e) => e.target.files && processIncomingFiles(e.target.files)}
-          />
-
-          {/* Dropzone Container */}
-          <div
-            className={`multi-dropzone ${isDragging ? 'drag-over' : ''}`}
-            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={handleDrop}
-          >
-            {frames.length === 0 ? (
-              <div className="dropzone-empty-hero" onClick={() => fileInputRef.current?.click()}>
-                <span className="drop-icon">📦</span>
-                <span className="drop-text">DROP MULTIPLE IMAGES OR ZIP/TAR ARCHIVE HERE</span>
-                <span className="drop-sub">Select multiple files, animated sequences, or archives up to 200MB</span>
-              </div>
-            ) : (
-              <div className="timeline-cards-row">
-                {frames.map((frame, index) => {
-                  const isActive = currentFrameIndex === index;
-                  return (
-                    <div 
-                      key={frame.id}
-                      className={`frame-card ${isActive ? 'active-frame' : ''}`}
-                      onClick={() => {
-                        setIsPlaying(false);
-                        setCurrentTweenStep(0);
-                        setCurrentFrameIndex(index);
-                      }}
-                    >
-                      <div className="frame-card-top">
-                        <span className="frame-idx-badge">#{index + 1}</span>
-                        <div className="frame-card-mini-actions">
-                          <button
-                            type="button"
-                            className="mini-btn"
-                            disabled={index === 0}
-                            onClick={(e) => { e.stopPropagation(); handleMoveFrame(index, -1); }}
-                            title="Move Left"
-                          >
-                            ◀
-                          </button>
-                          <button
-                            type="button"
-                            className="mini-btn"
-                            disabled={index === frames.length - 1}
-                            onClick={(e) => { e.stopPropagation(); handleMoveFrame(index, 1); }}
-                            title="Move Right"
-                          >
-                            ▶
-                          </button>
-                          <button
-                            type="button"
-                            className="mini-btn"
-                            onClick={(e) => { e.stopPropagation(); handleDuplicateFrame(index); }}
-                            title="Duplicate Frame"
-                          >
-                            📋
-                          </button>
-                          <button
-                            type="button"
-                            className="mini-btn del"
-                            onClick={(e) => { e.stopPropagation(); handleDeleteFrame(index); }}
-                            title="Delete Frame"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="frame-thumb-viewport">
-                        <img src={frame.url} alt={frame.name} draggable="false" />
-                      </div>
-
-                      <div className="frame-card-foot" onClick={(e) => e.stopPropagation()}>
-                        <label className="frame-delay-label">DELAY:</label>
-                        <input
-                          type="number"
-                          value={frame.delayMs || globalDelayMs}
-                          onChange={(e) => handleFrameDelayChange(index, e.target.value)}
-                          className="frame-delay-input"
-                          step="10"
-                          min="10"
-                        />
-                        <span className="ms-unit">MS</span>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* Add Card Tile */}
-                <div className="add-frame-tile" onClick={() => fileInputRef.current?.click()}>
-                  <span className="add-glyph">+</span>
-                  <span className="add-txt">ADD FILES</span>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
 
-        {/* Results Banner & Download Section */}
+        {/* STEP 3: Results Banner & Download Section */}
         {outputGifUrl && outputStats && (
-          <div className="gif-results-card">
+          <div ref={resultsRef} className="gif-results-card">
             <div className="results-header">
-              <span className="results-badge">GENERATION COMPLETE</span>
-              <h3 className="results-title">YOUR ANIMATED GIF IS READY</h3>
+              <div className="step-header-left">
+                <div className="step-giant-badge step-3">
+                  <span className="step-giant-tag">STEP</span>
+                  <span className="step-giant-num">3</span>
+                </div>
+                <div className="head-text">
+                  <span className="results-badge">GENERATION COMPLETE</span>
+                  <h3 className="results-title">YOUR ANIMATED GIF IS READY</h3>
+                </div>
+              </div>
+
+              {readyTime && (
+                <div className="ready-timestamp-pill">
+                  <span className="ready-dot" />
+                  COMPILED AT {readyTime}
+                </div>
+              )}
             </div>
 
             <div className="results-body">
@@ -1489,32 +1542,51 @@ const AnimatedGifMaker = () => {
                   )}
                 </div>
 
-                <div className="results-cta-actions">
+                {/* Animated Attention-Grabbing Ready Box & Hero Download CTA */}
+                <div className="download-ready-box">
+                  <div className="ready-indicator-bar">
+                    <div className="beacon-cluster">
+                      <div className="beacon-wrap">
+                        <span className="beacon-wave" />
+                        <span className="beacon-core" />
+                      </div>
+                      <span className="beacon-text">READY FOR EXPORT</span>
+                    </div>
+                    <span className="ready-time-tag">
+                      {readyTime ? `COMPILED AT ${readyTime}` : 'READY NOW'} • {outputStats.sizeKb} KB
+                    </span>
+                  </div>
+
                   <a
                     href={outputGifUrl}
                     download="RYNELL_STUDIO_ANIMATION.gif"
-                    className="studio-btn-primary dl-btn"
+                    className="studio-download-hero-btn"
                   >
-                    📥 DOWNLOAD ANIMATED .GIF
+                    <span className="dl-icon-bob">⬇</span>
+                    <span className="dl-hero-text">DOWNLOAD ANIMATED .GIF</span>
+                    <span className="dl-hero-badge">{outputStats.sizeKb} KB</span>
                   </a>
-                  <button
-                    type="button"
-                    className="studio-btn-primary send-compressor-btn"
-                    onClick={handleSendToCompressor}
-                    title="Send this GIF directly into Studio Compressor for MozJPEG/WebP transcoding & advanced optimization"
-                  >
-                    ⚡ SEND TO STUDIO COMPRESSOR
-                  </button>
-                  <button
-                    type="button"
-                    className="studio-btn-secondary"
-                    onClick={() => {
-                      const w = window.open('');
-                      w?.document.write(`<img src="${outputGifUrl}" style="background:#000;display:block;margin:auto;" />`);
-                    }}
-                  >
-                    🔍 OPEN IN NEW TAB
-                  </button>
+
+                  <div className="results-secondary-actions">
+                    <button
+                      type="button"
+                      className="action-secondary-btn compress-cta"
+                      onClick={handleSendToCompressor}
+                      title="Send this GIF directly into Studio Compressor for MozJPEG/WebP transcoding & advanced optimization"
+                    >
+                      ⚡ SEND TO STUDIO COMPRESSOR
+                    </button>
+                    <button
+                      type="button"
+                      className="action-secondary-btn tab-cta"
+                      onClick={() => {
+                        const w = window.open('');
+                        w?.document.write(`<img src="${outputGifUrl}" style="background:#000;display:block;margin:auto;" />`);
+                      }}
+                    >
+                      🔍 OPEN IN NEW TAB
+                    </button>
+                  </div>
                 </div>
 
                 {sentNotice && (
@@ -2133,6 +2205,37 @@ const AnimatedGifMaker = () => {
           margin-top: 0.5rem;
         }
 
+        .studio-btn-primary {
+          font-family: var(--font-heading);
+          letter-spacing: 2px;
+          background: var(--primary-orange);
+          color: #000;
+          border: 3px solid #000;
+          box-shadow: 4px 4px 0 #000;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.15s, box-shadow 0.15s, background-color 0.15s;
+        }
+
+        .studio-btn-primary:hover:not(:disabled) {
+          transform: translate(-2px, -2px);
+          box-shadow: 6px 6px 0 #000;
+          background: #ff7b1a;
+        }
+
+        .studio-btn-primary:active:not(:disabled) {
+          transform: translate(2px, 2px);
+          box-shadow: 2px 2px 0 #000;
+        }
+
+        .studio-btn-primary:disabled {
+          opacity: 0.55;
+          cursor: not-allowed;
+          filter: grayscale(0.5);
+        }
+
         .make-gif-btn {
           width: 100%;
           font-size: 1.25rem;
@@ -2140,6 +2243,96 @@ const AnimatedGifMaker = () => {
           padding: 0.9rem;
           text-align: center;
           justify-content: center;
+        }
+
+        /* Step Indicators & Giant Badges */
+        .step-header-left {
+          display: flex;
+          align-items: center;
+          gap: 1.25rem;
+        }
+
+        .step-giant-badge {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          width: 58px;
+          height: 58px;
+          min-width: 58px;
+          background: var(--primary-orange);
+          color: #000;
+          border: 3px solid #000;
+          box-shadow: 4px 4px 0 #000;
+          transform: skewX(-6deg);
+          user-select: none;
+          transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
+        }
+
+        .step-giant-badge:hover {
+          transform: skewX(-6deg) translateY(-2px);
+          box-shadow: 6px 6px 0 #000;
+        }
+
+        .step-giant-tag {
+          font-family: var(--font-heading);
+          font-size: 0.65rem;
+          font-weight: 800;
+          letter-spacing: 2px;
+          line-height: 1;
+          color: #000;
+          margin-top: 2px;
+          opacity: 0.85;
+        }
+
+        .step-giant-num {
+          font-family: var(--font-heading);
+          font-size: 2.3rem;
+          font-weight: 900;
+          line-height: 0.9;
+          letter-spacing: -1px;
+          color: #000;
+        }
+
+        .step-giant-badge.step-1 {
+          background: var(--primary-orange);
+        }
+
+        .step-giant-badge.step-2 {
+          background: #007bff;
+          color: #fff;
+        }
+        .step-giant-badge.step-2 .step-giant-tag,
+        .step-giant-badge.step-2 .step-giant-num {
+          color: #fff;
+        }
+
+        .step-giant-badge.step-3 {
+          background: #00e676;
+          color: #000;
+        }
+        .step-giant-badge.step-3 .step-giant-tag,
+        .step-giant-badge.step-3 .step-giant-num {
+          color: #000;
+        }
+
+        /* Workbench Section Container (Step 2) */
+        .workbench-section-container {
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+        }
+
+        .workbench-section-head {
+          background: var(--bg-card);
+          border: 3px solid var(--text-primary);
+          box-shadow: 8px 8px 0 var(--secondary-blue);
+          padding: 1.25rem 1.5rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 1rem;
         }
 
         /* Timeline Strip */
@@ -2374,8 +2567,10 @@ const AnimatedGifMaker = () => {
 
         .results-header {
           display: flex;
-          flex-direction: column;
-          gap: 0.2rem;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 1rem;
           border-bottom: 2px solid var(--border-color);
           padding-bottom: 0.75rem;
         }
@@ -2392,6 +2587,27 @@ const AnimatedGifMaker = () => {
           font-size: 2rem;
           letter-spacing: 1.5px;
           margin: 0;
+        }
+
+        .ready-timestamp-pill {
+          font-family: monospace;
+          font-size: 0.8rem;
+          font-weight: 700;
+          color: #00e676;
+          background: rgba(0, 230, 118, 0.1);
+          border: 1px solid rgba(0, 230, 118, 0.35);
+          padding: 0.35rem 0.75rem;
+          display: flex;
+          align-items: center;
+          gap: 0.55rem;
+        }
+
+        .ready-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #00e676;
+          box-shadow: 0 0 6px #00e676;
         }
 
         .results-body {
@@ -2457,15 +2673,235 @@ const AnimatedGifMaker = () => {
           color: var(--primary-orange);
         }
 
-        .results-cta-actions {
+        /* Animated Attention-Grabbing Download Ready Box */
+        .download-ready-box {
+          background: linear-gradient(135deg, rgba(0, 230, 118, 0.08) 0%, rgba(255, 106, 0, 0.08) 100%), #050b14;
+          border: 3px solid #00e676;
+          box-shadow: 6px 6px 0 #000, 0 0 20px rgba(0, 230, 118, 0.25);
+          padding: 1.25rem;
           display: flex;
+          flex-direction: column;
           gap: 1rem;
-          flex-wrap: wrap;
+          animation: readyBoxPop 0.45s cubic-bezier(0.16, 1, 0.3, 1), readyBorderPulse 3s infinite ease-in-out;
+          position: relative;
+          overflow: hidden;
         }
 
-        .dl-btn {
-          font-size: 1.15rem;
-          padding: 0.85rem 1.75rem;
+        @keyframes readyBoxPop {
+          0% {
+            transform: scale(0.96) translateY(6px);
+            opacity: 0.6;
+          }
+          100% {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+          }
+        }
+
+        @keyframes readyBorderPulse {
+          0%, 100% {
+            border-color: #00e676;
+            box-shadow: 6px 6px 0 #000, 0 0 16px rgba(0, 230, 118, 0.25);
+          }
+          50% {
+            border-color: var(--primary-orange);
+            box-shadow: 6px 6px 0 #000, 0 0 26px rgba(255, 106, 0, 0.35);
+          }
+        }
+
+        .ready-indicator-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 0.75rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          padding-bottom: 0.75rem;
+        }
+
+        .beacon-cluster {
+          display: flex;
+          align-items: center;
+          gap: 0.65rem;
+        }
+
+        .beacon-wrap {
+          position: relative;
+          width: 14px;
+          height: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .beacon-core {
+          width: 10px;
+          height: 10px;
+          background: #00e676;
+          border-radius: 50%;
+          box-shadow: 0 0 8px #00e676;
+          position: relative;
+          z-index: 2;
+        }
+
+        .beacon-wave {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 10px;
+          height: 10px;
+          margin: -5px 0 0 -5px;
+          border-radius: 50%;
+          border: 2px solid #00e676;
+          animation: beaconPulse 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+        }
+
+        @keyframes beaconPulse {
+          0% {
+            transform: scale(1);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(3.2);
+            opacity: 0;
+          }
+        }
+
+        .beacon-text {
+          font-family: var(--font-heading);
+          font-size: 0.95rem;
+          letter-spacing: 1.5px;
+          color: #00e676;
+          font-weight: 700;
+        }
+
+        .ready-time-tag {
+          font-family: monospace;
+          font-size: 0.78rem;
+          color: #cbd5e1;
+          background: rgba(255, 255, 255, 0.06);
+          padding: 0.25rem 0.6rem;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          letter-spacing: 0.5px;
+        }
+
+        /* Proper Hero Download Button */
+        .studio-download-hero-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.9rem;
+          width: 100%;
+          padding: 1rem 1.75rem;
+          background: var(--primary-orange);
+          color: #000;
+          border: 3px solid #000;
+          box-shadow: 6px 6px 0 #000;
+          text-decoration: none;
+          font-family: var(--font-heading);
+          font-size: 1.35rem;
+          letter-spacing: 2px;
+          font-weight: 900;
+          cursor: pointer;
+          transform: skewX(-4deg);
+          transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s, background-color 0.15s;
+          animation: dlButtonThrob 3s infinite ease-in-out;
+        }
+
+        @keyframes dlButtonThrob {
+          0%, 100% {
+            box-shadow: 6px 6px 0 #000;
+          }
+          50% {
+            box-shadow: 6px 6px 0 #000, 0 0 22px rgba(255, 106, 0, 0.45);
+          }
+        }
+
+        .studio-download-hero-btn:hover {
+          background: #ff7f24;
+          color: #000;
+          transform: skewX(-4deg) translate(-3px, -3px);
+          box-shadow: 9px 9px 0 #000;
+        }
+
+        .studio-download-hero-btn:active {
+          transform: skewX(-4deg) translate(2px, 2px);
+          box-shadow: 2px 2px 0 #000;
+        }
+
+        .dl-icon-bob {
+          display: inline-block;
+          font-size: 1.4rem;
+          animation: arrowBob 1.2s infinite ease-in-out;
+        }
+
+        @keyframes arrowBob {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(4px);
+          }
+        }
+
+        .dl-hero-text {
+          letter-spacing: 2px;
+        }
+
+        .dl-hero-badge {
+          font-family: monospace;
+          font-size: 0.85rem;
+          font-weight: 800;
+          background: #000;
+          color: #fff;
+          padding: 0.2rem 0.55rem;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          letter-spacing: 0.5px;
+        }
+
+        /* Secondary Actions inside Ready Box */
+        .results-secondary-actions {
+          display: grid;
+          grid-template-columns: 1.4fr 1fr;
+          gap: 0.85rem;
+        }
+
+        .action-secondary-btn {
+          font-family: var(--font-heading);
+          font-size: 0.95rem;
+          letter-spacing: 1.5px;
+          padding: 0.75rem 1rem;
+          border: 2px solid #000;
+          box-shadow: 4px 4px 0 #000;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          transition: transform 0.15s, box-shadow 0.15s, background-color 0.15s;
+        }
+
+        .action-secondary-btn.compress-cta {
+          background: #007bff;
+          color: #fff;
+        }
+
+        .action-secondary-btn.compress-cta:hover {
+          background: #1a8aff;
+          transform: translateY(-2px);
+          box-shadow: 6px 6px 0 #000;
+        }
+
+        .action-secondary-btn.tab-cta {
+          background: var(--bg-primary);
+          color: var(--text-primary);
+          border-color: var(--border-color);
+        }
+
+        .action-secondary-btn.tab-cta:hover {
+          background: #1e293b;
+          transform: translateY(-2px);
+          box-shadow: 6px 6px 0 #000;
         }
 
         /* Quick GIF Compression Box & Send to Compressor */
