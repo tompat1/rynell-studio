@@ -15,6 +15,19 @@ export const AUTO_DELETE_DELAY_MS = 60 * 60 * 1000; // 1 hour
 
 export const CONVERTER_TOOLS = [
   {
+    id: 'image-to-favicon',
+    name: 'Favicon Maker',
+    pairId: null,
+    direction: 'image-to-icon',
+    inputFormat: 'IMAGE',
+    outputFormat: 'ICO',
+    accept: '.png,.jpg,.jpeg,.webp,.gif,.svg,.avif,image/png,image/jpeg,image/webp,image/gif,image/svg+xml,image/avif',
+    outputMime: 'image/x-icon',
+    outputExt: 'ico',
+    icon: '⭐',
+    desc: 'Turn a logo or image into one browser-ready favicon.ico with 16, 32, 48, 64, 128, and 256px sizes.'
+  },
+  {
     id: 'svg-to-png',
     name: 'SVG to PNG',
     pairId: 'png-to-svg',
@@ -213,6 +226,85 @@ function loadImage(src) {
   });
 }
 
+function canvasToBlob(canvas, type = 'image/png', quality) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error(`This browser could not encode ${type}.`));
+    }, type, quality);
+  });
+}
+
+/**
+ * Build a standards-compatible ICO container whose image entries are PNG files.
+ * Modern browsers support PNG-compressed ICO entries and preserve alpha cleanly.
+ */
+export function packPngsIntoIco(pngEntries, sizes) {
+  if (!pngEntries.length || pngEntries.length !== sizes.length) {
+    throw new Error('ICO packaging requires one PNG entry for every requested icon size.');
+  }
+  const headerSize = 6;
+  const directorySize = sizes.length * 16;
+  const headerAndDirectory = new ArrayBuffer(headerSize + directorySize);
+  const view = new DataView(headerAndDirectory);
+  view.setUint16(0, 0, true); // reserved
+  view.setUint16(2, 1, true); // ICO image
+  view.setUint16(4, sizes.length, true);
+
+  let dataOffset = headerSize + directorySize;
+  sizes.forEach((size, index) => {
+    const entryOffset = headerSize + (index * 16);
+    const pngBytes = pngEntries[index];
+    view.setUint8(entryOffset, size === 256 ? 0 : size);
+    view.setUint8(entryOffset + 1, size === 256 ? 0 : size);
+    view.setUint8(entryOffset + 2, 0); // palette colors
+    view.setUint8(entryOffset + 3, 0); // reserved
+    view.setUint16(entryOffset + 4, 1, true); // color planes
+    view.setUint16(entryOffset + 6, 32, true); // RGBA bits per pixel
+    view.setUint32(entryOffset + 8, pngBytes.byteLength, true);
+    view.setUint32(entryOffset + 12, dataOffset, true);
+    dataOffset += pngBytes.byteLength;
+  });
+
+  return new Blob([headerAndDirectory, ...pngEntries], { type: 'image/x-icon' });
+}
+
+async function createFaviconIco(sourceUrl, bgColor = 'transparent') {
+  const image = await loadImage(sourceUrl);
+  const sizes = [16, 32, 48, 64, 128, 256];
+  const pngEntries = [];
+
+  for (const size of sizes) {
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    if (bgColor && bgColor !== 'transparent') {
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, size, size);
+    } else {
+      ctx.clearRect(0, 0, size, size);
+    }
+
+    const sourceWidth = image.naturalWidth || image.width;
+    const sourceHeight = image.naturalHeight || image.height;
+    const fitScale = Math.min(size / sourceWidth, size / sourceHeight);
+    const drawWidth = Math.max(1, Math.round(sourceWidth * fitScale));
+    const drawHeight = Math.max(1, Math.round(sourceHeight * fitScale));
+    const drawX = Math.round((size - drawWidth) / 2);
+    const drawY = Math.round((size - drawHeight) / 2);
+    ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+
+    const pngBlob = await canvasToBlob(canvas, 'image/png');
+    pngEntries.push(new Uint8Array(await pngBlob.arrayBuffer()));
+  }
+
+  return packPngsIntoIco(pngEntries, sizes);
+}
+
 /**
  * Convert SVG text or data URL to HTML Canvas with viewBox normalization
  */
@@ -330,8 +422,15 @@ export async function executeConversion({
   let width = 0;
   let height = 0;
 
-  // Branch A: SVGZ to SVG
-  if (toolId === 'svgz-to-svg') {
+  // Branch A: Multi-resolution favicon ICO
+  if (toolId === 'image-to-favicon') {
+    resultBlob = await createFaviconIco(sourceUrl, bgColor);
+    resultUrl = URL.createObjectURL(resultBlob);
+    width = 256;
+    height = 256;
+  }
+  // Branch B: SVGZ to SVG
+  else if (toolId === 'svgz-to-svg') {
     const svgString = await decompressSvgz(file || sourceUrl);
     resultText = svgString;
     resultBlob = new Blob([svgString], { type: 'image/svg+xml' });
@@ -346,7 +445,7 @@ export async function executeConversion({
       console.warn('Could not measure SVGZ dimensions:', e);
     }
   }
-  // Branch B: SVG to SVGZ
+  // Branch C: SVG to SVGZ
   else if (toolId === 'svg-to-svgz') {
     let svgString = resultText;
     if (!svgString && file) {
@@ -358,7 +457,7 @@ export async function executeConversion({
     resultBlob = await compressSvgToSvgz(svgString);
     resultUrl = URL.createObjectURL(resultBlob);
   }
-  // Branch C: Raster to SVG (PNG->SVG, JPG->SVG, WebP->SVG, AVIF->SVG, GIF->SVG)
+  // Branch D: Raster to SVG (PNG->SVG, JPG->SVG, WebP->SVG, AVIF->SVG, GIF->SVG)
   else if (tool.direction === 'raster-to-svg') {
     const traceResult = await traceRasterToSVG(sourceUrl, {
       preset: vectorPreset,
@@ -380,7 +479,7 @@ export async function executeConversion({
       console.warn('Could not read raster dimensions:', e);
     }
   }
-  // Branch D: SVG to Raster (PNG, JPG, WebP, AVIF, APNG, JXL, GIF)
+  // Branch E: SVG to Raster (PNG, JPG, WebP, AVIF, APNG, JXL, GIF)
   else {
     const fillBg = tool.outputFormat === 'JPG' ? (bgColor === 'transparent' ? '#ffffff' : bgColor) : bgColor;
     const { canvas, width: cW, height: cH } = await renderSvgToCanvas(sourceUrl, { scale, bgColor: fillBg, file });

@@ -140,6 +140,18 @@ const StudioConverter = () => {
     }
   };
 
+  useEffect(() => {
+    const handleSearchNavigation = (event) => {
+      const targetToolId = event.detail?.targetId;
+      if (!targetToolId || !CONVERTER_TOOLS.some((tool) => tool.id === targetToolId)) return;
+      setActiveFilter('all');
+      handleToolChange(targetToolId);
+    };
+
+    window.addEventListener('rynell:search-navigate', handleSearchNavigation);
+    return () => window.removeEventListener('rynell:search-navigate', handleSearchNavigation);
+  }, []);
+
   // File handling & validation
   const handleIncomingFile = (file) => {
     setErrorNotice(null);
@@ -209,7 +221,7 @@ const StudioConverter = () => {
         sizeBytes: 19500,
         type: 'image/svg+xml'
       });
-      // Auto-select SVG-to-PNG if raster-to-svg was active
+      // Keep the favicon maker active because it accepts both vector and raster sources.
       if (currentTool.direction === 'raster-to-svg') {
         setSelectedToolId('svg-to-png');
       }
@@ -224,8 +236,10 @@ const StudioConverter = () => {
         sizeBytes: 78200,
         type: 'image/webp'
       });
-      // Auto-select WebP to SVG
-      setSelectedToolId('webp-to-svg');
+      // Keep the favicon maker active because it accepts any supported image input.
+      if (currentTool.direction !== 'image-to-icon') {
+        setSelectedToolId('webp-to-svg');
+      }
       setCanvasBg('transparent');
       setPreviewBgGrid('checker');
     }
@@ -337,7 +351,7 @@ const StudioConverter = () => {
       return CONVERTER_TOOLS.filter(t => t.direction === 'raster-to-svg');
     }
     if (activeFilter === 'special') {
-      return CONVERTER_TOOLS.filter(t => t.direction.includes('archive') || t.id.includes('apng') || t.id.includes('jxl') || t.id.includes('gif'));
+      return CONVERTER_TOOLS.filter(t => t.direction.includes('archive') || t.direction === 'image-to-icon' || t.id.includes('apng') || t.id.includes('jxl') || t.id.includes('gif'));
     }
     return CONVERTER_TOOLS;
   }, [activeFilter]);
@@ -374,7 +388,7 @@ const StudioConverter = () => {
             <span className="policy-icon">📐</span>
             <div className="policy-text-group">
               <span className="policy-title">SUPPORTED IMAGE TYPES</span>
-              <span className="policy-detail">SVG (Scalable Vector Graphics) • PNG • JPG • WebP • AVIF • APNG • JXL • GIF • SVGZ</span>
+              <span className="policy-detail">SVG • PNG • JPG • WebP • AVIF • APNG • JXL • GIF • SVGZ • ICO / FAVICON</span>
             </div>
           </div>
 
@@ -432,7 +446,7 @@ const StudioConverter = () => {
               className={`filter-btn ${activeFilter === 'special' ? 'active' : ''}`}
               onClick={() => setActiveFilter('special')}
             >
-              SPECIALTY (APNG, JXL, GIF, SVGZ)
+              SPECIALTY (FAVICON, APNG, JXL, GIF, SVGZ)
             </button>
           </div>
 
@@ -695,6 +709,31 @@ const StudioConverter = () => {
                     <p className="special-notice-text">
                       Gzip stream encoding directly decompresses and serializes XML vector codestreams without quality loss.
                     </p>
+                  </div>
+                )}
+
+                {currentTool.direction === 'image-to-icon' && (
+                  <div className="settings-group">
+                    <div className="control-row">
+                      <label className="control-label">
+                        <span>FAVICON PACKAGE:</span>
+                        <strong className="param-value">6 SIZES IN ONE .ICO</strong>
+                      </label>
+                      <p className="special-notice-text">
+                        Generates transparent 16, 32, 48, 64, 128, and 256px PNG-compressed icon layers. Artwork is fitted and centered without cropping.
+                      </p>
+                    </div>
+                    <div className="control-row">
+                      <label className="control-label">
+                        <span>ICON BACKGROUND:</span>
+                        <strong className="param-value">{canvasBg.toUpperCase()}</strong>
+                      </label>
+                      <div className="bg-pill-buttons">
+                        <button type="button" className={`bg-btn ${canvasBg === 'transparent' ? 'active' : ''}`} onClick={() => setCanvasBg('transparent')}>TRANSPARENT</button>
+                        <button type="button" className={`bg-btn ${canvasBg === '#ffffff' ? 'active' : ''}`} onClick={() => setCanvasBg('#ffffff')}>WHITE</button>
+                        <button type="button" className={`bg-btn ${canvasBg === '#000000' ? 'active' : ''}`} onClick={() => setCanvasBg('#000000')}>BLACK</button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

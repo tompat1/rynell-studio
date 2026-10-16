@@ -42,7 +42,19 @@ function App() {
 
   const handleSearchSelect = (item) => {
     setIsSearchOpen(false)
-    setActiveDetailView(item)
+    if (item.kind === 'CONTENT') {
+      setActiveDetailView(item)
+      return
+    }
+
+    setActiveDetailView(null)
+    window.setTimeout(() => {
+      const destination = document.querySelector(item.anchor)
+      destination?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      window.dispatchEvent(new CustomEvent('rynell:search-navigate', {
+        detail: { targetId: item.targetId, itemId: item.id, anchor: item.anchor }
+      }))
+    }, 180)
   }
 
   useEffect(() => {

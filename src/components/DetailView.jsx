@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAudio } from '../contexts/AudioContext';
-import { SEARCH_DATA } from './SearchDrawer';
+import { SEARCH_DATA } from '../data/searchData';
 
 const DetailView = ({ item, onClose, addToCart, setItem, openShopArchive }) => {
   const [selectedSize, setSelectedSize] = useState(null);
