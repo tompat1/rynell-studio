@@ -1,3 +1,5 @@
+import { isAnimatedGif, decodeGif, encodeFramesToAnimatedGif } from './gifEncoder.js';
+
 /**
  * Studio Image Compression & Optimization Engine
  * Inspired by ImageOptim (MozJPEG, pngquant, OptiPNG, SVGO).
@@ -751,6 +753,127 @@ export async function optimizeImageFile(file, options = {}) {
       isSvg: true,
       cleaningReport
     };
+  }
+
+  // Branch 1.5: Animated GIF Multi-Frame Optimization
+  const isGifInput = lowerName.endsWith('.gif') || file.type === 'image/gif';
+  if (isGifInput && isAnimatedGif(rawUint8) && (targetFormat === 'original' || targetFormat === 'image/gif')) {
+    try {
+      const decoded = decodeGif(rawUint8);
+      if (decoded && decoded.frames && decoded.frames.length > 1) {
+        let targetColors = 256;
+        let useUnified = false;
+
+        if (enableLossy) {
+          if (presetId === 'brutal-squeeze' || gifQuality < 0.5) {
+            targetColors = 64;
+            useUnified = true;
+          } else if (presetId === 'high-compression' || gifQuality < 0.75) {
+            targetColors = 128;
+            useUnified = false;
+          } else {
+            targetColors = 256;
+            useUnified = false;
+          }
+          if (typeof pngColors === 'number' && pngColors < 256) {
+            targetColors = Math.min(targetColors, pngColors);
+          }
+        }
+
+        // Handle dimension scaling if maxDimension is provided
+        let targetW = decoded.width;
+        let targetH = decoded.height;
+        if (maxDimension && (decoded.width > maxDimension || decoded.height > maxDimension)) {
+          if (decoded.width >= decoded.height) {
+            targetW = maxDimension;
+            targetH = Math.max(1, Math.round((decoded.height * maxDimension) / decoded.width));
+          } else {
+            targetH = maxDimension;
+            targetW = Math.max(1, Math.round((decoded.width * maxDimension) / decoded.height));
+          }
+        }
+
+        let encoderFrames;
+        if ((targetW !== decoded.width || targetH !== decoded.height) && typeof document !== 'undefined') {
+          const resizeCanvas = document.createElement('canvas');
+          resizeCanvas.width = targetW;
+          resizeCanvas.height = targetH;
+          const resizeCtx = resizeCanvas.getContext('2d', { willReadFrequently: true });
+
+          const frameCanvas = document.createElement('canvas');
+          frameCanvas.width = decoded.width;
+          frameCanvas.height = decoded.height;
+          const frameCtx = frameCanvas.getContext('2d', { willReadFrequently: true });
+
+          encoderFrames = decoded.frames.map((f) => {
+            frameCtx.putImageData(new ImageData(f.rgba, f.width, f.height), 0, 0);
+            resizeCtx.clearRect(0, 0, targetW, targetH);
+            resizeCtx.imageSmoothingEnabled = true;
+            resizeCtx.imageSmoothingQuality = 'high';
+            resizeCtx.drawImage(frameCanvas, 0, 0, targetW, targetH);
+            const scaledData = resizeCtx.getImageData(0, 0, targetW, targetH);
+            return {
+              imageData: scaledData,
+              delayMs: f.delayMs,
+              disposal: f.disposal
+            };
+          });
+        } else {
+          encoderFrames = decoded.frames.map((f) => ({
+            imageData: typeof ImageData !== 'undefined'
+              ? new ImageData(f.rgba, f.width, f.height)
+              : { data: f.rgba, width: f.width, height: f.height },
+            delayMs: f.delayMs,
+            disposal: f.disposal
+          }));
+        }
+
+        const optimizedBlob = encodeFramesToAnimatedGif(encoderFrames, {
+          width: targetW,
+          height: targetH,
+          loopCount: decoded.loopCount,
+          maxColors: targetColors,
+          useGlobalPaletteOnly: useUnified
+        });
+
+        // In strict lossless mode, if the re-encoded GIF is not smaller, keep original bytes
+        const finalBlob = (!enableLossy && optimizedBlob.size >= originalSizeBytes)
+          ? new Blob([rawUint8], { type: 'image/gif' })
+          : optimizedBlob;
+
+        const compressedSizeBytes = finalBlob.size;
+        const savedBytes = Math.max(0, originalSizeBytes - compressedSizeBytes);
+        const savedPercent = originalSizeBytes > 0
+          ? Math.round((savedBytes / originalSizeBytes) * 1000) / 10
+          : 0;
+
+        cleaningReport.toolsApplied = [
+          'Gifsicle (Multi-Frame Animation Preservation)',
+          `Animated GIF Preserved (${decoded.frames.length} Frames)`,
+          enableLossy ? `Color Squeezer (${targetColors} Colors)` : 'Lossless Frame Optimization'
+        ];
+
+        return {
+          fileName,
+          mimeType: 'image/gif',
+          formatExt: 'gif',
+          blob: finalBlob,
+          url: URL.createObjectURL(finalBlob),
+          width: targetW,
+          height: targetH,
+          originalSizeBytes,
+          compressedSizeBytes,
+          savedBytes,
+          savedPercent,
+          isSvg: false,
+          isAnimatedGif: true,
+          frameCount: decoded.frames.length,
+          cleaningReport
+        };
+      }
+    } catch (gifErr) {
+      console.warn('Animated GIF multi-frame processing fallback:', gifErr);
+    }
   }
 
   // Detect JPEG binary junk before processing

@@ -305,3 +305,283 @@ export function encodeFramesToAnimatedGif(frames, options = {}) {
 
   return new Blob([new Uint8Array(bytes)], { type: 'image/gif' });
 }
+
+/**
+ * Fast binary check to see if a Uint8Array contains an animated GIF (>= 2 frames)
+ * @param {Uint8Array} buf
+ * @returns {boolean}
+ */
+export function isAnimatedGif(buf) {
+  if (!buf || buf.length < 13) return false;
+  if (buf[0] !== 0x47 || buf[1] !== 0x49 || buf[2] !== 0x46) return false;
+  let count = 0;
+  for (let i = 13; i < buf.length - 9; i++) {
+    if (buf[i] === 0x2c) {
+      count++;
+      if (count > 1) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Pure JavaScript GIF Decoder
+ * Decodes all frames from a GIF buffer, applies disposal methods and compositing,
+ * and returns frame RGBA arrays, timing, loop count, and canvas dimensions.
+ * @param {Uint8Array} buf
+ * @returns {{ width: number, height: number, loopCount: number, frames: Array<{ width: number, height: number, delayMs: number, rgba: Uint8ClampedArray, disposal: number }> }}
+ */
+export function decodeGif(buf) {
+  if (!buf || buf.length < 13) throw new Error('Invalid GIF buffer');
+  if (buf[0] !== 0x47 || buf[1] !== 0x49 || buf[2] !== 0x46) {
+    throw new Error('Not a GIF file');
+  }
+
+  const width = buf[6] | (buf[7] << 8);
+  const height = buf[8] | (buf[9] << 8);
+  const packed = buf[10];
+  const hasGct = !!(packed & 0x80);
+  const gctSize = hasGct ? (1 << ((packed & 0x07) + 1)) : 0;
+  const gct = [];
+  let offset = 13;
+  if (hasGct) {
+    for (let i = 0; i < gctSize; i++) {
+      gct.push([buf[offset], buf[offset + 1], buf[offset + 2]]);
+      offset += 3;
+    }
+  }
+
+  const rawFrames = [];
+  let graphicControl = { delay: 100, transIndex: -1, disposal: 0 };
+  let loopCount = 0;
+
+  while (offset < buf.length) {
+    const b = buf[offset++];
+    if (b === 0x3b) break; // Trailer
+    if (b === 0x21) { // Extension
+      const extType = buf[offset++];
+      if (extType === 0xf9) { // Graphic Control Extension
+        offset++; // block size (4)
+        const gcePacked = buf[offset++];
+        const disposal = (gcePacked >> 2) & 0x07;
+        const hasTrans = !!(gcePacked & 0x01);
+        const delay = (buf[offset] | (buf[offset + 1] << 8)) * 10;
+        offset += 2;
+        const transIdx = buf[offset++];
+        graphicControl = {
+          delay: delay || 100,
+          transIndex: hasTrans ? transIdx : -1,
+          disposal
+        };
+        offset++; // terminator 0x00
+      } else if (extType === 0xff) { // Application Extension (Netscape 2.0 Loop)
+        const blockSize = buf[offset++];
+        let appName = '';
+        for (let i = 0; i < blockSize; i++) appName += String.fromCharCode(buf[offset++]);
+        if (appName === 'NETSCAPE2.0' || appName === 'ANIMEXTS1.0') {
+          const subSize = buf[offset++];
+          if (subSize === 3 && buf[offset++] === 1) {
+            loopCount = buf[offset] | (buf[offset + 1] << 8);
+            offset += 2;
+          }
+        }
+        while (offset < buf.length && buf[offset] !== 0) {
+          offset += 1 + buf[offset];
+        }
+        offset++; // terminator
+      } else {
+        while (offset < buf.length && buf[offset] !== 0) {
+          offset += 1 + buf[offset];
+        }
+        offset++;
+      }
+    } else if (b === 0x2c) { // Image Descriptor
+      const left = buf[offset] | (buf[offset + 1] << 8);
+      const top = buf[offset + 2] | (buf[offset + 3] << 8);
+      const fw = buf[offset + 4] | (buf[offset + 5] << 8);
+      const fh = buf[offset + 6] | (buf[offset + 7] << 8);
+      offset += 8;
+      const imgPacked = buf[offset++];
+      const hasLct = !!(imgPacked & 0x80);
+      const isInterlaced = !!(imgPacked & 0x40);
+      const lctSize = hasLct ? (1 << ((imgPacked & 0x07) + 1)) : 0;
+      let activePalette = gct;
+      if (hasLct) {
+        activePalette = [];
+        for (let i = 0; i < lctSize; i++) {
+          activePalette.push([buf[offset], buf[offset + 1], buf[offset + 2]]);
+          offset += 3;
+        }
+      }
+
+      const lzwMinCodeSize = buf[offset++];
+      const dataBlocks = [];
+      while (offset < buf.length && buf[offset] !== 0) {
+        const blockSize = buf[offset++];
+        for (let i = 0; i < blockSize; i++) {
+          dataBlocks.push(buf[offset++]);
+        }
+      }
+      offset++;
+
+      const clearCode = 1 << lzwMinCodeSize;
+      const eoiCode = clearCode + 1;
+      let codeSize = lzwMinCodeSize + 1;
+      let maxCode = 1 << codeSize;
+      let dict = [];
+      const initDict = () => {
+        dict = [];
+        for (let i = 0; i < clearCode; i++) dict[i] = [i];
+        dict[clearCode] = [];
+        dict[eoiCode] = null;
+        codeSize = lzwMinCodeSize + 1;
+        maxCode = 1 << codeSize;
+      };
+      initDict();
+
+      const rawPixels = [];
+      let bitPos = 0;
+      const readBits = (count) => {
+        let val = 0;
+        for (let i = 0; i < count; i++) {
+          const byteIdx = (bitPos + i) >> 3;
+          if (byteIdx >= dataBlocks.length) break;
+          const bitIdx = (bitPos + i) & 7;
+          if ((dataBlocks[byteIdx] >> bitIdx) & 1) {
+            val |= (1 << i);
+          }
+        }
+        bitPos += count;
+        return val;
+      };
+
+      let oldCode = -1;
+      while (bitPos < dataBlocks.length * 8) {
+        const code = readBits(codeSize);
+        if (code === clearCode) {
+          initDict();
+          oldCode = -1;
+          continue;
+        }
+        if (code === eoiCode) break;
+
+        let entry;
+        if (code < dict.length) {
+          entry = dict[code];
+        } else if (code === dict.length && oldCode >= 0) {
+          entry = dict[oldCode].concat(dict[oldCode][0]);
+        } else {
+          break;
+        }
+
+        for (let p = 0; p < entry.length; p++) rawPixels.push(entry[p]);
+
+        if (oldCode >= 0 && dict.length < 4096) {
+          dict.push(dict[oldCode].concat(entry[0]));
+          if (dict.length >= maxCode && codeSize < 12) {
+            codeSize++;
+            maxCode = 1 << codeSize;
+          }
+        }
+        oldCode = code;
+      }
+
+      let pixels = rawPixels;
+      if (isInterlaced) {
+        pixels = new Array(fw * fh);
+        let srcIdx = 0;
+        for (let r = 0; r < fh; r += 8) {
+          for (let c = 0; c < fw; c++) pixels[r * fw + c] = rawPixels[srcIdx++];
+        }
+        for (let r = 4; r < fh; r += 8) {
+          for (let c = 0; c < fw; c++) pixels[r * fw + c] = rawPixels[srcIdx++];
+        }
+        for (let r = 2; r < fh; r += 4) {
+          for (let c = 0; c < fw; c++) pixels[r * fw + c] = rawPixels[srcIdx++];
+        }
+        for (let r = 1; r < fh; r += 2) {
+          for (let c = 0; c < fw; c++) pixels[r * fw + c] = rawPixels[srcIdx++];
+        }
+      }
+
+      const rgba = new Uint8ClampedArray(fw * fh * 4);
+      for (let i = 0; i < fw * fh; i++) {
+        const colorIdx = pixels[i];
+        const isTrans = colorIdx === graphicControl.transIndex;
+        const color = activePalette[colorIdx] || [0, 0, 0];
+        const outIdx = i * 4;
+        rgba[outIdx] = color[0];
+        rgba[outIdx + 1] = color[1];
+        rgba[outIdx + 2] = color[2];
+        rgba[outIdx + 3] = isTrans ? 0 : 255;
+      }
+
+      rawFrames.push({
+        left, top, width: fw, height: fh,
+        delayMs: graphicControl.delay,
+        disposal: graphicControl.disposal,
+        rgba
+      });
+    }
+  }
+
+  // Composite frames onto complete full-canvas buffers
+  const compositedFrames = [];
+  const canvasBuffer = new Uint8ClampedArray(width * height * 4);
+  let prevCanvasBuffer = new Uint8ClampedArray(width * height * 4);
+
+  for (let f = 0; f < rawFrames.length; f++) {
+    const rf = rawFrames[f];
+    const frameBuffer = new Uint8ClampedArray(canvasBuffer);
+
+    for (let row = 0; row < rf.height; row++) {
+      const targetY = rf.top + row;
+      if (targetY >= height) break;
+      for (let col = 0; col < rf.width; col++) {
+        const targetX = rf.left + col;
+        if (targetX >= width) break;
+        const srcIdx = (row * rf.width + col) * 4;
+        const srcA = rf.rgba[srcIdx + 3];
+        if (srcA > 0) {
+          const destIdx = (targetY * width + targetX) * 4;
+          frameBuffer[destIdx] = rf.rgba[srcIdx];
+          frameBuffer[destIdx + 1] = rf.rgba[srcIdx + 1];
+          frameBuffer[destIdx + 2] = rf.rgba[srcIdx + 2];
+          frameBuffer[destIdx + 3] = 255;
+        }
+      }
+    }
+
+    compositedFrames.push({
+      width,
+      height,
+      delayMs: rf.delayMs,
+      rgba: new Uint8ClampedArray(frameBuffer),
+      disposal: rf.disposal
+    });
+
+    if (rf.disposal === 2) {
+      for (let row = 0; row < rf.height; row++) {
+        const targetY = rf.top + row;
+        if (targetY >= height) break;
+        for (let col = 0; col < rf.width; col++) {
+          const targetX = rf.left + col;
+          if (targetX >= width) break;
+          const destIdx = (targetY * width + targetX) * 4;
+          canvasBuffer[destIdx] = 0;
+          canvasBuffer[destIdx + 1] = 0;
+          canvasBuffer[destIdx + 2] = 0;
+          canvasBuffer[destIdx + 3] = 0;
+        }
+      }
+    } else if (rf.disposal === 3) {
+      canvasBuffer.set(prevCanvasBuffer);
+    } else {
+      prevCanvasBuffer = new Uint8ClampedArray(canvasBuffer);
+      canvasBuffer.set(frameBuffer);
+    }
+  }
+
+  return { width, height, loopCount, frames: compositedFrames };
+}
+
