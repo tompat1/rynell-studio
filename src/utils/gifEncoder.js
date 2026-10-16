@@ -165,6 +165,8 @@ export function encodeFramesToAnimatedGif(frames, options = {}) {
   const width = options.width || frames[0].imageData.width;
   const height = options.height || frames[0].imageData.height;
   const loopCount = typeof options.loopCount === 'number' ? options.loopCount : 0;
+  const maxColors = typeof options.maxColors === 'number' ? Math.max(4, Math.min(256, options.maxColors)) : 256;
+  const useGlobalPaletteOnly = !!options.useGlobalPaletteOnly;
 
   const bytes = [];
 
@@ -175,9 +177,27 @@ export function encodeFramesToAnimatedGif(frames, options = {}) {
   bytes.push(width & 0xff, (width >> 8) & 0xff);
   bytes.push(height & 0xff, (height >> 8) & 0xff);
 
-  // Create initial Global Palette from first frame
-  const firstFrameData = frames[0].imageData.data;
-  const globalPalette = createPalette(firstFrameData, 256);
+  // Sample data for Global Palette
+  let sampleData = frames[0].imageData.data;
+  if (useGlobalPaletteOnly && frames.length > 1) {
+    const combinedLength = Math.min(600000, frames.length * 40000);
+    const combined = new Uint8ClampedArray(combinedLength);
+    let offset = 0;
+    for (const fr of frames) {
+      const d = fr.imageData.data;
+      const step = Math.max(1, Math.floor(d.length / 40000));
+      for (let i = 0; i < d.length && offset < combinedLength; i += step * 4) {
+        combined[offset] = d[i];
+        combined[offset + 1] = d[i + 1];
+        combined[offset + 2] = d[i + 2];
+        combined[offset + 3] = d[i + 3];
+        offset += 4;
+      }
+    }
+    sampleData = combined;
+  }
+
+  const globalPalette = createPalette(sampleData, maxColors);
   const colorBits = Math.max(2, Math.ceil(Math.log2(globalPalette.length)));
   const gctSize = 1 << colorBits;
   while (globalPalette.length < gctSize) {
@@ -213,8 +233,9 @@ export function encodeFramesToAnimatedGif(frames, options = {}) {
     const fWidth = frame.imageData.width;
     const fHeight = frame.imageData.height;
 
-    // Use local palette per frame for maximum color fidelity
-    const localPalette = f === 0 ? globalPalette : createPalette(data, 256);
+    // Use global palette if unified mode, otherwise local palette per frame
+    const hasLocalPalette = !useGlobalPaletteOnly && f > 0;
+    const localPalette = hasLocalPalette ? createPalette(data, maxColors) : globalPalette;
     const fColorBits = Math.max(2, Math.ceil(Math.log2(localPalette.length)));
     const fPalSize = 1 << fColorBits;
     while (localPalette.length < fPalSize) {
@@ -243,8 +264,8 @@ export function encodeFramesToAnimatedGif(frames, options = {}) {
     bytes.push(fWidth & 0xff, (fWidth >> 8) & 0xff);
     bytes.push(fHeight & 0xff, (fHeight >> 8) & 0xff);
 
-    // If frame > 0, include Local Color Table
-    if (f > 0) {
+    // If frame > 0 and not using global only, include Local Color Table
+    if (hasLocalPalette) {
       const lctPacked = 0x80 | (fColorBits - 1); // LCT flag set
       bytes.push(lctPacked);
       for (let i = 0; i < fPalSize; i++) {
@@ -262,7 +283,7 @@ export function encodeFramesToAnimatedGif(frames, options = {}) {
     }
 
     // Image Data (LZW)
-    const minCodeSize = Math.max(2, fColorBits);
+    const minCodeSize = Math.max(2, hasLocalPalette ? fColorBits : colorBits);
     bytes.push(minCodeSize);
 
     const lzwBytes = lzwEncode(minCodeSize, indexedPixels);

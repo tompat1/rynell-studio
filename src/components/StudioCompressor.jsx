@@ -277,6 +277,18 @@ const StudioCompressor = () => {
     setExpirySeconds(3600);
   }, [activeFileId, currentOptions, processItemCompression, registerUrl]);
 
+  // Listen for cross-component compression handoff (e.g. from AnimatedGifMaker)
+  useEffect(() => {
+    const handleExternalCompress = (e) => {
+      const file = e.detail?.file;
+      if (file) {
+        handleIncomingFiles([file]);
+      }
+    };
+    window.addEventListener('rynell:compress-image', handleExternalCompress);
+    return () => window.removeEventListener('rynell:compress-image', handleExternalCompress);
+  }, [handleIncomingFiles]);
+
   // Load a demo sample file
   const handleLoadSample = useCallback(async (sampleType) => {
     setErrorNotice(null);

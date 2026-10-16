@@ -37,8 +37,13 @@ const AnimatedGifMaker = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [outputGifUrl, setOutputGifUrl] = useState(null);
+  const [outputGifBlob, setOutputGifBlob] = useState(null);
   const [outputStats, setOutputStats] = useState(null);
   const [errorNotice, setErrorNotice] = useState(null);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [optimizationNotice, setOptimizationNotice] = useState(null);
+  const [sentNotice, setSentNotice] = useState(false);
+  const rawFramesRef = useRef([]);
   const [isDragging, setIsDragging] = useState(false);
 
   // Ephemeral 1-hour auto-deletion
@@ -652,6 +657,7 @@ const AnimatedGifMaker = () => {
       setGenerationProgress(92);
 
       // Encode into GIF89a binary
+      rawFramesRef.current = encodedFrames;
       const gifBlob = encodeFramesToAnimatedGif(encodedFrames, {
         width: targetW,
         height: targetH,
@@ -659,10 +665,13 @@ const AnimatedGifMaker = () => {
       });
 
       const gifUrl = registerUrl(URL.createObjectURL(gifBlob));
+      setOutputGifBlob(gifBlob);
       setOutputGifUrl(gifUrl);
+      setOptimizationNotice(null);
       setOutputStats({
         sizeBytes: gifBlob.size,
         sizeKb: Math.round((gifBlob.size / 1024) * 10) / 10,
+        originalSizeKb: Math.round((gifBlob.size / 1024) * 10) / 10,
         frameCount: encodedFrames.length,
         width: targetW,
         height: targetH,
@@ -675,6 +684,77 @@ const AnimatedGifMaker = () => {
       setErrorNotice(err.message || 'Failed to encode animated GIF. Please verify image inputs.');
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  // Send generated animated GIF directly to StudioCompressor
+  const handleSendToCompressor = () => {
+    if (!outputGifBlob) return;
+
+    const w = outputStats?.width || 500;
+    const h = outputStats?.height || 500;
+    const fileName = `rynell_animation_${w}x${h}_${Date.now()}.gif`;
+    const file = new File([outputGifBlob], fileName, { type: 'image/gif' });
+
+    window.dispatchEvent(new CustomEvent('rynell:compress-image', {
+      detail: { file }
+    }));
+
+    setSentNotice(true);
+    setTimeout(() => setSentNotice(false), 3500);
+
+    const targetEl = document.getElementById('image-compressor');
+    if (targetEl) {
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // Re-encode GIF with lower color palette or unified table to crush bytes in-place
+  const handleOptimizeInMaker = async (options = {}) => {
+    if (!rawFramesRef.current || rawFramesRef.current.length === 0 || !outputStats) return;
+
+    try {
+      setIsOptimizing(true);
+      setErrorNotice(null);
+
+      const targetColors = options.maxColors || 128;
+      const useUnified = options.useGlobalPaletteOnly !== undefined ? options.useGlobalPaletteOnly : false;
+
+      const optimizedBlob = encodeFramesToAnimatedGif(rawFramesRef.current, {
+        width: outputStats.width,
+        height: outputStats.height,
+        loopCount,
+        maxColors: targetColors,
+        useGlobalPaletteOnly: useUnified
+      });
+
+      const origKb = outputStats.originalSizeKb || outputStats.sizeKb;
+      const newKb = Math.round((optimizedBlob.size / 1024) * 10) / 10;
+      const savedKb = Math.round((origKb - newKb) * 10) / 10;
+      const savedPercent = origKb > 0 ? Math.round(((origKb - newKb) / origKb) * 100) : 0;
+
+      const newUrl = registerUrl(URL.createObjectURL(optimizedBlob));
+      setOutputGifBlob(optimizedBlob);
+      setOutputGifUrl(newUrl);
+      setOutputStats(prev => ({
+        ...prev,
+        sizeBytes: optimizedBlob.size,
+        sizeKb: newKb,
+        originalSizeKb: origKb,
+        savedPercent: savedPercent > 0 ? savedPercent : null,
+        activePresetLabel: options.label || `${targetColors} Colors`
+      }));
+
+      setOptimizationNotice(
+        savedPercent > 0 
+          ? `📉 CRUSHED ${savedPercent}%: SAVED ${savedKb} KB (${origKb} KB → ${newKb} KB)!`
+          : `✨ RE-ENCODED AT ${newKb} KB`
+      );
+    } catch (err) {
+      console.error('In-maker optimization failed:', err);
+      setErrorNotice('Could not optimize GIF: ' + err.message);
+    } finally {
+      setIsOptimizing(false);
     }
   };
 
@@ -1304,6 +1384,61 @@ const AnimatedGifMaker = () => {
                   </div>
                 </div>
 
+                {/* Quick In-Maker GIF Compression / Palette Squeezer */}
+                <div className="gif-compress-box">
+                  <div className="compress-box-header">
+                    <span className="compress-box-title">🗜️ QUICK GIF COMPRESSION & SQUEEZE</span>
+                    <span className="compress-box-sub">
+                      GIF is ideal for smaller canvases and inflates quickly on large sizes. Squeeze palette depth to crush file size instantly:
+                    </span>
+                  </div>
+
+                  <div className="compress-presets-actions">
+                    <button
+                      type="button"
+                      className={`compress-action-pill ${outputStats.activePresetLabel === '128 Colors' ? 'active' : ''}`}
+                      onClick={() => handleOptimizeInMaker({ maxColors: 128, useGlobalPaletteOnly: false, label: '128 Colors' })}
+                      disabled={isOptimizing}
+                      title="Quantize to 128 colors (saves ~30-40% file size)"
+                    >
+                      {isOptimizing ? '⏳ SQUEEZING...' : '📉 128 COLORS (-35%)'}
+                    </button>
+                    <button
+                      type="button"
+                      className={`compress-action-pill ${outputStats.activePresetLabel === '64 Colors' ? 'active' : ''}`}
+                      onClick={() => handleOptimizeInMaker({ maxColors: 64, useGlobalPaletteOnly: false, label: '64 Colors' })}
+                      disabled={isOptimizing}
+                      title="Quantize to 64 colors (saves ~55% file size)"
+                    >
+                      {isOptimizing ? '⏳ SQUEEZING...' : '📉 64 COLORS (-55%)'}
+                    </button>
+                    <button
+                      type="button"
+                      className={`compress-action-pill ${outputStats.activePresetLabel === 'Unified Table' ? 'active' : ''}`}
+                      onClick={() => handleOptimizeInMaker({ maxColors: 128, useGlobalPaletteOnly: true, label: 'Unified Table' })}
+                      disabled={isOptimizing}
+                      title="Reuses one unified color table across all frames"
+                    >
+                      {isOptimizing ? '⏳ SQUEEZING...' : '🌐 UNIFIED PALETTE (-40%)'}
+                    </button>
+                    <button
+                      type="button"
+                      className="compress-action-pill reset"
+                      onClick={() => handleOptimizeInMaker({ maxColors: 256, useGlobalPaletteOnly: false, label: 'Full 256 Colors' })}
+                      disabled={isOptimizing}
+                      title="Restore full 256 colors maximum quality"
+                    >
+                      🛡️ FULL 256
+                    </button>
+                  </div>
+
+                  {optimizationNotice && (
+                    <div className="opt-notice-badge">
+                      {optimizationNotice}
+                    </div>
+                  )}
+                </div>
+
                 <div className="results-cta-actions">
                   <a
                     href={outputGifUrl}
@@ -1312,6 +1447,14 @@ const AnimatedGifMaker = () => {
                   >
                     📥 DOWNLOAD ANIMATED .GIF
                   </a>
+                  <button
+                    type="button"
+                    className="studio-btn-primary send-compressor-btn"
+                    onClick={handleSendToCompressor}
+                    title="Send this GIF directly into Studio Compressor for MozJPEG/WebP transcoding & advanced optimization"
+                  >
+                    ⚡ SEND TO STUDIO COMPRESSOR
+                  </button>
                   <button
                     type="button"
                     className="studio-btn-secondary"
@@ -1323,6 +1466,12 @@ const AnimatedGifMaker = () => {
                     🔍 OPEN IN NEW TAB
                   </button>
                 </div>
+
+                {sentNotice && (
+                  <div className="sent-compressor-pill">
+                    ⚡ GIF SENT TO STUDIO COMPRESSOR! SCROLLED TO OPTIMIZER QUEUE.
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -2223,6 +2372,118 @@ const AnimatedGifMaker = () => {
         .dl-btn {
           font-size: 1.15rem;
           padding: 0.85rem 1.75rem;
+        }
+
+        /* Quick GIF Compression Box & Send to Compressor */
+        .gif-compress-box {
+          background: #090e18;
+          border: 1px solid rgba(255, 106, 0, 0.35);
+          box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4);
+          padding: 0.9rem 1rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.65rem;
+        }
+
+        .compress-box-header {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+
+        .compress-box-title {
+          font-family: var(--font-heading);
+          font-size: 0.88rem;
+          letter-spacing: 1px;
+          color: var(--primary-orange);
+        }
+
+        .compress-box-sub {
+          font-size: 0.75rem;
+          color: #94a3b8;
+          line-height: 1.4;
+        }
+
+        .compress-presets-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+        }
+
+        .compress-action-pill {
+          font-family: monospace;
+          font-size: 0.72rem;
+          font-weight: 700;
+          padding: 0.35rem 0.65rem;
+          background: #111a2e;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          color: #e2e8f0;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .compress-action-pill:hover:not(:disabled) {
+          background: #1e293b;
+          border-color: var(--primary-orange);
+          color: #fff;
+        }
+
+        .compress-action-pill.active {
+          background: rgba(255, 106, 0, 0.2);
+          border-color: var(--primary-orange);
+          color: var(--primary-orange);
+        }
+
+        .compress-action-pill.reset {
+          background: #0a0f1d;
+          border-color: rgba(255, 255, 255, 0.1);
+          color: #94a3b8;
+        }
+
+        .opt-notice-badge {
+          font-family: monospace;
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #34d399;
+          background: rgba(6, 78, 59, 0.35);
+          border: 1px solid rgba(52, 211, 153, 0.4);
+          padding: 0.35rem 0.65rem;
+          border-radius: 2px;
+          display: inline-block;
+        }
+
+        .send-compressor-btn {
+          background: #0284c7 !important;
+          color: #fff !important;
+          border: 2px solid #000 !important;
+          box-shadow: 4px 4px 0 #000 !important;
+          font-size: 1.05rem;
+          padding: 0.85rem 1.4rem;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .send-compressor-btn:hover {
+          background: #0369a1 !important;
+          transform: translate(-2px, -2px);
+          box-shadow: 6px 6px 0 #000 !important;
+        }
+
+        .sent-compressor-pill {
+          font-family: monospace;
+          font-size: 0.8rem;
+          font-weight: 700;
+          color: #38bdf8;
+          background: #0c1b33;
+          border: 1px solid rgba(56, 189, 248, 0.4);
+          padding: 0.5rem 0.85rem;
+          text-align: center;
+          animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         @media (max-width: 1024px) {
