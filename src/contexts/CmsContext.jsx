@@ -623,7 +623,6 @@ export const CmsProvider = ({ children }) => {
   );
 };
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useCms = () => {
   const context = useContext(CmsContext);
   if (!context) {

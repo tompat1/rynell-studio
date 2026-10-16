@@ -111,6 +111,7 @@ export const traceRasterToSVG = (imageSrc, customConfig = {}) => {
           scale: 1,
           strokewidth: preset === 'lineart' ? 2 : 1,
           linefilter: preset === 'bw' || isPureBW,
+          rightangleenhance: corners >= 0.5,
           blurradius: Math.round(smoothing),
           blurdelta: noiseCleanup
         };
@@ -118,7 +119,7 @@ export const traceRasterToSVG = (imageSrc, customConfig = {}) => {
         if (engineMode === 'sharp') {
           options.ltres = Math.min(detail, 0.2);
           options.qtres = Math.min(detail, 0.2);
-          options.rightangleenhance = true;
+          options.rightangleenhance = corners >= 0.25;
         }
 
         if (preset === 'detailed') {

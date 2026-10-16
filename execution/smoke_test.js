@@ -197,7 +197,9 @@ async function runSmokeTests() {
       if (apiData && apiData.code) {
         token = apiData.code;
       }
-    } catch (_) {}
+    } catch {
+      // The smoke test also covers the local fallback when the gateway is offline.
+    }
 
     // Step B: Request password reset token & store
     const resetPayload = {
@@ -221,6 +223,7 @@ async function runSmokeTests() {
       tier: 'FREE_REGISTERED',
       createdAt: new Date().toISOString()
     };
+    console.log(`Reset verified for ${resetUser.email}`);
     localStorage.removeItem(`rynell_reset_${cleanEmail}`);
 
     const verifyCleared = localStorage.getItem(`rynell_reset_${cleanEmail}`);

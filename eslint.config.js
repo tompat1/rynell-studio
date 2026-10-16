@@ -18,4 +18,20 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  {
+    files: ['execution/**/*.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
+  {
+    files: [
+      'src/contexts/**/*.{js,jsx}',
+      'src/components/{Journal,QwenStudio,Services,Shop,StudioLab,StudioModelSelector}.jsx',
+    ],
+    rules: {
+      // These modules intentionally share provider hooks or catalog data with components.
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])

@@ -1,4 +1,3 @@
-import React from 'react';
 import { useAudio } from '../contexts/AudioContext';
 import { useCms } from '../contexts/CmsContext';
 import studioPortrait from '../assets/studio_portrait.jpg';
@@ -131,8 +130,8 @@ const About = () => {
           color: var(--text-secondary);
           line-height: 1.6;
           font-weight: 300;
-          border-left: 4px solid var(--primary-orange);
-          padding-left: 2rem;
+          border-top: 1px solid color-mix(in srgb, var(--primary-orange) 65%, transparent);
+          padding-top: 1.5rem;
           margin: 0;
         }
         .studio-image-wrapper {

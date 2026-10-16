@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const stored = localStorage.getItem(USER_STORAGE_KEY);
       return stored ? JSON.parse(stored) : null;
-    } catch (_) {
+    } catch {
       return null;
     }
   });
@@ -31,7 +31,9 @@ export const AuthProvider = ({ children }) => {
     if (user) {
       try {
         localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-      } catch (_) {}
+      } catch {
+        // Authentication still works when browser storage is unavailable.
+      }
     } else {
       localStorage.removeItem(USER_STORAGE_KEY);
     }
@@ -51,7 +53,7 @@ export const AuthProvider = ({ children }) => {
     setIsAccountOpen(false);
   };
 
-  const register = async ({ name, email, password }) => {
+  const register = async ({ name, email }) => {
     // Check if registering admin email
     const cleanEmail = (email || '').trim().toLowerCase();
     if (cleanEmail === 'admin@rynell.org' || cleanEmail === 'admin') {
@@ -85,7 +87,9 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem(QUOTA_STORAGE_KEY, JSON.stringify(updatedQuota));
       // Dispatch storage event so active listeners can immediately sync
       window.dispatchEvent(new Event('storage'));
-    } catch (_) {}
+    } catch {
+      // Quota persistence is optional in privacy-restricted browsers.
+    }
 
     return { success: true, user: newUser };
   };
@@ -160,7 +164,9 @@ export const AuthProvider = ({ children }) => {
       if (data && data.code) {
         token = data.code;
       }
-    } catch (_) {}
+    } catch {
+      // The local demo code remains available when the email service is offline.
+    }
 
     try {
       localStorage.setItem(`rynell_reset_${cleanEmail}`, JSON.stringify({
@@ -168,7 +174,9 @@ export const AuthProvider = ({ children }) => {
         email: cleanEmail,
         expiresAt: Date.now() + 15 * 60 * 1000
       }));
-    } catch (_) {}
+    } catch {
+      // The reset flow can still continue in the current session.
+    }
 
     return {
       success: true,
@@ -179,6 +187,20 @@ export const AuthProvider = ({ children }) => {
 
   const resetPasswordWithCode = async ({ email, code, newPassword }) => {
     const cleanEmail = (email || '').trim().toLowerCase();
+    if (!cleanEmail || !code || !newPassword) {
+      return { success: false, message: 'Email, verification code, and new password are required.' };
+    }
+
+    try {
+      const rawReset = localStorage.getItem(`rynell_reset_${cleanEmail}`);
+      const savedReset = rawReset ? JSON.parse(rawReset) : null;
+      if (!savedReset || String(savedReset.token) !== String(code) || savedReset.expiresAt <= Date.now()) {
+        return { success: false, message: 'The verification code is invalid or has expired.' };
+      }
+    } catch {
+      return { success: false, message: 'Unable to verify the reset code in this browser.' };
+    }
+
     const resetUser = {
       id: `usr_${Date.now()}`,
       name: cleanEmail.split('@')[0].toUpperCase(),
@@ -189,7 +211,9 @@ export const AuthProvider = ({ children }) => {
     setUser(resetUser);
     try {
       localStorage.removeItem(`rynell_reset_${cleanEmail}`);
-    } catch (_) {}
+    } catch {
+      // The password has already been reset; stale token cleanup is best effort.
+    }
     return { success: true, message: 'Password successfully updated! You are now signed in.', user: resetUser };
   };
 

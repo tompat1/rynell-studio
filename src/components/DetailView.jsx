@@ -1,25 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAudio } from '../contexts/AudioContext';
 import { SEARCH_DATA } from '../data/searchData';
 
 const DetailView = ({ item, onClose, addToCart, setItem, openShopArchive }) => {
-  const [selectedSize, setSelectedSize] = useState(null);
+  const [sizeSelections, setSizeSelections] = useState({});
   const { playTTS, stopAudio, isPlaying, isSynthesizing } = useAudio();
 
   useEffect(() => {
     if (item) {
       document.body.classList.add('drawer-open');
-      if (item.type === 'PRODUCT' && item.sizes && item.sizes.length > 0) {
-        setSelectedSize(item.sizes[0]);
-      }
     } else {
       document.body.classList.remove('drawer-open');
-      setSelectedSize(null);
     }
     return () => document.body.classList.remove('drawer-open');
   }, [item]);
 
   if (!item) return null;
+  const selectedSize = sizeSelections[item.id] ?? item.sizes?.[0] ?? null;
 
   const handleAddToCart = () => {
     if (addToCart && item.type === 'PRODUCT') {
@@ -100,7 +97,7 @@ const DetailView = ({ item, onClose, addToCart, setItem, openShopArchive }) => {
                       <button 
                         key={size}
                         className={`size-btn ${selectedSize === size ? 'active' : ''}`}
-                        onClick={() => setSelectedSize(size)}
+                        onClick={() => setSizeSelections(prev => ({ ...prev, [item.id]: size }))}
                       >
                         {size}
                       </button>

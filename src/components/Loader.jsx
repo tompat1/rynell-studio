@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import boltSvg from '../assets/lightning_bolt_sticker_vector.svg';
 import loaderBg from '../assets/loader_clean_bg.webp';
 import loaderMobileBg from '../assets/loader_mobile_bg.webp';
@@ -32,7 +32,7 @@ const Loader = ({ onComplete }) => {
     preloadAudio();
   }, []);
 
-  const handleFinish = () => {
+  const handleFinish = useCallback(() => {
     setIsFading(true);
     setTimeout(() => {
       onComplete();
@@ -46,7 +46,7 @@ const Loader = ({ onComplete }) => {
         localStorage.setItem('hasHeardGreeting', 'true');
       }
     }, 500);
-  };
+  }, [onComplete, playTTS, preloadedAudioUrl]);
 
   // 1. Track Real Network Loading to unlock the NEXT button
   useEffect(() => {
@@ -55,8 +55,8 @@ const Loader = ({ onComplete }) => {
     let loaded = 0;
 
     if (total === 0) {
-      setIsPreloaded(true);
-      return;
+      const readyTimer = window.setTimeout(() => setIsPreloaded(true), 0);
+      return () => window.clearTimeout(readyTimer);
     }
 
     const listeners = [];
@@ -134,7 +134,7 @@ const Loader = ({ onComplete }) => {
       }, 500);
       return () => clearTimeout(t);
     }
-  }, [isPreloaded, timeElapsed]);
+  }, [isPreloaded, timeElapsed, handleFinish]);
 
   const handleSkip = () => {
     if (!isPreloaded) return;
@@ -167,11 +167,8 @@ const Loader = ({ onComplete }) => {
               {/* The actual filled bar */}
               <div 
                 className="progress-fill" 
-                style={{ width: `${progressPercentage}%` }}
-              >
-                {/* The glowing spark at the edge */}
-                <div className="progress-flare"></div>
-              </div>
+                style={{ transform: `scaleX(${progressPercentage / 100})` }}
+              ></div>
             </div>
           </div>
           <div className="progress-percentage">
@@ -307,28 +304,13 @@ const Loader = ({ onComplete }) => {
         }
 
         .progress-fill {
+          width: 100%;
           height: 100%;
           background: linear-gradient(90deg, #FF6A00 0%, #FFB400 100%);
           border-radius: 50px;
-          transition: width 0.3s ease-out;
+          transform-origin: left center;
           position: relative;
           box-shadow: 0 0 15px rgba(255, 106, 0, 0.8);
-        }
-
-        /* The glowing flare at the leading edge */
-        .progress-flare {
-          position: absolute;
-          right: -12px;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 24px;
-          height: 40px;
-          background: #FFF;
-          border-radius: 50%;
-          box-shadow: 0 0 20px #FFF, 0 0 40px #0078FF, 0 0 60px #0078FF;
-          z-index: 10;
-          opacity: 0.95;
-          filter: blur(1px);
         }
 
         .loader-subtitle {

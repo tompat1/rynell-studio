@@ -1,4 +1,3 @@
-import React from 'react';
 
 const PricingTable = ({ onClose }) => {
   const handleSubscribe = (priceId) => {

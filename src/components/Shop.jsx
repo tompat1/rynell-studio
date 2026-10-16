@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useCms } from '../contexts/CmsContext';
 const merchModules = import.meta.glob('../assets/merch/*.{png,jpg,jpeg,webp,avif}', { eager: true, import: 'default' });

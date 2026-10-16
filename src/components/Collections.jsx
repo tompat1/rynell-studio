@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useCms } from '../contexts/CmsContext';
 const collectionModules = import.meta.glob('../assets/collection/*.{png,jpg,jpeg,webp,avif}', { eager: true, import: 'default' });
 const collectionImages = Object.values(collectionModules);

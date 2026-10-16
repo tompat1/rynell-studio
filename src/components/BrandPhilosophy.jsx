@@ -1,4 +1,3 @@
-import React from 'react';
 import logoSticker from '../assets/logo-sticker.png';
 
 const BrandPhilosophy = () => {

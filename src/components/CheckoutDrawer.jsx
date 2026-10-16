@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 const CheckoutDrawer = ({ isOpen, setIsOpen, cart, clearCart }) => {
   const [status, setStatus] = useState('IDLE'); // IDLE, PROCESSING, SUCCESS
@@ -8,12 +8,16 @@ const CheckoutDrawer = ({ isOpen, setIsOpen, cart, clearCart }) => {
   useEffect(() => {
     if (isOpen) {
       document.body.classList.add('drawer-open');
-      setStatus('IDLE');
     } else {
       document.body.classList.remove('drawer-open');
     }
     return () => document.body.classList.remove('drawer-open');
   }, [isOpen]);
+
+  const handleClose = () => {
+    setStatus('IDLE');
+    setIsOpen(false);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -28,13 +32,13 @@ const CheckoutDrawer = ({ isOpen, setIsOpen, cart, clearCart }) => {
     <>
       <div 
         className={`drawer-backdrop ${isOpen ? 'open' : ''}`}
-        onClick={() => setIsOpen(false)}
+        onClick={handleClose}
       ></div>
 
       <div className={`cart-drawer ${isOpen ? 'open' : ''}`}>
         <div className="cart-header">
           <h2>CHECKOUT</h2>
-          <button className="cart-close" onClick={() => setIsOpen(false)}>
+          <button className="cart-close" onClick={handleClose}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -107,7 +111,7 @@ const CheckoutDrawer = ({ isOpen, setIsOpen, cart, clearCart }) => {
               </svg>
               <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '2.5rem', color: 'var(--text-primary)' }}>ORDER SECURED</h3>
               <p style={{ fontFamily: 'var(--font-body)', color: 'var(--text-secondary)' }}>A confirmation has been sent to your network.</p>
-              <button className="checkout-btn" onClick={() => setIsOpen(false)}>CONTINUE BROWSING</button>
+              <button className="checkout-btn" onClick={handleClose}>CONTINUE BROWSING</button>
             </div>
           )}
         </div>

@@ -1,4 +1,3 @@
-import React from 'react';
 import merchComposite from '../assets/merch-composite.png';
 
 const MerchDrop = () => {

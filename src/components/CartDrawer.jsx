@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 const CartDrawer = ({ cart, isCartOpen, setIsCartOpen, removeFromCart, updateCartQuantity, onCheckout }) => {
   const subtotal = cart.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0);

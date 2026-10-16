@@ -1,4 +1,4 @@
-import React, { createContext, useState, useRef, useContext, useEffect } from 'react';
+import { createContext, useState, useRef, useContext, useEffect } from 'react';
 import { synthesizeSpeech } from '../services/elevenlabs';
 
 const AudioContext = createContext();

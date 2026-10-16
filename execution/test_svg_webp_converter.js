@@ -21,7 +21,7 @@ function runTests() {
   // Ensure DOMParser or string matching handles viewBox correctly
   const viewBoxMatch = sampleSvg.match(/viewBox=["']([^"']+)["']/);
   if (!viewBoxMatch) throw new Error('viewBox regex failed');
-  const [minX, minY, w, h] = viewBoxMatch[1].trim().split(/[\s,]+/).map(Number);
+  const [, , w, h] = viewBoxMatch[1].trim().split(/[\s,]+/).map(Number);
   if (w !== 1200 || h !== 800) {
     throw new Error(`Failed to extract viewBox dimensions: ${w}x${h}`);
   }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import BeforeAfterSlider from './BeforeAfterSlider';
 import heroClean from '../assets/hero_page_rynell_studio_clean.webp';
 

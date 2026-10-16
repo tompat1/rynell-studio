@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import StudioModelSelector, { MODELS, FREE_MODELS } from './StudioModelSelector';
 import BeforeAfterSlider from './BeforeAfterSlider';
 import PricingTable from './PricingTable';
@@ -46,7 +46,9 @@ const StudioLab = () => {
     try {
       const raw = localStorage.getItem('rynell_studio_quota_v1');
       if (raw) return JSON.parse(raw);
-    } catch (_) {}
+    } catch {
+      // Fall back to the default quota when local storage is unavailable.
+    }
     return {
       imageStudioRendersLeft: 5,
       upscalerTrialsLeft: 1,
@@ -60,7 +62,9 @@ const StudioLab = () => {
       try {
         const raw = localStorage.getItem('rynell_studio_quota_v1');
         if (raw) setUsage(JSON.parse(raw));
-      } catch (_) {}
+      } catch {
+        // Ignore malformed or inaccessible quota updates.
+      }
     };
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
@@ -79,7 +83,9 @@ const StudioLab = () => {
       }
       try {
         localStorage.setItem('rynell_studio_quota_v1', JSON.stringify(next));
-      } catch (_) {}
+      } catch {
+        // Quota remains valid for this session even if persistence fails.
+      }
       return next;
     });
   };
@@ -227,17 +233,27 @@ const StudioLab = () => {
       const userKey = user ? (user.email || user.id || 'registered') : 'guest';
       const raw = localStorage.getItem(`rynell_studio_asset_library_${userKey}`);
       if (raw) return JSON.parse(raw);
-    } catch (_) {}
+    } catch {
+      // Start with an empty library if saved history cannot be read.
+    }
     return [];
   });
 
   useEffect(() => {
-    try {
-      const userKey = user ? (user.email || user.id || 'registered') : 'guest';
-      const raw = localStorage.getItem(`rynell_studio_asset_library_${userKey}`);
-      if (raw) setHistory(JSON.parse(raw));
-      else setHistory([]);
-    } catch (_) {}
+    let isCurrent = true;
+    queueMicrotask(() => {
+      if (!isCurrent) return;
+      try {
+        const userKey = user ? (user.email || user.id || 'registered') : 'guest';
+        const raw = localStorage.getItem(`rynell_studio_asset_library_${userKey}`);
+        setHistory(raw ? JSON.parse(raw) : []);
+      } catch {
+        setHistory([]);
+      }
+    });
+    return () => {
+      isCurrent = false;
+    };
   }, [user]);
 
   const saveToHistory = (outputAssetUrl, modelKey = selectedModel, promptText = qwenPrompt, previewSourceUrl = previewUrl) => {
@@ -267,7 +283,9 @@ const StudioLab = () => {
       const updated = [newItem, ...filtered].slice(0, 50);
       try {
         localStorage.setItem(`rynell_studio_asset_library_${userKey}`, JSON.stringify(updated));
-      } catch (_) {}
+      } catch {
+        // Keep the in-memory library when persistence is unavailable.
+      }
       return updated;
     });
   };
@@ -278,7 +296,9 @@ const StudioLab = () => {
       const updated = prev.filter(item => item.id !== itemId);
       try {
         localStorage.setItem(`rynell_studio_asset_library_${userKey}`, JSON.stringify(updated));
-      } catch (_) {}
+      } catch {
+        // Keep the in-memory library when persistence is unavailable.
+      }
       return updated;
     });
   };
@@ -316,9 +336,8 @@ const StudioLab = () => {
 
   const WORKER_ENDPOINT = import.meta.env.VITE_CLOUDFLARE_WORKER_URL || 'https://rynell-ai-gateway.thomasrynell.workers.dev';
 
-  const generateQwenEditedImage = (imageSrc, prompt = '', refImageSrc = null, aiAssetUrl = null) => {
-    return new Promise(async (resolve) => {
-      try {
+  const generateQwenEditedImage = async (imageSrc, prompt = '', refImageSrc = null, aiAssetUrl = null) => {
+    try {
         const loadImage = (src) => new Promise((res) => {
           if (!src) return res(null);
           const img = new Image();
@@ -330,8 +349,7 @@ const StudioLab = () => {
 
         const sourceImg = await loadImage(imageSrc);
         if (!sourceImg) {
-          resolve(imageSrc);
-          return;
+          return imageSrc;
         }
 
         const canvas = document.createElement('canvas');
@@ -438,11 +456,10 @@ const StudioLab = () => {
         ctx.fillStyle = '#00E5FF';
         ctx.fillText('QWEN AI EDITED // ZERO EGRESS', 20, canvas.height - 20);
 
-        resolve(canvas.toDataURL('image/png'));
-      } catch (_) {
-        resolve(imageSrc);
+        return canvas.toDataURL('image/png');
+      } catch {
+        return imageSrc;
       }
-    });
   };
 
   const generateUpscaled4KImage = async (imageSrc, engine = 'pruna', scale = 4, preset = 'photo') => {
@@ -473,7 +490,8 @@ const StudioLab = () => {
           ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, 0, 0, targetW, targetH);
 
-          const { data } = ctx.getImageData(0, 0, targetW, targetH);
+          const imgData = ctx.getImageData(0, 0, targetW, targetH);
+          const { data } = imgData;
           const w = targetW;
           const h = targetH;
 
@@ -624,7 +642,7 @@ const StudioLab = () => {
               });
               setStatusMessage(`PROCESS COMPLETE: SVG VECTOR READY (${vectorRes.pathCount} CURVES).`);
               handleSetOutputUrl(vectorRes.svgDataUrl, 'logo', qwenPrompt, sourceImg);
-            } catch (errTrace) {
+            } catch {
               handleSetOutputUrl(sourceImg, 'logo', qwenPrompt, sourceImg);
             }
           } else {
@@ -901,7 +919,7 @@ const StudioLab = () => {
             console.warn("Worker status note, running matrix preview:", statusData.error);
             runSimulatedPipeline();
           }
-        } catch (pollErr) {
+        } catch {
           clearInterval(pollInterval);
           runSimulatedPipeline();
         }
@@ -1358,7 +1376,7 @@ const StudioLab = () => {
                       if (!svgContent && outputUrl) {
                         try {
                           svgContent = decodeURIComponent(outputUrl.replace(/^data:image\/svg\+xml;(utf8,)?/, ''));
-                        } catch (_) {
+                        } catch {
                           svgContent = outputUrl;
                         }
                       }
@@ -1461,7 +1479,9 @@ const StudioLab = () => {
                             if (!svgContent && outputUrl) {
                               try {
                                 svgContent = decodeURIComponent(outputUrl.replace(/^data:image\/svg\+xml;(utf8,)?/, ''));
-                              } catch (_) {}
+                              } catch {
+                                // Leave the encoded SVG unchanged if decoding fails.
+                              }
                             }
                             if (svgContent) {
                               navigator.clipboard.writeText(svgContent);
@@ -1920,7 +1940,7 @@ const StudioLab = () => {
                           if (!svgContent && outputUrl) {
                             try {
                               svgContent = decodeURIComponent(outputUrl.replace(/^data:image\/svg\+xml;(utf8,)?/, ''));
-                            } catch (_) {
+                            } catch {
                               svgContent = outputUrl;
                             }
                           }
@@ -1954,7 +1974,9 @@ const StudioLab = () => {
                           if (!svgContent && outputUrl) {
                             try {
                               svgContent = decodeURIComponent(outputUrl.replace(/^data:image\/svg\+xml;(utf8,)?/, ''));
-                            } catch (_) {}
+                            } catch {
+                              // Leave the encoded SVG unchanged if decoding fails.
+                            }
                           }
                           if (svgContent) {
                             navigator.clipboard.writeText(svgContent);
@@ -2406,7 +2428,7 @@ const StudioLab = () => {
                           const svgRaw = decodeURIComponent((outputUrl || '').replace(/^data:image\/svg\+xml;(utf8,)?/, ''));
                           navigator.clipboard.writeText(svgRaw);
                           alert('SVG Code copied to clipboard!');
-                        } catch (_) {
+                        } catch {
                           alert('SVG ready for download.');
                         }
                       }}

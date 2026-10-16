@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useCms } from '../contexts/CmsContext';
 const campaignModules = import.meta.glob('../assets/campaigns/*.{png,jpg,jpeg,webp,avif}', { eager: true, import: 'default' });
 
@@ -153,8 +153,8 @@ const Ads = () => {
           margin: 0;
           max-width: 500px;
           line-height: 1.5;
-          border-left: 4px solid var(--primary-orange);
-          padding-left: 1.5rem;
+          border-top: 1px solid color-mix(in srgb, var(--primary-orange) 65%, transparent);
+          padding-top: 1rem;
         }
         .ads-carousel {
           width: 100%;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 const AccountDrawer = ({ isOpen, setIsOpen }) => {
@@ -13,32 +13,30 @@ const AccountDrawer = ({ isOpen, setIsOpen }) => {
     loginAsAdmin,
     register, 
     logout,
-    openForgotPassword,
     requestPasswordReset,
     resetPasswordWithCode
   } = useAuth();
 
-  const [isLogin, setIsLogin] = useState(authMode === 'login' || !authMode);
+  const isLogin = authMode === 'login' || !authMode;
   const [status, setStatus] = useState('IDLE'); // IDLE, PROCESSING, SUCCESS
   const [formData, setFormData] = useState({ name: '', email: '', password: '', resetCode: '', newPassword: '' });
   const [resetMessage, setResetMessage] = useState(null);
   const [sentCode, setSentCode] = useState(null);
 
   useEffect(() => {
-    if (authMode === 'login') setIsLogin(true);
-    if (authMode === 'register') setIsLogin(false);
-  }, [authMode]);
-
-  useEffect(() => {
     if (isOpen) {
       document.body.classList.add('drawer-open');
-      setStatus('IDLE');
-      setResetMessage(null);
     } else {
       document.body.classList.remove('drawer-open');
     }
     return () => document.body.classList.remove('drawer-open');
   }, [isOpen]);
+
+  const handleClose = () => {
+    setStatus('IDLE');
+    setResetMessage(null);
+    setIsOpen(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -90,7 +88,7 @@ const AccountDrawer = ({ isOpen, setIsOpen }) => {
   };
 
   const handleCloseAndGoToStudio = () => {
-    setIsOpen(false);
+    handleClose();
     const studioEl = document.getElementById('studio-lab');
     if (studioEl) {
       studioEl.scrollIntoView({ behavior: 'smooth' });
@@ -108,13 +106,13 @@ const AccountDrawer = ({ isOpen, setIsOpen }) => {
     <>
       <div 
         className={`drawer-backdrop ${isOpen ? 'open' : ''}`}
-        onClick={() => setIsOpen(false)}
+        onClick={handleClose}
       ></div>
 
       <div className={`cart-drawer account-drawer ${isOpen ? 'open' : ''}`}>
         <div className="cart-header">
           <h2>{getHeaderTitle()}</h2>
-          <button className="cart-close" onClick={() => setIsOpen(false)}>
+          <button className="cart-close" onClick={handleClose}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -179,7 +177,7 @@ const AccountDrawer = ({ isOpen, setIsOpen }) => {
                   className="signout-btn" 
                   onClick={() => {
                     logout();
-                    setIsOpen(false);
+                    handleClose();
                   }}
                 >
                   SIGN OUT
@@ -229,7 +227,6 @@ const AccountDrawer = ({ isOpen, setIsOpen }) => {
                     type="button" 
                     className="text-btn" 
                     onClick={() => {
-                      setIsLogin(true);
                       setAuthMode('login');
                     }}
                   >
@@ -295,7 +292,6 @@ const AccountDrawer = ({ isOpen, setIsOpen }) => {
                     type="button" 
                     className="text-btn" 
                     onClick={() => {
-                      setIsLogin(true);
                       setAuthMode('login');
                     }}
                   >
@@ -400,7 +396,6 @@ const AccountDrawer = ({ isOpen, setIsOpen }) => {
                     className="text-btn" 
                     onClick={() => {
                       const nextMode = !isLogin;
-                      setIsLogin(nextMode);
                       setAuthMode(nextMode ? 'login' : 'register');
                     }}
                   >
@@ -742,7 +737,7 @@ const AccountDrawer = ({ isOpen, setIsOpen }) => {
           font-family: monospace;
           font-size: 0.85rem;
           line-height: 1.4;
-          border-left: 3px solid var(--primary-orange);
+          border: 1px solid var(--primary-orange);
         }
 
         .reset-notice-box.success {

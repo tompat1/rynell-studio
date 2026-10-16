@@ -1,4 +1,3 @@
-import React from 'react';
 import { useCms } from '../contexts/CmsContext';
 
 const Footer = () => {
