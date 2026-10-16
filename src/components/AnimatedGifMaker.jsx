@@ -6,6 +6,29 @@ import { BG_COLOR_MAP, DEMO_SEQUENCES, getDefaultFrames } from '../utils/gifSequ
 
 const MAX_FILE_SIZE_BYTES = 200 * 1024 * 1024; // 200MB
 
+const AVATAR_CANVAS_PRESETS = [
+  { label: '32×32 Pixel / Favicon', w: 32, h: 32 },
+  { label: '48×48 Slack Emoji', w: 48, h: 48 },
+  { label: '64×64 Discord Emoji', w: 64, h: 64 },
+  { label: '80×80 Forum PFP', w: 80, h: 80 },
+  { label: '100×100 Sticker / PFP', w: 100, h: 100 },
+  { label: '128×128 Discord / Steam', w: 128, h: 128 },
+  { label: '160×160 Web Avatar', w: 160, h: 160 },
+  { label: '200×200 Square Avatar', w: 200, h: 200 },
+  { label: '256×256 HD Nitro PFP', w: 256, h: 256 }
+];
+
+const STANDARD_CANVAS_PRESETS = [
+  { label: '320×320 Mobile Drop', w: 320, h: 320 },
+  { label: '480×480 Square', w: 480, h: 480 },
+  { label: '500×500 Studio Drop', w: 500, h: 500 },
+  { label: '600×600 Square', w: 600, h: 600 },
+  { label: '800×800 HD Square', w: 800, h: 800 },
+  { label: '1080×1080 Feed (1:1)', w: 1080, h: 1080 },
+  { label: '1280×720 HD (16:9)', w: 1280, h: 720 },
+  { label: '720×1280 Reel (9:16)', w: 720, h: 1280 }
+];
+
 const AnimatedGifMaker = () => {
   const { t, isLiveEditMode, isCmsAdmin, openCms } = useCms();
   // Frame sequence state
@@ -975,6 +998,18 @@ const AnimatedGifMaker = () => {
                   </button>
                   <button
                     type="button"
+                    className={`pill-btn avatar-header-btn ${canvasSizeMode === 'custom' && Number(customWidth) === 128 && Number(customHeight) === 128 ? 'active' : ''}`}
+                    onClick={() => {
+                      setCanvasSizeMode('custom');
+                      setCustomWidth(128);
+                      setCustomHeight(128);
+                    }}
+                    title="128x128 Avatar standard (Discord, Steam, GitHub)"
+                  >
+                    👤 AVATAR 128×128
+                  </button>
+                  <button
+                    type="button"
                     className={`pill-btn ${canvasSizeMode === 'square' ? 'active' : ''}`}
                     onClick={() => setCanvasSizeMode('square')}
                   >
@@ -982,7 +1017,7 @@ const AnimatedGifMaker = () => {
                   </button>
                   <button
                     type="button"
-                    className={`pill-btn ${canvasSizeMode === 'custom' ? 'active' : ''}`}
+                    className={`pill-btn ${canvasSizeMode === 'custom' && (Number(customWidth) !== 128 || Number(customHeight) !== 128) ? 'active' : ''}`}
                     onClick={() => setCanvasSizeMode('custom')}
                   >
                     CUSTOM
@@ -1036,29 +1071,44 @@ const AnimatedGifMaker = () => {
                       <span className="size-unit">PX</span>
                     </div>
 
-                    <div className="custom-presets-row">
-                      {[
-                        { label: '320×320', w: 320, h: 320 },
-                        { label: '480×480', w: 480, h: 480 },
-                        { label: '500×500', w: 500, h: 500 },
-                        { label: '640×640', w: 640, h: 640 },
-                        { label: '800×800', w: 800, h: 800 },
-                        { label: '1080×1080', w: 1080, h: 1080 },
-                        { label: '1280×720 (16:9)', w: 1280, h: 720 },
-                        { label: '720×1280 (9:16)', w: 720, h: 1280 }
-                      ].map(p => (
-                        <button
-                          key={p.label}
-                          type="button"
-                          className={`size-preset-pill ${Number(customWidth) === p.w && Number(customHeight) === p.h ? 'active' : ''}`}
-                          onClick={() => {
-                            setCustomWidth(p.w);
-                            setCustomHeight(p.h);
-                          }}
-                        >
-                          {p.label}
-                        </button>
-                      ))}
+                    {/* Presets Group 1: Avatars & Micro Sizes */}
+                    <div className="custom-presets-group">
+                      <span className="presets-category-label">👤 AVATARS & MICRO SIZES (RECOMMENDED FOR TINY GIF BYTES):</span>
+                      <div className="custom-presets-row">
+                        {AVATAR_CANVAS_PRESETS.map(p => (
+                          <button
+                            key={p.label}
+                            type="button"
+                            className={`size-preset-pill avatar-pill ${Number(customWidth) === p.w && Number(customHeight) === p.h ? 'active' : ''}`}
+                            onClick={() => {
+                              setCustomWidth(p.w);
+                              setCustomHeight(p.h);
+                            }}
+                          >
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Presets Group 2: Standard & Social */}
+                    <div className="custom-presets-group">
+                      <span className="presets-category-label">📐 STANDARD & SOCIAL SIZES:</span>
+                      <div className="custom-presets-row">
+                        {STANDARD_CANVAS_PRESETS.map(p => (
+                          <button
+                            key={p.label}
+                            type="button"
+                            className={`size-preset-pill ${Number(customWidth) === p.w && Number(customHeight) === p.h ? 'active' : ''}`}
+                            onClick={() => {
+                              setCustomWidth(p.w);
+                              setCustomHeight(p.h);
+                            }}
+                          >
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1917,6 +1967,50 @@ const AnimatedGifMaker = () => {
           color: #94a3b8;
           cursor: pointer;
           transition: all 0.15s ease;
+        }
+
+        .custom-presets-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.35rem;
+          margin-top: 0.35rem;
+        }
+
+        .presets-category-label {
+          font-family: var(--font-heading);
+          font-size: 0.65rem;
+          letter-spacing: 0.8px;
+          color: var(--primary-orange);
+          font-weight: 700;
+        }
+
+        .avatar-header-btn {
+          border-color: rgba(56, 189, 248, 0.4);
+          color: #38bdf8;
+        }
+
+        .avatar-header-btn:hover {
+          border-color: #38bdf8;
+          color: #fff;
+        }
+
+        .size-preset-pill.avatar-pill {
+          background: #06111f;
+          border-color: rgba(56, 189, 248, 0.35);
+          color: #38bdf8;
+        }
+
+        .size-preset-pill.avatar-pill:hover {
+          background: #0c213d;
+          border-color: #38bdf8;
+          color: #fff;
+        }
+
+        .size-preset-pill.avatar-pill.active {
+          background: rgba(56, 189, 248, 0.25);
+          border-color: #38bdf8;
+          color: #38bdf8;
+          font-weight: 700;
         }
 
         .size-preset-pill:hover {
