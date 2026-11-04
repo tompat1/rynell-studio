@@ -44,6 +44,11 @@ export const TOOL_SEARCH_DATA = [
   feature('ai-compare', 'AI Before & After Comparison', 'AI FEATURE', 'AI LABS', '#studio-lab', 'Inspect generated, upscaled, or vectorized output against its source.', ['comparison slider', 'preview', 'source output']),
   feature('ai-history', 'Saved AI Asset Library', 'AI FEATURE', 'AI LABS', '#studio-lab', 'Re-download or reload saved generations, prompts, vectors, and high-resolution assets.', ['render history', 'saved images', 'downloads', 'prompt history']),
 
+  feature('tool-profile-photo', 'LinkedIn Profile Photo & Badge Maker', 'TOOL SUITE', 'PROFILE PIC', '#profile-photo-maker', 'Crop a portrait, add a curved custom badge, and export a profile-ready 1080px PNG.', ['linkedin photo', 'profile picture', 'open to work', 'hiring badge', 'headshot', 'linkedin frame']),
+  feature('profile-badge-presets', 'Profile Photo Badge Presets', 'PROFILE FEATURE', 'PROFILE PIC', '#profile-photo-maker', 'Start with Open to Work, Hiring, Freelance, or Let\'s Connect badge styles.', ['linkedin badge', 'open to work frame', 'hiring frame', 'freelance']),
+  feature('profile-photo-crop', 'LinkedIn Circular Crop Preview', 'PROFILE FEATURE', 'PROFILE PIC', '#profile-photo-maker', 'Reposition and zoom a portrait inside a LinkedIn-safe circular crop guide.', ['crop profile picture', 'linkedin safe zone', 'zoom headshot']),
+  feature('profile-photo-local', 'Private Browser-Only Profile Export', 'PROFILE FEATURE', 'PROFILE PIC', '#profile-photo-maker', 'Render and download a 1080×1080 PNG locally without uploading the portrait.', ['private photo editor', 'local image tool', 'download png']),
+
   feature('tool-converters', 'Image & Vector Converter Matrix', 'TOOL SUITE', 'CONVERTERS', '#converter-tools', 'Convert SVG, PNG, JPG, WebP, AVIF, GIF, APNG, JXL, SVGZ, and ICO formats.', ['image conversion', 'vector conversion', 'raster', 'transcoder']),
   ...converterEntries,
   feature('converter-resolution', '1x, 2x & 4K Converter Export', 'CONVERTER FEATURE', 'CONVERTERS', '#converter-tools', 'Render vector artwork at standard, retina, or ultra 4K resolution.', ['resolution upscale', 'retina', '4x export', 'high resolution']),
@@ -95,5 +100,6 @@ export const POPULAR_SEARCH_PILLS = [
   { label: 'GIF MAKER', query: 'gif maker' },
   { label: 'SVG → PNG', query: 'svg to png' },
   { label: '4K UPSCALE', query: '4k upscale' },
+  { label: 'PROFILE PIC', query: 'linkedin profile picture' },
   { label: 'JSON → CSV', query: 'json to csv' }
 ];

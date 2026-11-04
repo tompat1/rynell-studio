@@ -386,6 +386,7 @@ const AdminCmsDrawer = () => {
                         >
                           <option value="" disabled>Choose a studio section to autofill...</option>
                           <option value="AI LABS||#studio-lab">⚡ AI Creative Suite (#studio-lab)</option>
+                          <option value="PROFILE PIC||#profile-photo-maker">👤 LinkedIn Profile Photo Maker (#profile-photo-maker)</option>
                           <option value="CONVERTERS||#converter-tools">📐 Vector & Raster Transcoder (#converter-tools)</option>
                           <option value="OPTIMIZER||#image-compressor">🗜️ Asset Compressor & Scrubber (#image-compressor)</option>
                           <option value="GIF MAKER||#gif-maker">🎞️ Animated GIF Studio (#gif-maker)</option>
@@ -405,6 +406,7 @@ const AdminCmsDrawer = () => {
                         <span className="suggest-lbl">QUICK 1-CLICK ADD:</span>
                         {[
                           { name: 'AI LABS', link: '#studio-lab' },
+                          { name: 'PROFILE PIC', link: '#profile-photo-maker' },
                           { name: 'CONVERTERS', link: '#converter-tools' },
                           { name: 'OPTIMIZER', link: '#image-compressor' },
                           { name: 'GIF MAKER', link: '#gif-maker' },

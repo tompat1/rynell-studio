@@ -22,6 +22,7 @@ const Navbar = ({ cartCount, onCartClick, onSearchClick, onAccountClick, onConta
 
   const imageMap = {
     'AI LABS': aiLabImg,
+    'PROFILE PIC': aboutImg,
     'CONVERTERS': boltSvg,
     'OPTIMIZER': boltSvg,
     'GIF MAKER': aiLabImg,

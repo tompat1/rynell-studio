@@ -20,6 +20,7 @@ import StudioConverter from './components/StudioConverter'
 import StudioCompressor from './components/StudioCompressor'
 import AnimatedGifMaker from './components/AnimatedGifMaker'
 import JsonTransformer from './components/JsonTransformer'
+import LinkedInProfileMaker from './components/LinkedInProfileMaker'
 import AdminCmsDrawer from './components/AdminCmsDrawer'
 import AdminFloatingBar from './components/AdminFloatingBar'
 
@@ -133,6 +134,7 @@ function App() {
       />
       <Hero />
       <StudioLab />
+      <LinkedInProfileMaker />
       <StudioConverter />
       <StudioCompressor />
       <AnimatedGifMaker />

@@ -4,6 +4,7 @@ import { useAuth } from './AuthContext';
 // Default Nav Items with rich default metadata
 const DEFAULT_NAV_ITEMS = [
   { id: 'ai-labs', name: 'AI LABS', link: '#studio-lab', visible: true },
+  { id: 'profile-photo', name: 'PROFILE PIC', link: '#profile-photo-maker', visible: true },
   { id: 'converters', name: 'CONVERTERS', link: '#converter-tools', visible: true },
   { id: 'optimizer', name: 'OPTIMIZER', link: '#image-compressor', visible: true },
   { id: 'gif-maker', name: 'GIF MAKER', link: '#gif-maker', visible: true },
@@ -16,7 +17,10 @@ const DEFAULT_NAV_ITEMS = [
 ];
 
 // Factory Default Copy for All Pages and Sections
+const CMS_SCHEMA_VERSION = 3;
+
 const DEFAULT_CMS_CONTENT = {
+  schemaVersion: CMS_SCHEMA_VERSION,
   navItems: DEFAULT_NAV_ITEMS,
   brand: {
     name: 'RYNELL STUDIO',
@@ -78,6 +82,11 @@ const DEFAULT_CMS_CONTENT = {
       title: 'RYNELL AI CREATIVE SUITE',
       subDescription: 'Unified AI production studio with top-tier models, real-time image gen, AI vectorization, super-resolution upscaling & instant client preview.'
     },
+    profileMaker: {
+      sectionLabel: 'PROFILE PHOTO LAB',
+      title: 'MAKE YOUR LINKEDIN PROFILE HIT HARDER.',
+      subDescription: 'Upload a portrait, build a custom curved badge, and export a sharp profile-ready image in under a minute.'
+    },
     converter: {
       sectionLabel: 'STUDIO CONVERTERS',
       title: 'VECTOR & RASTER CONVERSION ENGINE',
@@ -137,6 +146,28 @@ function deepMerge(target, source) {
   return output;
 }
 
+function migrateCmsContent(source) {
+  const merged = deepMerge(DEFAULT_CMS_CONTENT, source);
+  const sourceVersion = Number(source?.schemaVersion || 0);
+
+  if (sourceVersion < CMS_SCHEMA_VERSION) {
+    const hasProfileMaker = merged.navItems?.some((item) => item.link === '#profile-photo-maker');
+    if (!hasProfileMaker) {
+      const navItems = [...(merged.navItems || [])];
+      const aiLabsIndex = navItems.findIndex((item) => item.link === '#studio-lab');
+      navItems.splice(aiLabsIndex >= 0 ? aiLabsIndex + 1 : 0, 0, {
+        id: 'profile-photo',
+        name: 'PROFILE PIC',
+        link: '#profile-photo-maker',
+        visible: true
+      });
+      merged.navItems = navItems;
+    }
+  }
+
+  return { ...merged, schemaVersion: CMS_SCHEMA_VERSION };
+}
+
 const WORKER_ENDPOINT = import.meta.env.VITE_CLOUDFLARE_WORKER_URL || 'https://rynell-ai-gateway.thomasrynell.workers.dev';
 
 export const CmsProvider = ({ children }) => {
@@ -151,7 +182,7 @@ export const CmsProvider = ({ children }) => {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        return deepMerge(DEFAULT_CMS_CONTENT, parsed);
+        return migrateCmsContent(parsed);
       }
     } catch (e) {
       console.warn('Failed to load CMS content from localStorage:', e);
@@ -192,7 +223,7 @@ export const CmsProvider = ({ children }) => {
         }
         const data = await res.json();
         if (data && data.success && data.content && isMounted) {
-          const merged = deepMerge(DEFAULT_CMS_CONTENT, data.content);
+          const merged = migrateCmsContent(data.content);
           setContent(merged);
           setEdgeSource(data.source || 'cloudflare_kv');
           setLastSyncedAt(data.updatedAt || new Date().toISOString());
