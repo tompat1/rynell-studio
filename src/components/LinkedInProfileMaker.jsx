@@ -13,11 +13,11 @@ const ensureHashtag = (raw = '') => {
 };
 
 const FRAME_STYLES = [
-  { id: 'arc', label: 'ARC', icon: '◐', desc: 'Tapered bottom arc with curved #badge copy' },
-  { id: 'ring', label: 'RING', icon: '◯', desc: 'Full 360° perimeter ring with curved #badge copy' },
-  { id: 'badge', label: 'BADGE', icon: '🏷', desc: 'Bottom pill tag badge with crisp horizontal #copy' },
-  { id: 'gradient', label: 'GRADIENT', icon: '◌', desc: 'Multi-stop gradient perimeter ring (no text)' },
-  { id: 'none', label: 'NONE', icon: '⊘', desc: 'Clean portrait with no frame or text overlay' }
+  { id: 'arc', label: 'Arc', icon: '◐', desc: 'Tapered bottom arc with curved #badge copy' },
+  { id: 'ring', label: 'Ring', icon: '◯', desc: 'Full 360° perimeter ring with curved #badge copy' },
+  { id: 'badge', label: 'Badge', icon: '🏷', desc: 'Bottom pill tag badge with crisp horizontal #copy' },
+  { id: 'gradient', label: 'Gradient', icon: '◌', desc: 'Multi-stop gradient perimeter ring (no text)' },
+  { id: 'none', label: 'None', icon: '⊘', desc: 'Clean portrait with no frame or text overlay' }
 ];
 
 const FRAME_PRESETS = [
@@ -43,6 +43,61 @@ const BG_COLOR_SWATCHES = [
   { id: 'rose', label: 'ROSE', value: '#E11D48' },
   { id: 'slate', label: 'SLATE', value: '#CBD5E1' }
 ];
+
+const SOCIAL_ICONS = {
+  linkedin: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.64a1.64 1.64 0 1 0 1.63 1.64 1.63 1.63 0 0 0-1.63-1.64z"/>
+    </svg>
+  ),
+  instagram: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+    </svg>
+  ),
+  tiktok: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.89 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.51a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3 15.67 6.34 6.34 0 0 0 9.34 22a6.34 6.34 0 0 0 6.34-6.33V9.05a8.28 8.28 0 0 0 4.91 1.59V7.19a4.84 4.84 0 0 1-1-.5z"/>
+    </svg>
+  ),
+  slack: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+      <path d="M5.04 14.68a2.16 2.16 0 1 1-2.16-2.16h2.16v2.16zm1.08 0a2.16 2.16 0 1 1 4.32 0v5.4a2.16 2.16 0 1 1-4.32 0v-5.4zm3.24-9.64a2.16 2.16 0 1 1-2.16-2.16v2.16h2.16zm0 1.08a2.16 2.16 0 1 1 0 4.32H3.96a2.16 2.16 0 1 1 0-4.32h5.4zm9.64 3.24a2.16 2.16 0 1 1 2.16 2.16h-2.16V9.36zm-1.08 0a2.16 2.16 0 1 1-4.32 0V3.96a2.16 2.16 0 1 1 4.32 0v5.4zm-3.24 9.64a2.16 2.16 0 1 1 2.16 2.16v-2.16h-2.16zm0-1.08a2.16 2.16 0 1 1 0-4.32h5.4a2.16 2.16 0 1 1 0 4.32h-5.4z"/>
+    </svg>
+  ),
+  facebook: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+    </svg>
+  ),
+  x: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+    </svg>
+  ),
+  threads: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+      <path d="M12.003 2c-5.523 0-10 4.477-10 10 0 5.522 4.477 10 10 10 4.095 0 7.632-2.463 9.172-5.995a.75.75 0 1 0-1.377-.597A8.487 8.487 0 0 1 12.003 20.5c-4.687 0-8.5-3.813-8.5-8.5s3.813-8.5 8.5-8.5c4.542 0 8.262 3.58 8.49 8.08.17 3.32-1.895 5.545-4.437 5.545-1.353 0-2.443-.63-2.883-1.673.916-.484 1.577-1.36 1.802-2.464.33-1.616-.545-3.23-2.148-3.957-.423-.192-.907-.295-1.427-.295-2.52 0-4.382 1.874-4.382 4.41 0 2.664 1.954 4.548 4.673 4.548 1.488 0 2.873-.554 3.864-1.547.886 1.34 2.378 2.072 4.048 2.072 3.518 0 6.04-2.894 5.86-6.84C21.144 6.037 17.062 2 12.003 2zm-.57 12.87c-1.728 0-2.885-1.206-2.885-2.894 0-1.688 1.157-2.894 2.885-2.894.464 0 .848.1 1.148.298.815.539 1.183 1.517.974 2.537-.2 1.02-.95 2.128-2.122 2.953z"/>
+    </svg>
+  ),
+  discord: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+      <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.893.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+    </svg>
+  ),
+  whatsapp: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+      <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.47c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.77 2.7 4.29 3.79.6.26 1.07.42 1.44.53.6.19 1.15.16 1.59.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.15-1.18-.06-.1-.22-.16-.47-.29z"/>
+    </svg>
+  ),
+  youtube: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+    </svg>
+  )
+};
 
 const SOCIAL_PLATFORMS = [
   {
@@ -613,7 +668,7 @@ const renderFrameToCanvas = (canvas, imageElement, config) => {
 
     ctx.strokeStyle = grad;
     ctx.lineWidth = scaledArcWidth;
-    ctx.lineCap = 'round';
+    ctx.lineCap = 'butt';
     ctx.beginPath();
     ctx.arc(center, center, arcRadius, Math.PI * 0.12, Math.PI * 1.04, false);
     ctx.stroke();
@@ -1820,31 +1875,58 @@ const LinkedInProfileMaker = () => {
                   </button>
                 </div>
 
-                <div className="profile-theme-pills" role="group" aria-label="Preview theme mode">
-                  <button
-                    type="button"
-                    className={previewTheme === 'light' ? 'active' : ''}
-                    onClick={() => setPreviewTheme('light')}
-                    title="Light mode preview"
-                  >
-                    ☀ LIGHT
-                  </button>
-                  <button
-                    type="button"
-                    className={previewTheme === 'dark' ? 'active' : ''}
-                    onClick={() => setPreviewTheme('dark')}
-                    title="Dark mode preview"
-                  >
-                    ☾ DARK
-                  </button>
-                  <button
-                    type="button"
-                    className={previewTheme === 'split' ? 'active' : ''}
-                    onClick={() => setPreviewTheme('split')}
-                    title="Split light & dark preview"
-                  >
-                    ◐ SPLIT
-                  </button>
+                <div className="profile-preview-right-actions">
+                  <div className="profile-phone-tab-group" role="radiogroup" aria-label="Select mobile profile app">
+                    {[
+                      { id: 'linkedin', label: 'LinkedIn' },
+                      { id: 'instagram', label: 'Instagram' },
+                      { id: 'tiktok', label: 'TikTok' }
+                    ].map((app) => {
+                      const isSelected = previewTab === 'profile' && selectedPlatformId === app.id;
+                      return (
+                        <button
+                          key={app.id}
+                          type="button"
+                          className={`profile-phone-tab-btn ${isSelected ? 'active' : ''}`}
+                          onClick={() => {
+                            setSelectedPlatformId(app.id);
+                            setPreviewTab('profile');
+                            setNotice(`SWITCHED TO ${app.label.toUpperCase()} MOBILE PROFILE PREVIEW`);
+                          }}
+                          title={`Preview on ${app.label} mobile profile`}
+                        >
+                          {SOCIAL_ICONS[app.id]}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="profile-theme-pills" role="group" aria-label="Preview theme mode">
+                    <button
+                      type="button"
+                      className={previewTheme === 'light' ? 'active' : ''}
+                      onClick={() => setPreviewTheme('light')}
+                      title="Light mode"
+                    >
+                      ☀
+                    </button>
+                    <button
+                      type="button"
+                      className={previewTheme === 'dark' ? 'active' : ''}
+                      onClick={() => setPreviewTheme('dark')}
+                      title="Dark mode"
+                    >
+                      ☾
+                    </button>
+                    <button
+                      type="button"
+                      className={previewTheme === 'split' ? 'active' : ''}
+                      onClick={() => setPreviewTheme('split')}
+                      title="Split light & dark mode"
+                    >
+                      ◐
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1874,8 +1956,8 @@ const LinkedInProfileMaker = () => {
                           setNotice(`OPTIMIZED TARGET SET TO ${platform.name.toUpperCase()} (${platform.size}×${platform.size} PX)`);
                         }}
                       >
-                        <span className="profile-social-badge" style={{ background: platform.accent }}>
-                          {platform.shortName}
+                        <span className="profile-social-badge" style={{ color: platform.accent }}>
+                          {SOCIAL_ICONS[platform.id]}
                         </span>
                         <span>{platform.name}</span>
                         <small>{platform.size}px</small>
@@ -1901,8 +1983,8 @@ const LinkedInProfileMaker = () => {
                       <article key={platform.id} className="profile-social-card">
                         <header className="profile-social-card-head">
                           <div className="profile-social-card-title">
-                            <span className="profile-social-icon" style={{ background: platform.accent }}>
-                              {platform.shortName}
+                            <span className="profile-app-brand-icon" style={{ color: platform.accent }}>
+                              {SOCIAL_ICONS[platform.id]}
                             </span>
                             <strong>{platform.name}</strong>
                             <span className="profile-social-spec">
@@ -2067,93 +2149,277 @@ const LinkedInProfileMaker = () => {
               {/* VIEW 3: ON A PROFILE (Mobile Phone Mockup across any selected social platform) */}
               {previewTab === 'profile' && (
                 <div className="profile-phone-stage">
-                  <div className={`profile-phone-mockup ${previewTheme === 'dark' ? 'dark' : 'light'}`}>
-                    <div className="profile-phone-statusbar">
-                      <span>9:41</span>
-                      <div className="profile-phone-island" />
-                      <span>5G ▮</span>
-                    </div>
-
-                    <div className="profile-phone-searchbar">
-                      <img
-                        src={activeThumbUrl}
-                        alt="Mini nav avatar"
-                        style={{ borderRadius: selectedPlatform.shape === 'rounded-square' ? '22%' : '50%' }}
-                      />
-                      <div className="profile-phone-search-pill">🔍 Search {selectedPlatform.name}</div>
-                      <span>💬</span>
-                    </div>
-
-                    <div
-                      className="profile-phone-banner"
-                      style={{
-                        background: `linear-gradient(120deg, ${selectedPlatform.accent}, ${arcColor})`
-                      }}
-                    />
-
-                    <div className="profile-phone-body">
-                      <div
-                        className={`profile-phone-main-avatar ${selectedPlatform.shape === 'rounded-square' ? 'rounded-square' : ''} ${selectedPlatform.storyRing ? 'story-ring' : ''}`}
-                      >
-                        <img src={activeThumbUrl} alt="Phone profile avatar" />
+                  {selectedPlatformId === 'instagram' ? (
+                    /* Instagram Mobile Profile Mockup matching user reference */
+                    <div className={`profile-phone-mockup instagram ${previewTheme === 'dark' ? 'dark' : 'light'}`}>
+                      <div className="profile-phone-statusbar">
+                        <span>9:41</span>
+                        <div className="profile-phone-island" />
+                        <div className="profile-phone-status-icons">
+                          <span>5G ▮</span>
+                        </div>
                       </div>
 
-                      <div className="profile-phone-identity">
+                      <div className="profile-ig-header-bar">
+                        <div className="profile-ig-handle-dropdown">
+                          <strong>yourname</strong>
+                          <span>▾</span>
+                        </div>
+                        <div className="profile-ig-header-actions">
+                          <button type="button" aria-label="Create post">＋</button>
+                          <button type="button" aria-label="Menu">☰</button>
+                        </div>
+                      </div>
+
+                      <div className="profile-ig-main-row">
+                        <div className="profile-avatar-shell lg story-ring">
+                          <img src={activeThumbUrl} alt="Instagram profile avatar" />
+                        </div>
+                        <div className="profile-ig-stats-row">
+                          <div className="profile-ig-stat">
+                            <strong>128</strong>
+                            <span>posts</span>
+                          </div>
+                          <div className="profile-ig-stat">
+                            <strong>1.3K</strong>
+                            <span>followers</span>
+                          </div>
+                          <div className="profile-ig-stat">
+                            <strong>312</strong>
+                            <span>following</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="profile-ig-bio">
                         <h4>Your Name</h4>
-                        <p>{selectedPlatform.bio}</p>
-                        <small>{selectedPlatform.meta}</small>
+                        <p>Sharing what I learn, one post at a time ✨</p>
+                        <p>New carousel every Tuesday</p>
                       </div>
 
-                      <div className="profile-phone-cta-row">
-                        <button
-                          type="button"
-                          className="profile-phone-cta-primary"
-                          style={{ background: selectedPlatform.accent }}
-                        >
-                          {selectedPlatform.actionPrimary}
+                      <div className="profile-ig-actions">
+                        <button type="button">Edit profile</button>
+                        <button type="button">Share profile</button>
+                      </div>
+
+                      <div className="profile-ig-highlights">
+                        <div className="profile-ig-highlight-item">
+                          <div className="profile-ig-highlight-circle" />
+                          <span>Tips</span>
+                        </div>
+                        <div className="profile-ig-highlight-item">
+                          <div className="profile-ig-highlight-circle" />
+                          <span>Behind</span>
+                        </div>
+                        <div className="profile-ig-highlight-item">
+                          <div className="profile-ig-highlight-circle" />
+                          <span>Reviews</span>
+                        </div>
+                        <div className="profile-ig-highlight-item">
+                          <div className="profile-ig-highlight-circle plus">＋</div>
+                          <span>New</span>
+                        </div>
+                      </div>
+
+                      <div className="profile-ig-tabs">
+                        <button type="button" className="active" title="Posts grid">
+                          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3 3h7v7H3V3zm11 0h7v7h-7V3zm-11 11h7v7H3v-7zm11 0h7v7h-7v-7z"/></svg>
                         </button>
-                        <button type="button" className="profile-phone-cta-secondary">
-                          {selectedPlatform.actionSecondary}
+                        <button type="button" title="Reels">
+                          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="3"/><line x1="7" y1="2" x2="7" y2="8"/><line x1="17" y1="2" x2="17" y2="8"/><line x1="2" y1="8" x2="22" y2="8"/></svg>
+                        </button>
+                        <button type="button" title="Tagged">
+                          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>
                         </button>
                       </div>
 
-                      <div className="profile-phone-feed-section">
-                        <div className="profile-phone-feed-label">POST · 48 PX</div>
-                        <div className="profile-phone-post">
-                          <img
-                            src={activeThumbUrl}
-                            alt="Post 48px avatar"
-                            className="sz-48"
-                            style={{ borderRadius: selectedPlatform.shape === 'rounded-square' ? '22%' : '50%' }}
-                          />
-                          <div>
-                            <strong>Your Name · You</strong>
-                            <span>{selectedPlatform.bio.slice(0, 44)}...</span>
-                            <div className="profile-phone-skeleton-lines">
-                              <span />
-                              <span />
+                      <div className="profile-ig-grid">
+                        <div className="profile-ig-grid-cell" />
+                        <div className="profile-ig-grid-cell" />
+                        <div className="profile-ig-grid-cell" />
+                        <div className="profile-ig-grid-cell" />
+                        <div className="profile-ig-grid-cell" />
+                        <div className="profile-ig-grid-cell" />
+                      </div>
+
+                      <div className="profile-ig-bottom-nav">
+                        <span>🏠</span>
+                        <span>🔍</span>
+                        <span>⊞</span>
+                        <span>🎬</span>
+                        <div className="profile-ig-nav-avatar">
+                          <img src={activeThumbUrl} alt="Mini nav avatar" />
+                        </div>
+                      </div>
+                    </div>
+                  ) : selectedPlatformId === 'tiktok' ? (
+                    /* TikTok Mobile Profile Mockup */
+                    <div className={`profile-phone-mockup tiktok ${previewTheme === 'dark' ? 'dark' : 'light'}`}>
+                      <div className="profile-phone-statusbar">
+                        <span>9:41</span>
+                        <div className="profile-phone-island" />
+                        <div className="profile-phone-status-icons">
+                          <span>5G ▮</span>
+                        </div>
+                      </div>
+
+                      <div className="profile-tt-header-bar">
+                        <div className="profile-tt-handle-dropdown">
+                          <strong>yourname</strong>
+                          <span>▾</span>
+                        </div>
+                        <div className="profile-tt-header-actions">
+                          <button type="button" aria-label="Saved">🔖</button>
+                          <button type="button" aria-label="Menu">☰</button>
+                        </div>
+                      </div>
+
+                      <div className="profile-tt-center-head">
+                        <div className="profile-avatar-shell lg">
+                          <img src={activeThumbUrl} alt="TikTok profile avatar" />
+                        </div>
+                        <strong>@yourname</strong>
+                      </div>
+
+                      <div className="profile-tt-stats">
+                        <div><strong>142</strong><span>Following</span></div>
+                        <div><strong>84.2K</strong><span>Followers</span></div>
+                        <div><strong>1.2M</strong><span>Likes</span></div>
+                      </div>
+
+                      <div className="profile-tt-actions">
+                        <button type="button">Edit profile</button>
+                        <button type="button">Share profile</button>
+                      </div>
+
+                      <div className="profile-tt-bio">
+                        <p>Daily design breakdowns & creative workflows 🎬</p>
+                        <small>rynell.studio</small>
+                      </div>
+
+                      <div className="profile-tt-tabs">
+                        <button type="button" className="active">▥</button>
+                        <button type="button">🔒</button>
+                        <button type="button">♡</button>
+                      </div>
+
+                      <div className="profile-tt-grid">
+                        <div className="profile-tt-video-card"><span>▶ 42.1K</span></div>
+                        <div className="profile-tt-video-card"><span>▶ 18.5K</span></div>
+                        <div className="profile-tt-video-card"><span>▶ 95.3K</span></div>
+                      </div>
+
+                      <div className="profile-tt-bottom-nav">
+                        <span>Home</span>
+                        <span>Friends</span>
+                        <span className="profile-tt-create-btn">＋</span>
+                        <span>Inbox</span>
+                        <span className="active">Profile</span>
+                      </div>
+                    </div>
+                  ) : (
+                    /* LinkedIn Mobile Profile Mockup matching user reference */
+                    <div className={`profile-phone-mockup linkedin ${previewTheme === 'dark' ? 'dark' : 'light'}`}>
+                      <div className="profile-phone-statusbar">
+                        <span>9:41</span>
+                        <div className="profile-phone-island" />
+                        <div className="profile-phone-status-icons">
+                          <span>5G ▮</span>
+                        </div>
+                      </div>
+
+                      <div className="profile-li-searchbar">
+                        <div className="profile-li-search-avatar">
+                          <img src={activeThumbUrl} alt="Mini search avatar" />
+                        </div>
+                        <div className="profile-li-search-box">
+                          <span>🔍</span>
+                          <span>Search</span>
+                        </div>
+                        <span className="profile-li-chat-icon">💬</span>
+                      </div>
+
+                      <div className="profile-li-banner" />
+
+                      <div className="profile-li-body">
+                        <div className="profile-li-avatar-wrapper">
+                          <div className="profile-avatar-shell lg" style={{ border: '4px solid #FFF' }}>
+                            <img src={activeThumbUrl} alt="LinkedIn phone avatar" />
+                          </div>
+                        </div>
+
+                        <div className="profile-li-meta">
+                          <h3>Your Name</h3>
+                          <p>Helping founders tell their story | Carousels, content and personal brand</p>
+                          <div className="profile-li-location">Barcelona, Spain · <a>Contact info</a></div>
+                          <div className="profile-li-connections">500+ connections</div>
+                        </div>
+
+                        <div className="profile-li-actions">
+                          <button type="button" className="profile-li-btn-open">Open to</button>
+                          <button type="button" className="profile-li-btn-outline">Add section</button>
+                          <button type="button" className="profile-li-btn-circle">···</button>
+                        </div>
+
+                        <div className="profile-li-feed-section">
+                          <div className="profile-phone-feed-label">POST · 48 PX</div>
+                          <div className="profile-li-post-card">
+                            <div className="profile-avatar-shell sm">
+                              <img src={activeThumbUrl} alt="Post 48px avatar" />
+                            </div>
+                            <div className="profile-li-post-details">
+                              <strong>Your Name · You</strong>
+                              <span className="profile-li-post-desc">Helping founders tell their story | Carousels, co...</span>
+                              <span className="profile-li-post-time">2h · 🌐</span>
+                              <div className="profile-phone-skeleton-lines">
+                                <span />
+                                <span />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="profile-phone-feed-label">COMMENT · 32 PX</div>
+                          <div className="profile-li-comment-card">
+                            <div className="profile-avatar-shell xs">
+                              <img src={activeThumbUrl} alt="Comment 32px avatar" />
+                            </div>
+                            <div className="profile-li-comment-bubble">
+                              <strong>Your Name</strong>
+                              <span>Helping founders tell their story | Carousels, c...</span>
                             </div>
                           </div>
                         </div>
+                      </div>
 
-                        <div className="profile-phone-feed-label">COMMENT · 32 PX</div>
-                        <div className="profile-phone-comment">
-                          <img
-                            src={activeThumbUrl}
-                            alt="Comment 32px avatar"
-                            className="sz-32"
-                            style={{ borderRadius: selectedPlatform.shape === 'rounded-square' ? '22%' : '50%' }}
-                          />
-                          <div className="profile-phone-comment-box">
-                            <strong>Your Name</strong>
-                            <span>Looks super sharp at both 48 px and 32 px!</span>
-                          </div>
+                      <div className="profile-li-bottom-nav">
+                        <div className="profile-li-nav-item active">
+                          <span>🏠</span>
+                          <small>Home</small>
+                        </div>
+                        <div className="profile-li-nav-item">
+                          <span>👥</span>
+                          <small>My Network</small>
+                        </div>
+                        <div className="profile-li-nav-item">
+                          <span>➕</span>
+                          <small>Post</small>
+                        </div>
+                        <div className="profile-li-nav-item">
+                          <span>🔔</span>
+                          <small>Notifications</small>
+                        </div>
+                        <div className="profile-li-nav-item">
+                          <span>💼</span>
+                          <small>Jobs</small>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  )}
+
                   <p className="profile-preview-note">
-                    <span>○</span> Previewing your framed avatar on a mobile <strong>{selectedPlatform.name}</strong> profile, next to a post (48 px) and a comment (32 px) where the frame must stay readable.
+                    {selectedPlatformId === 'linkedin'
+                      ? 'Your picture on your LinkedIn profile on a phone, next to a post (48 px) and a comment (40 px): the sizes where a frame has to stay readable.'
+                      : 'Your picture on a LinkedIn, Instagram or TikTok profile.'}
                   </p>
                 </div>
               )}
@@ -2321,6 +2587,14 @@ const LinkedInProfileMaker = () => {
         .profile-view-tab, .profile-theme-pills button { padding: .42rem .75rem; border: 1px solid transparent; background: transparent; color: var(--studio-text-muted); font: .72rem var(--font-heading); letter-spacing: 1px; cursor: pointer; }
         .profile-view-tab.active, .profile-theme-pills button.active { background: var(--primary-orange); color: var(--black); border-color: var(--black); box-shadow: 2px 2px 0 var(--secondary-blue); }
 
+        .profile-preview-right-actions { display: flex; align-items: center; gap: .65rem; }
+        .profile-phone-tab-group { display: flex; gap: .25rem; padding: .25rem; background: var(--studio-surface); border: 1px solid var(--studio-border); }
+        .profile-phone-tab-btn { width: 34px; height: 32px; border: 1px solid transparent; background: transparent; color: var(--studio-text-muted); cursor: pointer; display: grid; place-items: center; transition: all .15s ease; }
+        .profile-phone-tab-btn:hover { color: var(--studio-text); background: var(--studio-surface-soft); }
+        .profile-phone-tab-btn.active { background: var(--primary-orange); color: #000; border-color: #000; box-shadow: 2px 2px 0 var(--secondary-blue); }
+        .profile-app-brand-icon { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; flex-shrink: 0; }
+        .profile-app-brand-icon svg { width: 20px; height: 20px; display: block; }
+
         .profile-social-target-bar { padding: .8rem .95rem; border: 1px solid var(--studio-border); background: var(--studio-surface); }
         .profile-social-target-header { display: flex; justify-content: space-between; align-items: center; gap: .6rem; margin-bottom: .6rem; font: .68rem var(--font-heading); letter-spacing: 1.1px; color: var(--studio-text-muted); }
         .profile-export-all-inline { padding: .32rem .65rem; border: 1px solid var(--studio-accent-cyan); background: transparent; color: var(--studio-accent-cyan); font: .66rem var(--font-heading); letter-spacing: .9px; cursor: pointer; }
@@ -2333,42 +2607,41 @@ const LinkedInProfileMaker = () => {
         .profile-social-pill small { color: var(--studio-text-muted); font-size: .58rem; }
 
         /* All Apps Grid */
-        .profile-apps-scroll { display: grid; gap: 1rem; max-height: 920px; overflow-y: auto; padding-right: .25rem; }
-        .profile-social-card { border: 2px solid var(--studio-border); background: var(--studio-surface); overflow: hidden; }
-        .profile-social-card-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .6rem; padding: .65rem .95rem; border-bottom: 1px solid var(--studio-border); background: var(--studio-surface-soft); }
-        .profile-social-card-title { display: flex; align-items: center; gap: .55rem; font: .82rem var(--font-heading); letter-spacing: 1px; }
-        .profile-social-icon { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 5px; color: #FFF; font: 700 .62rem/1 var(--font-body); }
-        .profile-social-spec { color: var(--studio-text-muted); font-size: .64rem; }
-        .profile-social-export-btn { padding: .35rem .65rem; border: 1px solid var(--primary-orange); background: var(--primary-orange); color: var(--black); font: .66rem var(--font-heading); letter-spacing: .9px; cursor: pointer; }
+        .profile-apps-scroll { display: flex; flex-direction: column; gap: 1.5rem; max-height: 860px; overflow-y: auto; overflow-x: hidden; padding-right: .5rem; min-height: 0; }
+        .profile-social-card { flex-shrink: 0; border: 1px solid var(--studio-border); border-radius: 16px; background: var(--studio-surface); overflow: hidden; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.14); }
+        .profile-social-card-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .6rem; padding: .8rem 1.25rem; border-bottom: 1px solid var(--studio-border); background: var(--studio-surface-soft); }
+        .profile-social-card-title { display: flex; align-items: center; gap: .65rem; font: .88rem var(--font-heading); letter-spacing: 1px; }
+        .profile-social-spec { color: var(--studio-text-muted); font-size: .66rem; }
+        .profile-social-export-btn { padding: .35rem .75rem; border: 1px solid var(--primary-orange); background: var(--primary-orange); color: var(--black); font: .68rem var(--font-heading); letter-spacing: .9px; border-radius: 4px; cursor: pointer; }
         .profile-social-export-btn:hover { box-shadow: 2px 2px 0 var(--secondary-blue); }
 
         .profile-social-modes { display: grid; grid-template-columns: 1fr 1fr; }
         .profile-social-modes.single-mode { grid-template-columns: 1fr; }
-        .profile-social-pane { padding: 1rem; display: grid; gap: .8rem; }
+        .profile-social-pane { padding: 1.5rem 1.7rem; display: flex; flex-direction: column; gap: 1.25rem; min-height: 440px; }
         .profile-social-pane.light { background: #FFFFFF; color: #111318; }
-        .profile-social-pane.dark { background: #12151C; color: #F3F5F8; border-left: 1px solid #262B38; }
-        .profile-mock-hero { display: flex; align-items: center; gap: .8rem; }
-        .profile-mock-user strong { display: block; font: 700 .88rem/1.15 var(--font-body); }
-        .profile-mock-user span { font: .72rem var(--font-body); opacity: .65; }
+        .profile-social-pane.dark { background: #111318; color: #F3F5F8; border-left: 1px solid #232733; }
+        .profile-mock-hero { display: flex; align-items: center; gap: .95rem; }
+        .profile-mock-user strong { display: block; font: 700 1rem/1.2 var(--font-body); }
+        .profile-mock-user span { font: .76rem var(--font-body); opacity: .65; }
 
         .profile-avatar-shell { position: relative; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
         .profile-avatar-shell.rounded-square { border-radius: 22%; }
         .profile-avatar-shell.story-ring { padding: 3px; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
         .profile-avatar-shell.story-ring img { border-radius: inherit; border: 2px solid #FFF; }
         .profile-avatar-shell img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .profile-avatar-shell.lg { width: 82px; height: 82px; }
-        .profile-avatar-shell.md { width: 58px; height: 58px; }
-        .profile-avatar-shell.sm { width: 38px; height: 38px; }
+        .profile-avatar-shell.lg { width: 96px; height: 96px; }
+        .profile-avatar-shell.md { width: 54px; height: 54px; }
+        .profile-avatar-shell.sm { width: 40px; height: 40px; }
         .profile-avatar-shell.xs { width: 30px; height: 30px; }
         .profile-status-indicator { position: absolute; right: 2px; bottom: 2px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #12151C; }
 
-        .profile-mock-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+        .profile-mock-row { display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; }
         .profile-mock-story { display: grid; justify-items: center; gap: .25rem; }
-        .profile-mock-story small, .profile-mock-item small { display: block; margin-top: .22rem; font: 600 .56rem var(--font-heading); letter-spacing: 1px; opacity: .55; }
-        .profile-mock-inline { display: flex; align-items: center; gap: .55rem; }
-        .profile-mock-inline strong { display: block; font: 600 .74rem/1.15 var(--font-body); }
-        .profile-mock-inline span { display: block; font: .65rem var(--font-body); opacity: .68; }
-        .profile-mock-bubble { padding: .35rem .65rem; border-radius: 12px; background: rgba(128, 128, 128, 0.14); font: .7rem var(--font-body); }
+        .profile-mock-story small, .profile-mock-item small { display: block; margin-top: .28rem; font: 600 .62rem var(--font-heading); letter-spacing: 1px; opacity: .55; }
+        .profile-mock-inline { display: flex; align-items: center; gap: .65rem; }
+        .profile-mock-inline strong { display: block; font: 600 .8rem/1.15 var(--font-body); }
+        .profile-mock-inline span { display: block; font: .7rem var(--font-body); opacity: .68; }
+        .profile-mock-bubble { padding: .42rem .85rem; border-radius: 14px; background: rgba(128, 128, 128, 0.14); font: .74rem var(--font-body); }
 
         /* Compare Matrix */
         .profile-compare-wrap { display: grid; gap: 1rem; }
@@ -2387,40 +2660,97 @@ const LinkedInProfileMaker = () => {
 
         /* On a Profile Mobile Phone Mockup */
         .profile-phone-stage { display: grid; place-items: center; padding: 1.2rem; border: 1px solid var(--studio-border); background: var(--studio-surface); }
-        .profile-phone-mockup { width: min(100%, 370px); border-radius: 38px; border: 7px solid #1C1F26; overflow: hidden; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45); }
+        .profile-phone-mockup { width: min(100%, 375px); border-radius: 42px; border: 8px solid #1C1F26; overflow: hidden; box-shadow: 0 20px 48px rgba(0, 0, 0, 0.48); display: flex; flex-direction: column; }
         .profile-phone-mockup.light { background: #FFFFFF; color: #111318; }
         .profile-phone-mockup.dark { background: #10131A; color: #F3F5F8; }
-        .profile-phone-statusbar { display: flex; justify-content: space-between; align-items: center; padding: .55rem 1.2rem; font: 700 .72rem var(--font-body); }
-        .profile-phone-island { width: 88px; height: 20px; border-radius: 999px; background: #000; }
-        .profile-phone-searchbar { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: .55rem; padding: .4rem 1rem .65rem; }
-        .profile-phone-searchbar img { width: 28px; height: 28px; object-fit: cover; }
-        .profile-phone-search-pill { padding: .32rem .7rem; border-radius: 999px; background: rgba(128, 128, 128, 0.14); font: .7rem var(--font-body); opacity: .8; }
-        .profile-phone-banner { height: 76px; }
-        .profile-phone-body { padding: 0 1.1rem 1.2rem; }
-        .profile-phone-main-avatar { width: 96px; height: 96px; margin-top: -48px; border-radius: 50%; border: 4px solid currentColor; overflow: hidden; background: #000; }
-        .profile-phone-main-avatar.rounded-square { border-radius: 22%; }
-        .profile-phone-main-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .profile-phone-identity { margin-top: .55rem; }
-        .profile-phone-identity h4 { font: 700 1.1rem var(--font-body); text-transform: none; }
-        .profile-phone-identity p { margin-top: .2rem; font: .74rem/1.35 var(--font-body); opacity: .86; }
-        .profile-phone-identity small { display: block; margin-top: .25rem; font: .66rem var(--font-body); opacity: .6; }
-        .profile-phone-cta-row { display: flex; gap: .5rem; margin-top: .75rem; }
-        .profile-phone-cta-primary, .profile-phone-cta-secondary { padding: .38rem .9rem; border-radius: 999px; font: 600 .72rem var(--font-body); cursor: pointer; }
-        .profile-phone-cta-primary { border: 0; color: #FFF; }
-        .profile-phone-cta-secondary { border: 1px solid rgba(128, 128, 128, 0.45); background: transparent; color: inherit; }
-        .profile-phone-feed-section { margin-top: 1rem; padding-top: .8rem; border-top: 1px solid rgba(128, 128, 128, 0.2); display: grid; gap: .65rem; }
-        .profile-phone-feed-label { font: .62rem var(--font-heading); letter-spacing: 1px; opacity: .6; }
-        .profile-phone-post, .profile-phone-comment { display: flex; align-items: flex-start; gap: .6rem; }
-        .profile-phone-post img.sz-48 { width: 48px; height: 48px; object-fit: cover; flex-shrink: 0; }
-        .profile-phone-comment img.sz-32 { width: 32px; height: 32px; object-fit: cover; flex-shrink: 0; }
-        .profile-phone-post strong, .profile-phone-comment strong { display: block; font: 600 .74rem var(--font-body); }
-        .profile-phone-post span, .profile-phone-comment span { display: block; font: .66rem var(--font-body); opacity: .75; }
-        .profile-phone-skeleton-lines { display: grid; gap: .3rem; margin-top: .45rem; }
-        .profile-phone-skeleton-lines span { height: 7px; border-radius: 4px; background: rgba(128, 128, 128, 0.2); display: block; width: 190px; }
-        .profile-phone-skeleton-lines span:last-child { width: 130px; }
-        .profile-phone-comment-box { padding: .45rem .65rem; border-radius: 10px; background: rgba(128, 128, 128, 0.12); flex: 1; }
+        .profile-phone-statusbar { display: flex; justify-content: space-between; align-items: center; padding: .6rem 1.3rem .4rem; font: 700 .74rem var(--font-body); }
+        .profile-phone-island { width: 92px; height: 22px; border-radius: 999px; background: #000; }
+        .profile-phone-status-icons { font: 600 .7rem var(--font-body); }
 
-        .profile-preview-note { display: flex; align-items: center; gap: .5rem; max-width: 540px; margin-top: 1rem; color: var(--studio-text-muted); font: .64rem var(--font-body); letter-spacing: .2px; }
+        /* LinkedIn Specific Phone Elements */
+        .profile-li-searchbar { display: grid; grid-template-columns: 32px 1fr auto; align-items: center; gap: .65rem; padding: .4rem 1.1rem .65rem; }
+        .profile-li-search-avatar { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+        .profile-li-search-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .profile-li-search-box { display: flex; align-items: center; gap: .45rem; padding: .4rem .8rem; border-radius: 4px; background: rgba(128, 128, 128, 0.14); font: .74rem var(--font-body); opacity: .8; }
+        .profile-li-chat-icon { font-size: 1.1rem; opacity: .8; }
+        .profile-li-banner { height: 86px; background: #8E9CA8; }
+        .profile-li-body { padding: 0 1.2rem 1.2rem; }
+        .profile-li-avatar-wrapper { margin-top: -50px; margin-bottom: .6rem; }
+        .profile-li-meta h3 { font: 700 1.25rem var(--font-body); }
+        .profile-li-meta p { margin-top: .25rem; font: .76rem/1.38 var(--font-body); opacity: .88; }
+        .profile-li-location { margin-top: .3rem; font: .7rem var(--font-body); opacity: .68; }
+        .profile-li-location a { color: #0A66C2; font-weight: 600; }
+        .profile-li-connections { margin-top: .25rem; color: #0A66C2; font: 600 .72rem var(--font-body); }
+        .profile-li-actions { display: flex; align-items: center; gap: .5rem; margin-top: .85rem; }
+        .profile-li-btn-open { padding: .42rem 1.1rem; border-radius: 999px; border: 0; background: #0A66C2; color: #FFF; font: 600 .76rem var(--font-body); cursor: pointer; }
+        .profile-li-btn-outline { padding: .42rem 1.1rem; border-radius: 999px; border: 1.5px solid #0A66C2; background: transparent; color: #0A66C2; font: 600 .76rem var(--font-body); cursor: pointer; }
+        .profile-li-btn-circle { width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid rgba(128, 128, 128, 0.5); background: transparent; color: inherit; font: 700 .9rem var(--font-body); cursor: pointer; display: grid; place-items: center; }
+        .profile-li-feed-section { margin-top: 1.2rem; padding-top: .9rem; border-top: 1px solid rgba(128, 128, 128, 0.2); display: grid; gap: .75rem; }
+        .profile-li-post-card, .profile-li-comment-card { display: flex; align-items: flex-start; gap: .65rem; }
+        .profile-li-post-details strong { display: block; font: 600 .78rem var(--font-body); }
+        .profile-li-post-desc { display: block; font: .7rem var(--font-body); opacity: .8; }
+        .profile-li-post-time { display: block; font: .64rem var(--font-body); opacity: .55; margin-top: .15rem; }
+        .profile-li-comment-bubble { padding: .5rem .8rem; border-radius: 12px; background: rgba(128, 128, 128, 0.12); flex: 1; font: .72rem var(--font-body); }
+        .profile-li-comment-bubble strong { display: block; font-size: .76rem; margin-bottom: .15rem; }
+        .profile-li-bottom-nav { display: flex; justify-content: space-around; align-items: center; padding: .65rem .4rem; border-top: 1px solid rgba(128, 128, 128, 0.2); }
+        .profile-li-nav-item { display: flex; flex-direction: column; align-items: center; gap: .15rem; opacity: .65; font: .58rem var(--font-body); }
+        .profile-li-nav-item.active { opacity: 1; color: #0A66C2; font-weight: 600; }
+        .profile-li-nav-item span { font-size: 1.15rem; }
+
+        /* Instagram Specific Phone Elements */
+        .profile-ig-header-bar { display: flex; justify-content: space-between; align-items: center; padding: .5rem 1.2rem; }
+        .profile-ig-handle-dropdown { display: flex; align-items: center; gap: .35rem; font: 700 1.1rem var(--font-body); }
+        .profile-ig-header-actions { display: flex; align-items: center; gap: .85rem; font-size: 1.25rem; }
+        .profile-ig-header-actions button { border: 0; background: none; color: inherit; font-size: 1.3rem; cursor: pointer; }
+        .profile-ig-main-row { display: flex; align-items: center; gap: 1.4rem; padding: .6rem 1.2rem; }
+        .profile-ig-stats-row { display: flex; justify-content: space-around; flex: 1; text-align: center; }
+        .profile-ig-stat strong { display: block; font: 700 1.05rem var(--font-body); }
+        .profile-ig-stat span { display: block; font: .72rem var(--font-body); opacity: .7; }
+        .profile-ig-bio { padding: 0 1.2rem; }
+        .profile-ig-bio h4 { font: 700 .86rem var(--font-body); margin-bottom: .2rem; }
+        .profile-ig-bio p { font: .74rem/1.35 var(--font-body); opacity: .88; margin: 0; }
+        .profile-ig-actions { display: flex; gap: .5rem; padding: .75rem 1.2rem; }
+        .profile-ig-actions button { flex: 1; padding: .45rem 0; border-radius: 8px; border: 0; background: rgba(128, 128, 128, 0.16); color: inherit; font: 600 .74rem var(--font-body); cursor: pointer; }
+        .profile-ig-highlights { display: flex; gap: .9rem; padding: 0 1.2rem .75rem; overflow-x: auto; }
+        .profile-ig-highlight-item { display: flex; flex-direction: column; align-items: center; gap: .3rem; font: .66rem var(--font-body); opacity: .85; }
+        .profile-ig-highlight-circle { width: 54px; height: 54px; border-radius: 50%; border: 1px solid rgba(128, 128, 128, 0.35); background: rgba(128, 128, 128, 0.1); }
+        .profile-ig-highlight-circle.plus { display: grid; place-items: center; font-size: 1.3rem; opacity: .7; }
+        .profile-ig-tabs { display: flex; justify-content: space-around; border-top: 1px solid rgba(128, 128, 128, 0.2); }
+        .profile-ig-tabs button { flex: 1; padding: .65rem 0; border: 0; background: none; color: inherit; opacity: .5; cursor: pointer; display: grid; place-items: center; }
+        .profile-ig-tabs button.active { opacity: 1; border-bottom: 2px solid currentColor; }
+        .profile-ig-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: rgba(128, 128, 128, 0.1); }
+        .profile-ig-grid-cell { aspect-ratio: 1; background: rgba(128, 128, 128, 0.18); }
+        .profile-ig-bottom-nav { display: flex; justify-content: space-around; align-items: center; padding: .65rem 1rem; border-top: 1px solid rgba(128, 128, 128, 0.2); font-size: 1.15rem; }
+        .profile-ig-nav-avatar { width: 26px; height: 26px; border-radius: 50%; overflow: hidden; border: 1px solid currentColor; }
+        .profile-ig-nav-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* TikTok Specific Phone Elements */
+        .profile-tt-header-bar { display: flex; justify-content: space-between; align-items: center; padding: .5rem 1.2rem; }
+        .profile-tt-handle-dropdown { display: flex; align-items: center; gap: .35rem; font: 700 1.05rem var(--font-body); }
+        .profile-tt-header-actions { display: flex; align-items: center; gap: .8rem; font-size: 1.2rem; }
+        .profile-tt-header-actions button { border: 0; background: none; color: inherit; font-size: 1.15rem; cursor: pointer; }
+        .profile-tt-center-head { display: flex; flex-direction: column; align-items: center; gap: .45rem; margin-top: .4rem; }
+        .profile-tt-center-head strong { font: 600 .86rem var(--font-body); opacity: .85; }
+        .profile-tt-stats { display: flex; justify-content: center; gap: 1.8rem; text-align: center; margin-top: .75rem; }
+        .profile-tt-stats div strong { display: block; font: 700 .98rem var(--font-body); }
+        .profile-tt-stats div span { display: block; font: .68rem var(--font-body); opacity: .65; }
+        .profile-tt-actions { display: flex; justify-content: center; gap: .55rem; margin-top: .8rem; padding: 0 1.2rem; }
+        .profile-tt-actions button { flex: 1; max-width: 140px; padding: .45rem 0; border-radius: 6px; border: 0; background: rgba(128, 128, 128, 0.16); color: inherit; font: 600 .74rem var(--font-body); cursor: pointer; }
+        .profile-tt-bio { text-align: center; margin-top: .75rem; padding: 0 1.2rem; }
+        .profile-tt-bio p { font: .74rem var(--font-body); opacity: .88; margin: 0; }
+        .profile-tt-bio small { color: #00F2FE; font: 600 .68rem var(--font-body); }
+        .profile-tt-tabs { display: flex; justify-content: space-around; margin-top: .9rem; border-top: 1px solid rgba(128, 128, 128, 0.2); }
+        .profile-tt-tabs button { flex: 1; padding: .6rem 0; border: 0; background: none; color: inherit; opacity: .5; cursor: pointer; font-size: 1.1rem; }
+        .profile-tt-tabs button.active { opacity: 1; border-bottom: 2px solid currentColor; }
+        .profile-tt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; min-height: 140px; background: rgba(128, 128, 128, 0.1); }
+        .profile-tt-video-card { aspect-ratio: 9/14; background: rgba(128, 128, 128, 0.18); display: flex; align-items: flex-end; padding: .4rem; }
+        .profile-tt-video-card span { font: 600 .62rem var(--font-body); color: #FFF; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+        .profile-tt-bottom-nav { display: flex; justify-content: space-around; align-items: center; padding: .65rem .6rem; border-top: 1px solid rgba(128, 128, 128, 0.2); font: 600 .68rem var(--font-body); }
+        .profile-tt-bottom-nav span { opacity: .65; cursor: pointer; }
+        .profile-tt-bottom-nav span.active { opacity: 1; }
+        .profile-tt-create-btn { width: 34px; height: 26px; border-radius: 7px; background: #FFF; color: #000; display: grid; place-items: center; font-size: 1.1rem; box-shadow: -2px 0 0 #00F2FE, 2px 0 0 #FE2C55; }
+
+        .profile-preview-note { display: flex; align-items: center; gap: .5rem; max-width: 540px; margin-top: 1rem; color: var(--studio-text-muted); font: .68rem/1.4 var(--font-body); letter-spacing: .2px; text-align: center; }
         .profile-preview-note span { color: var(--studio-accent-cyan); font-size: 1rem; }
 
         /* Bottom Export Bar */
