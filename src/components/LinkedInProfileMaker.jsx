@@ -13,11 +13,11 @@ const ensureHashtag = (raw = '') => {
 };
 
 const FRAME_STYLES = [
-  { id: 'arc', label: 'Arc', icon: '◐', desc: 'Tapered bottom arc with curved #badge copy' },
-  { id: 'ring', label: 'Ring', icon: '◯', desc: 'Full 360° perimeter ring with curved #badge copy' },
-  { id: 'badge', label: 'Badge', icon: '🏷', desc: 'Bottom pill tag badge with crisp horizontal #copy' },
-  { id: 'gradient', label: 'Gradient', icon: '◌', desc: 'Multi-stop gradient perimeter ring (no text)' },
-  { id: 'none', label: 'None', icon: '⊘', desc: 'Clean portrait with no frame or text overlay' }
+  { id: 'arc', label: 'Arc', icon: <i className="ph ph-circle-half" aria-hidden="true" />, desc: 'Tapered bottom arc with curved #badge copy' },
+  { id: 'ring', label: 'Ring', icon: <i className="ph ph-circle" aria-hidden="true" />, desc: 'Full 360° perimeter ring with curved #badge copy' },
+  { id: 'badge', label: 'Badge', icon: <i className="ph ph-tag" aria-hidden="true" />, desc: 'Bottom pill tag badge with crisp horizontal #copy' },
+  { id: 'gradient', label: 'Gradient', icon: <i className="ph ph-circle-dashed" aria-hidden="true" />, desc: 'Multi-stop gradient perimeter ring (no text)' },
+  { id: 'none', label: 'None', icon: <i className="ph ph-prohibit" aria-hidden="true" />, desc: 'Clean portrait with no frame or text overlay' }
 ];
 
 const FRAME_PRESETS = [
@@ -45,58 +45,16 @@ const BG_COLOR_SWATCHES = [
 ];
 
 const SOCIAL_ICONS = {
-  linkedin: (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
-      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.64a1.64 1.64 0 1 0 1.63 1.64 1.63 1.63 0 0 0-1.63-1.64z"/>
-    </svg>
-  ),
-  instagram: (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
-    </svg>
-  ),
-  tiktok: (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
-      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.89 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.51a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3 15.67 6.34 6.34 0 0 0 9.34 22a6.34 6.34 0 0 0 6.34-6.33V9.05a8.28 8.28 0 0 0 4.91 1.59V7.19a4.84 4.84 0 0 1-1-.5z"/>
-    </svg>
-  ),
-  slack: (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
-      <path d="M5.04 14.68a2.16 2.16 0 1 1-2.16-2.16h2.16v2.16zm1.08 0a2.16 2.16 0 1 1 4.32 0v5.4a2.16 2.16 0 1 1-4.32 0v-5.4zm3.24-9.64a2.16 2.16 0 1 1-2.16-2.16v2.16h2.16zm0 1.08a2.16 2.16 0 1 1 0 4.32H3.96a2.16 2.16 0 1 1 0-4.32h5.4zm9.64 3.24a2.16 2.16 0 1 1 2.16 2.16h-2.16V9.36zm-1.08 0a2.16 2.16 0 1 1-4.32 0V3.96a2.16 2.16 0 1 1 4.32 0v5.4zm-3.24 9.64a2.16 2.16 0 1 1 2.16 2.16v-2.16h-2.16zm0-1.08a2.16 2.16 0 1 1 0-4.32h5.4a2.16 2.16 0 1 1 0 4.32h-5.4z"/>
-    </svg>
-  ),
-  facebook: (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
-      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-    </svg>
-  ),
-  x: (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-    </svg>
-  ),
-  threads: (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
-      <path d="M12.003 2c-5.523 0-10 4.477-10 10 0 5.522 4.477 10 10 10 4.095 0 7.632-2.463 9.172-5.995a.75.75 0 1 0-1.377-.597A8.487 8.487 0 0 1 12.003 20.5c-4.687 0-8.5-3.813-8.5-8.5s3.813-8.5 8.5-8.5c4.542 0 8.262 3.58 8.49 8.08.17 3.32-1.895 5.545-4.437 5.545-1.353 0-2.443-.63-2.883-1.673.916-.484 1.577-1.36 1.802-2.464.33-1.616-.545-3.23-2.148-3.957-.423-.192-.907-.295-1.427-.295-2.52 0-4.382 1.874-4.382 4.41 0 2.664 1.954 4.548 4.673 4.548 1.488 0 2.873-.554 3.864-1.547.886 1.34 2.378 2.072 4.048 2.072 3.518 0 6.04-2.894 5.86-6.84C21.144 6.037 17.062 2 12.003 2zm-.57 12.87c-1.728 0-2.885-1.206-2.885-2.894 0-1.688 1.157-2.894 2.885-2.894.464 0 .848.1 1.148.298.815.539 1.183 1.517.974 2.537-.2 1.02-.95 2.128-2.122 2.953z"/>
-    </svg>
-  ),
-  discord: (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
-      <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.893.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
-    </svg>
-  ),
-  whatsapp: (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
-      <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.47c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.77 2.7 4.29 3.79.6.26 1.07.42 1.44.53.6.19 1.15.16 1.59.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.15-1.18-.06-.1-.22-.16-.47-.29z"/>
-    </svg>
-  ),
-  youtube: (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
-      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-    </svg>
-  )
+  linkedin: <i className="ph ph-linkedin-logo" aria-hidden="true" />,
+  instagram: <i className="ph ph-instagram-logo" aria-hidden="true" />,
+  tiktok: <i className="ph ph-tiktok-logo" aria-hidden="true" />,
+  slack: <i className="ph ph-slack-logo" aria-hidden="true" />,
+  facebook: <i className="ph ph-facebook-logo" aria-hidden="true" />,
+  x: <i className="ph ph-x-logo" aria-hidden="true" />,
+  threads: <i className="ph ph-threads-logo" aria-hidden="true" />,
+  discord: <i className="ph ph-discord-logo" aria-hidden="true" />,
+  whatsapp: <i className="ph ph-whatsapp-logo" aria-hidden="true" />,
+  youtube: <i className="ph ph-youtube-logo" aria-hidden="true" />
 };
 
 const SOCIAL_PLATFORMS = [
@@ -148,7 +106,7 @@ const SOCIAL_PLATFORMS = [
     shape: 'rounded-square',
     safeScale: 0.92,
     statusDot: '#2BAC76',
-    accent: '#4A154B',
+    accent: '#FFFFFF',
     bio: 'Staff Product & Brand Designer — Available for design reviews',
     meta: '🟢 Active · Local time 14:30 CET',
     actionPrimary: 'Message',
@@ -187,7 +145,7 @@ const SOCIAL_PLATFORMS = [
     size: 1080,
     shape: 'circle',
     safeScale: 0.96,
-    accent: '#101010',
+    accent: '#FFFFFF',
     bio: 'Short thoughts on design systems, typography & creative direction.',
     meta: '9,420 followers · rynell.studio',
     actionPrimary: 'Follow',
@@ -1853,7 +1811,7 @@ const LinkedInProfileMaker = () => {
                     className={`profile-view-tab ${previewTab === 'apps' ? 'active' : ''}`}
                     onClick={() => setPreviewTab('apps')}
                   >
-                    ⊞ ALL APPS (10)
+                    <i className="ph ph-squares-four" aria-hidden="true" /> ALL APPS
                   </button>
                   <button
                     type="button"
@@ -1862,7 +1820,7 @@ const LinkedInProfileMaker = () => {
                     className={`profile-view-tab ${previewTab === 'compare' ? 'active' : ''}`}
                     onClick={() => setPreviewTab('compare')}
                   >
-                    ▥ COMPARE ({photos.length})
+                    <i className="ph ph-columns" aria-hidden="true" /> COMPARE ({photos.length})
                   </button>
                   <button
                     type="button"
@@ -1871,7 +1829,7 @@ const LinkedInProfileMaker = () => {
                     className={`profile-view-tab ${previewTab === 'profile' ? 'active' : ''}`}
                     onClick={() => setPreviewTab('profile')}
                   >
-                    📱 ON A PROFILE
+                    <i className="ph ph-device-mobile" aria-hidden="true" /> ON A PROFILE
                   </button>
                 </div>
 
@@ -1908,7 +1866,7 @@ const LinkedInProfileMaker = () => {
                       onClick={() => setPreviewTheme('light')}
                       title="Light mode"
                     >
-                      ☀
+                      <i className="ph ph-sun" aria-hidden="true" />
                     </button>
                     <button
                       type="button"
@@ -1916,7 +1874,7 @@ const LinkedInProfileMaker = () => {
                       onClick={() => setPreviewTheme('dark')}
                       title="Dark mode"
                     >
-                      ☾
+                      <i className="ph ph-moon" aria-hidden="true" />
                     </button>
                     <button
                       type="button"
@@ -1924,7 +1882,7 @@ const LinkedInProfileMaker = () => {
                       onClick={() => setPreviewTheme('split')}
                       title="Split light & dark mode"
                     >
-                      ◐
+                      <i className="ph ph-circle-half" aria-hidden="true" />
                     </button>
                   </div>
                 </div>
@@ -1950,13 +1908,16 @@ const LinkedInProfileMaker = () => {
                       <button
                         key={platform.id}
                         type="button"
-                        className={`profile-social-pill ${isCurrent ? 'active' : ''}`}
+                        className={`profile-social-pill ${isCurrent ? 'active' : ''} ${platform.id}`}
                         onClick={() => {
                           setSelectedPlatformId(platform.id);
                           setNotice(`OPTIMIZED TARGET SET TO ${platform.name.toUpperCase()} (${platform.size}×${platform.size} PX)`);
                         }}
                       >
-                        <span className="profile-social-badge" style={{ color: platform.accent }}>
+                        <span
+                          className={`profile-social-badge ${platform.id}`}
+                          style={platform.id === 'slack' || platform.id === 'threads' ? undefined : { color: platform.accent }}
+                        >
                           {SOCIAL_ICONS[platform.id]}
                         </span>
                         <span>{platform.name}</span>
@@ -1980,10 +1941,13 @@ const LinkedInProfileMaker = () => {
                           : ['light', 'dark'];
 
                     return (
-                      <article key={platform.id} className="profile-social-card">
+                      <article key={platform.id} className={`profile-social-card ${platform.id}`}>
                         <header className="profile-social-card-head">
                           <div className="profile-social-card-title">
-                            <span className="profile-app-brand-icon" style={{ color: platform.accent }}>
+                            <span
+                              className={`profile-app-brand-icon ${platform.id}`}
+                              style={platform.id === 'slack' || platform.id === 'threads' ? undefined : { color: platform.accent }}
+                            >
                               {SOCIAL_ICONS[platform.id]}
                             </span>
                             <strong>{platform.name}</strong>
@@ -2592,8 +2556,30 @@ const LinkedInProfileMaker = () => {
         .profile-phone-tab-btn { width: 34px; height: 32px; border: 1px solid transparent; background: transparent; color: var(--studio-text-muted); cursor: pointer; display: grid; place-items: center; transition: all .15s ease; }
         .profile-phone-tab-btn:hover { color: var(--studio-text); background: var(--studio-surface-soft); }
         .profile-phone-tab-btn.active { background: var(--primary-orange); color: #000; border-color: #000; box-shadow: 2px 2px 0 var(--secondary-blue); }
-        .profile-app-brand-icon { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; flex-shrink: 0; }
-        .profile-app-brand-icon svg { width: 20px; height: 20px; display: block; }
+        .profile-phone-tab-btn i.ph { font-size: 18px; line-height: 1; }
+        .profile-theme-pills button i.ph { font-size: 15px; line-height: 1; display: block; }
+        .profile-view-tab i.ph { font-size: 15px; margin-right: .35rem; vertical-align: middle; }
+        .profile-frame-tab-icon i.ph { font-size: 15px; line-height: 1; display: block; }
+
+        .profile-app-brand-icon { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; flex-shrink: 0; font-size: 20px; }
+        .profile-app-brand-icon i.ph { font-size: 20px; line-height: 1; }
+
+        /* White on black version for Slack & Threads in dark mode */
+        .profile-app-brand-icon.slack,
+        .profile-app-brand-icon.threads {
+          background: #000000 !important;
+          color: #FFFFFF !important;
+          border: 1px solid rgba(255, 255, 255, 0.35);
+          border-radius: 6px;
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+          padding: 2px;
+        }
+        .profile-app-brand-icon.slack i.ph,
+        .profile-app-brand-icon.threads i.ph {
+          font-size: 16px;
+          line-height: 1;
+          color: #FFFFFF !important;
+        }
 
         .profile-social-target-bar { padding: .8rem .95rem; border: 1px solid var(--studio-border); background: var(--studio-surface); }
         .profile-social-target-header { display: flex; justify-content: space-between; align-items: center; gap: .6rem; margin-bottom: .6rem; font: .68rem var(--font-heading); letter-spacing: 1.1px; color: var(--studio-text-muted); }
@@ -2603,7 +2589,32 @@ const LinkedInProfileMaker = () => {
         .profile-social-pill { display: inline-flex; align-items: center; gap: .38rem; padding: .34rem .55rem; border: 1px solid var(--studio-border); background: var(--studio-surface-soft); color: var(--studio-text); font: .66rem var(--font-heading); letter-spacing: .8px; cursor: pointer; transition: all .15s ease; }
         .profile-social-pill:hover { border-color: var(--studio-text); }
         .profile-social-pill.active { border-color: var(--primary-orange); background: var(--studio-surface-active); box-shadow: 2px 2px 0 var(--primary-orange); }
-        .profile-social-badge { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 4px; color: #FFF; font: 700 .55rem/1 var(--font-body); }
+        .profile-social-badge { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 4px; color: #FFF; font-size: 13px; line-height: 1; }
+        .profile-social-badge i.ph { font-size: 13px; line-height: 1; }
+
+        .profile-social-badge.slack,
+        .profile-social-badge.threads {
+          background: #000000 !important;
+          color: #FFFFFF !important;
+          border: 1px solid rgba(255, 255, 255, 0.35);
+          border-radius: 4px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+        }
+        .profile-social-badge.slack i.ph,
+        .profile-social-badge.threads i.ph {
+          color: #FFFFFF !important;
+          font-size: 12px;
+          line-height: 1;
+        }
+
+        body.light-theme .profile-app-brand-icon.slack,
+        body.light-theme .profile-app-brand-icon.threads,
+        body.light-theme .profile-social-badge.slack,
+        body.light-theme .profile-social-badge.threads {
+          background: #000000 !important;
+          color: #FFFFFF !important;
+          border-color: #000000;
+        }
         .profile-social-pill small { color: var(--studio-text-muted); font-size: .58rem; }
 
         /* All Apps Grid */
